@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+@source "../**/*.{js,ts,jsx,tsx}";
+@source "../../src/**/*.{js,ts,jsx,tsx}";
+
+:root {
+  --background: #070708;
+  --background-elevated: #0c0c0f;
+  --surface: #111114;
+  --surface-hover: #18181c;
+  --surface-glass: rgba(17, 17, 20, 0.72);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-glow: rgba(255, 107, 107, 0.35);
+  --accent: #ff6b6b;
+  --accent-hover: #ff5252;
+  --accent-soft: rgba(255, 107, 107, 0.12);
+  --warning: #f5a524;
+  --healthy: #3dd68c;
+  --text: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --shine: rgba(255, 255, 255, 0.06);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-elevated: var(--background-elevated);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-glass: var(--surface-glass);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-glow: var(--border-glow);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-warning: var(--warning);
+  --color-healthy: var(--healthy);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-shine: var(--shine);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  height: 100%;
+  transition:
+    background-color 0.35s ease,
+    color 0.35s ease;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background-color: var(--background);
+  color: var(--text);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: #fff;
+}
+
+/* ── Premium glass / panel system ─────────────────────────────────── */
+
+.glass-panel {
+  position: relative;
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 40%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    var(--surface-glass);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 50px -20px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+}
+
+.glass-panel::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    120% 80% at 10% -10%,
+    rgba(255, 107, 107, 0.1) 0%,
+    transparent 55%
+  );
+  z-index: 0;
+}
+
+.glass-panel::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+  z-index: 0;
+}
+
+.glass-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.glass-panel-glow {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.45),
+    0 1px 0 0 rgba(255, 255, 255, 0.05) inset,
+    0 0 40px -12px rgba(255, 107, 107, 0.25),
+    0 24px 60px -28px rgba(0, 0, 0, 0.85);
+}
+
+.glass-panel-interactive {
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.glass-panel-interactive:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 48px -10px rgba(255, 107, 107, 0.2),
+    0 28px 70px -30px rgba(0, 0, 0, 0.9);
+}
+
+/* Gradient border wrapper */
+.gradient-border {
+  position: relative;
+  border-radius: 1.35rem;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 107, 107, 0.35) 35%,
+    rgba(255, 255, 255, 0.04) 70%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  box-shadow: 0 24px 80px -32px rgba(0, 0, 0, 0.9);
+}
+
+.gradient-border-inner {
+  border-radius: calc(1.35rem - 1px);
+  background:
+    linear-gradient(
+      165deg,
+      rgba(255, 255, 255, 0.07) 0%,
+      rgba(255, 255, 255, 0.015) 42%,
+      transparent 100%
+    ),
+    rgba(12, 12, 15, 0.88);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  overflow: hidden;
+}
+
+.gradient-border-inner::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    90% 60% at 80% 0%,
+    rgba(255, 107, 107, 0.12) 0%,
+    transparent 50%
+  );
+  z-index: 0;
+}
+
+.gradient-border-inner > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Nav bar surface */
+.nav-bar {
+  background: rgba(7, 7, 8, 0.65);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset;
+}
+
+/* Soft ambient page mesh (under content, over PixelBlast) — uses theme mesh */
+.page-mesh {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(
+      ellipse 60% 40% at 50% -5%,
+      var(--theme-mesh, rgba(255, 107, 107, 0.14)) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 40% 30% at 100% 20%,
+      color-mix(in srgb, var(--accent) 12%, transparent) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse 35% 25% at 0% 60%,
+      color-mix(in srgb, var(--accent) 8%, transparent) 0%,
+      transparent 45%
+    );
+  transition: background 0.4s ease;
+}
+
+/* Animated shimmer line for CTAs */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.btn-shimmer {
+  background-image: linear-gradient(
+    110deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.18) 45%,
+    transparent 65%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.8s ease-in-out infinite;
+}
+
+/* React Flow */
+.react-flow__attribution {
+  display: none !important;
+}
+
+.react-flow__controls-button {
+  fill: #a1a1aa !important;
+  background: #111114 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.react-flow__controls-button:hover {
+  background: #18181c !important;
+}
+
+.react-flow__edge-path {
+  stroke-linecap: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-shimmer {
+    animation: none;
+  }
+}
