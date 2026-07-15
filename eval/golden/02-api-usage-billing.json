@@ -1,0 +1,15 @@
+{
+  "id": "02-api-usage-billing",
+  "title": "Usage-based public developer API",
+  "category": "API",
+  "locale": "en",
+  "fragile_hint": "mixed",
+  "idea": "A public REST API that enriches company domains with firmographic data (employee count bands, funding stage, tech stack hints). Pricing is pure usage-based: $0.02 per successful lookup, free tier 500 calls/month. Auth is API keys only (no OAuth yet). Data is scraped and licensed from mixed sources; refresh SLA promised as 'weekly'. Target customers are B2B SaaS sales tools that batch-enrich CRM lists overnight.",
+  "focus_notes": [
+    "Abuse / key leakage and unbounded batch jobs",
+    "Data licensing & accuracy liability",
+    "Versioning / breaking changes for CRM integrators",
+    "Unit economics when free tier + scrapers dominate cost"
+  ],
+  "expected_spof_themes": ["abuse", "data quality", "licensing", "pricing", "sla"]
+}

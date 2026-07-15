@@ -15,7 +15,7 @@ export type ProviderCallOptions = {
   temperature?: number;
   maxTokens?: number;
   signal?: AbortSignal;
-  stage?: "pass1" | "pass2" | "models" | "test";
+  stage?: "pass1" | "pass1_5" | "pass2" | "models" | "test";
 };
 
 export class ProviderError extends Error {

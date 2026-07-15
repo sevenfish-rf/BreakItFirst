@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# eval baseline runs (raw model output; keep folder via .gitkeep)
+eval/baselines/*
+!eval/baselines/.gitkeep

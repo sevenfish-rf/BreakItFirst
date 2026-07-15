@@ -30,6 +30,8 @@ export type Dictionary = {
     chars: string;
     needProvider: string;
     tipProvider: string;
+    deepLabel: string;
+    deepHint: string;
   };
   report: {
     kicker: string;
@@ -41,13 +43,25 @@ export type Dictionary = {
     assumptions: string;
     cascade: string;
     cascadeHint: string;
+    signal: string;
     failureModes: string;
     resilience: string;
     resilienceHint: string;
+    stressTest: string;
+    stressTestHint: string;
+    stressVerdict: { yes: string; maybe: string; no: string };
+    velocity: string;
+    velocityHint: string;
+    calibration: string;
+    calibrationHint: string;
+    calibrationRuns: string;
+    candidates: string;
     confidence: string;
     generated: string;
     step: string;
     of: string;
+    deepBadge: string;
+    warnings: string;
   };
   modes: {
     technical: string;
@@ -116,6 +130,9 @@ const en: Dictionary = {
     needProvider: "Configure an AI provider before analyzing.",
     tipProvider:
       "Tip: open Provider → Test connection / Fetch models to verify base URL, key, and model ids.",
+    deepLabel: "Deep analysis",
+    deepHint:
+      "Runs Pass 1 twice and calibrates SPOF agreement. Slower, uses 2 rate-limit slots.",
   },
   report: {
     kicker: "Failure report",
@@ -126,14 +143,29 @@ const en: Dictionary = {
     likelihood: "Failure likelihood",
     assumptions: "Hidden assumptions",
     cascade: "Failure cascade",
-    cascadeHint: "Causal chain from fragile point to end state",
+    cascadeHint:
+      "Causal chain from fragile point to end state — each step includes an observable signal",
+    signal: "Signal",
     failureModes: "Failure modes",
     resilience: "Resilience score",
     resilienceHint: "0–100 per dimension — lower is more fragile",
+    stressTest: "Archetype stress test",
+    stressTestHint:
+      "Pattern exposure checklist — not one overall danger score",
+    stressVerdict: { yes: "Yes", maybe: "Maybe", no: "No" },
+    velocity: "Failure velocity",
+    velocityHint: "How quickly the main failure path tends to unfold",
+    calibration: "SPOF calibration",
+    calibrationHint:
+      "Deep analysis only — agreement across independent reasoning runs",
+    calibrationRuns: "Pass 1 runs",
+    candidates: "Candidate SPOFs",
     confidence: "Confidence",
     generated: "Generated",
     step: "Step",
     of: "of",
+    deepBadge: "Deep analysis",
+    warnings: "Pipeline notes",
   },
   modes: {
     technical: "Technical",
@@ -149,7 +181,8 @@ const en: Dictionary = {
   },
   analyzing: {
     title: "Running failure analysis",
-    subtitle: "Two-pass pipeline — reasoning then structure. This can take a minute.",
+    subtitle:
+      "Reasoning → critique → structure. This can take a couple of minutes.",
     elapsed: "Elapsed",
     stages: [
       {
@@ -161,6 +194,11 @@ const en: Dictionary = {
         id: "pass1",
         label: "Pass 1 · Reasoning",
         hint: "Deep pre-mortem with your model",
+      },
+      {
+        id: "pass1_5",
+        label: "Pass 1.5 · Critique",
+        hint: "Attacking generic claims, sharpening SPOF",
       },
       {
         id: "pass2",
@@ -229,6 +267,9 @@ const id: Dictionary = {
     tooShort: (n) => `Tambah detail (${n} karakter lagi).`,
     chars: "karakter",
     needProvider: "Atur AI provider dulu sebelum menganalisis.",
+    deepLabel: "Analisis mendalam",
+    deepHint:
+      "Pass 1 dijalankan 2× lalu dikalibrasi. Lebih lambat, memakai 2 slot rate limit.",
     tipProvider:
       "Tip: buka Provider → Test connection / Fetch models untuk cek base URL, key, dan model.",
   },
@@ -241,14 +282,29 @@ const id: Dictionary = {
     likelihood: "Kemungkinan gagal",
     assumptions: "Asumsi tersembunyi",
     cascade: "Rantai kegagalan",
-    cascadeHint: "Rantai kausal dari titik rapuh sampai end state",
+    cascadeHint:
+      "Rantai kausal dari titik rapuh sampai end state — tiap langkah ada sinyal yang bisa diamati",
+    signal: "Sinyal",
     failureModes: "Mode kegagalan",
     resilience: "Skor ketahanan",
     resilienceHint: "0–100 per dimensi — semakin rendah semakin rapuh",
+    stressTest: "Stress test arketipe",
+    stressTestHint:
+      "Ceklis paparan pola — bukan satu skor bahaya keseluruhan",
+    stressVerdict: { yes: "Ya", maybe: "Mungkin", no: "Tidak" },
+    velocity: "Kecepatan kegagalan",
+    velocityHint: "Seberapa cepat jalur gagal utama cenderung terjadi",
+    calibration: "Kalibrasi SPOF",
+    calibrationHint:
+      "Hanya deep analysis — kesepakatan antar run penalaran independen",
+    calibrationRuns: "Run Pass 1",
+    candidates: "Kandidat SPOF",
     confidence: "Keyakinan",
     generated: "Dibuat",
     step: "Langkah",
     of: "dari",
+    deepBadge: "Analisis mendalam",
+    warnings: "Catatan pipeline",
   },
   modes: {
     technical: "Teknis",
@@ -265,7 +321,7 @@ const id: Dictionary = {
   analyzing: {
     title: "Menjalankan analisis kegagalan",
     subtitle:
-      "Pipeline dua pass — penalaran lalu struktur. Proses ini bisa ~1 menit.",
+      "Penalaran → kritik → struktur. Proses ini bisa beberapa menit.",
     elapsed: "Berjalan",
     stages: [
       {
@@ -277,6 +333,11 @@ const id: Dictionary = {
         id: "pass1",
         label: "Pass 1 · Penalaran",
         hint: "Pre-mortem mendalam lewat modelmu",
+      },
+      {
+        id: "pass1_5",
+        label: "Pass 1.5 · Kritik",
+        hint: "Serang klaim generik, tajamkan SPOF",
       },
       {
         id: "pass2",

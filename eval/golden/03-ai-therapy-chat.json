@@ -1,0 +1,15 @@
+{
+  "id": "03-ai-therapy-chat",
+  "title": "AI chat therapist subscription",
+  "category": "AI Product",
+  "locale": "en",
+  "fragile_hint": "true",
+  "idea": "A consumer subscription app ($19/month) offering 24/7 AI 'therapy-style' chat for anxiety and mild depression. Marketed as 'always available support, not a replacement for licensed care' in small footer text. Backend calls a single frontier LLM provider with a long system prompt and RAG over CBT worksheets. Crisis keywords trigger a static hotline message. No human clinicians in the loop. Launch markets: US and Indonesia.",
+  "focus_notes": [
+    "Quality ceiling / harmful advice / hallucination in clinical-adjacent domain",
+    "Liability & regulatory (medical device / counseling rules)",
+    "Trust collapse after one viral failure story",
+    "Provider cost and single-vendor lock-in"
+  ],
+  "expected_spof_themes": ["liability", "trust", "hallucination", "regulation", "provider lock-in"]
+}

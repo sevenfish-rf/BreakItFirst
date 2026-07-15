@@ -17,12 +17,15 @@ import {
 } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+/** Deep analysis can run 4+ model calls; raise when host allows (Vercel Pro+). */
+export const maxDuration = 300;
 
 type AnalyzeBody = {
   idea?: unknown;
   category?: unknown;
   locale?: unknown;
+  /** C.6 opt-in multi Pass 1 calibration */
+  deepAnalysis?: unknown;
   provider?: {
     baseUrl?: unknown;
     apiKey?: unknown;
@@ -36,11 +39,25 @@ export async function POST(request: Request) {
   const sessionId = getSessionId(request);
   const strict = isStrictMode({ ip, sessionId });
 
+  let body: AnalyzeBody;
+  try {
+    body = (await request.json()) as AnalyzeBody;
+  } catch {
+    return NextResponse.json(
+      { ok: false, message: "Invalid request body." },
+      { status: 400 },
+    );
+  }
+
+  const deepAnalysis = body.deepAnalysis === true;
+
   const limitResult = checkRateLimit({
     ip,
     sessionId,
     route: "analyze",
     strict,
+    // Deep analysis ≈ 2× provider load (extra Pass 1)
+    cost: deepAnalysis ? 2 : 1,
   });
 
   if (!limitResult.allowed) {
@@ -55,16 +72,6 @@ export async function POST(request: Request) {
         status: 429,
         headers: rateLimitHeaders(limitResult),
       },
-    );
-  }
-
-  let body: AnalyzeBody;
-  try {
-    body = (await request.json()) as AnalyzeBody;
-  } catch {
-    return NextResponse.json(
-      { ok: false, message: "Invalid request body." },
-      { status: 400, headers: rateLimitHeaders(limitResult) },
     );
   }
 
@@ -115,6 +122,7 @@ export async function POST(request: Request) {
       idea: input.idea,
       category: input.category,
       locale,
+      deepAnalysis,
       provider: {
         baseUrl: providerFields.baseUrl,
         apiKey: providerFields.apiKey,
@@ -135,10 +143,19 @@ export async function POST(request: Request) {
         console.warn("[analyze] not_analyzable", {
           ip,
           sessionId,
+          deepAnalysis,
           details: result.details,
+          pipelineMs: result.meta?.totalMs,
         });
-      } else if (result.details?.length) {
-        console.warn("[analyze]", result.code, result.stage, result.details);
+      } else {
+        console.warn("[analyze] fail", {
+          code: result.code,
+          stage: result.stage,
+          deepAnalysis,
+          details: result.details,
+          pipelineMs: result.meta?.totalMs,
+          stages: result.meta?.stages,
+        });
       }
 
       const status =
@@ -162,11 +179,23 @@ export async function POST(request: Request) {
       );
     }
 
+    console.info("[analyze] ok", {
+      ip,
+      sessionId,
+      deepAnalysis,
+      category: input.category,
+      pipelineMs: result.meta.totalMs,
+      stages: result.meta.stages,
+      warningCount: result.warnings.length,
+      spof: result.analysis.single_point_of_failure.component,
+    });
+
     return NextResponse.json(
       {
         ok: true,
         analysis: result.analysis,
         warnings: result.warnings,
+        meta: result.meta,
       },
       { headers: rateLimitHeaders(limitResult) },
     );

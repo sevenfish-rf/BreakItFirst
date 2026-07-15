@@ -54,10 +54,12 @@ export function AnalyzingOverlay({ open }: AnalyzingOverlayProps) {
 
   useEffect(() => {
     if (!open) return;
+    // Heuristic UI stages (not server-synced): ingest → pass1 → pass1.5 → pass2 → validate
     const timers = [
       window.setTimeout(() => setStageIndex(1), 900),
-      window.setTimeout(() => setStageIndex(2), 12_000),
-      window.setTimeout(() => setStageIndex(3), 45_000),
+      window.setTimeout(() => setStageIndex(2), 18_000),
+      window.setTimeout(() => setStageIndex(3), 50_000),
+      window.setTimeout(() => setStageIndex(4), 75_000),
     ];
     return () => timers.forEach((x) => window.clearTimeout(x));
   }, [open]);
@@ -66,8 +68,8 @@ export function AnalyzingOverlay({ open }: AnalyzingOverlayProps) {
     if (!open) return;
     const id = window.setInterval(() => {
       setProgress((p) => {
-        const cap =
-          stageIndex >= 3 ? 92 : stageIndex >= 2 ? 78 : stageIndex >= 1 ? 48 : 18;
+        const caps = [18, 38, 62, 82, 92];
+        const cap = caps[Math.min(stageIndex, caps.length - 1)] ?? 92;
         return Math.min(cap, p + (cap - p) * 0.04 + 0.15);
       });
     }, 120);

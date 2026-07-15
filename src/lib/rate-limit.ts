@@ -63,8 +63,14 @@ export function checkRateLimit(params: {
   sessionId?: string | null;
   route: "analyze" | "models";
   strict?: boolean;
+  /**
+   * How many slots this request consumes (Deep analysis = 2).
+   * Default 1.
+   */
+  cost?: number;
 }): RateLimitResult {
   const now = Date.now();
+  const cost = Math.max(1, Math.min(5, Math.floor(params.cost ?? 1)));
   const cfg =
     params.route === "models"
       ? LIMITS.models
@@ -81,7 +87,7 @@ export function checkRateLimit(params: {
   const entry = windows.get(key) ?? { timestamps: [] };
   entry.timestamps = prune(entry.timestamps, cfg.windowMs, now);
 
-  if (entry.timestamps.length >= cfg.limit) {
+  if (entry.timestamps.length + cost > cfg.limit) {
     const oldest = entry.timestamps[0] ?? now;
     const resetMs = oldest + cfg.windowMs;
     const retryAfterSec = Math.max(1, Math.ceil((resetMs - now) / 1000));
@@ -95,7 +101,9 @@ export function checkRateLimit(params: {
     };
   }
 
-  entry.timestamps.push(now);
+  for (let i = 0; i < cost; i++) {
+    entry.timestamps.push(now);
+  }
   windows.set(key, entry);
 
   return {

@@ -19,13 +19,6 @@ Paste an idea. Get a causal pre-mortem — not feature brainstorming, not a chat
 
 Most AI tools help you **build**. BreakItFirst helps you see **why something might not survive contact with reality**.
 
-It runs a disciplined pre-mortem:
-
-- What’s fragile?
-- What breaks first?
-- What does that cause next?
-- Where is the single point of failure?
-
 A good run should make you think: *“I hadn’t even considered that.”*  
 Not: *“That’s a nice feature idea.”*
 
@@ -35,25 +28,30 @@ Not: *“That’s a nice feature idea.”*
 
 | Area | What you get |
 |------|----------------|
-| **Two-pass AI pipeline** | Pass 1 freeform reasoning → Pass 2 schema extraction (MVP fields only) |
-| **Structured report** | Summary, hidden assumptions, SPOF, failure cascade, failure modes, likelihood, resilience radar |
-| **Visuals** | Interactive cascade graph (React Flow), multi-dimension radar (Recharts) |
-| **Bring your own key** | OpenAI-compatible providers (OpenAI, OpenRouter, Ollama, custom) — key stays in the browser |
-| **Themes** | Five color themes (Ember, Violet, Ocean, Forest, Gold) with BorderGlow cards |
-| **i18n** | English & Indonesian UI **and** report prose |
-| **Safety** | Input validation, rate limiting, SSRF checks on provider base URLs |
+| **Multi-stage AI pipeline** | Pass 1 reasoning → Pass 1.5 adversarial critique → Pass 2 JSON schema |
+| **Archetype knowledge layer** | Static failure patterns (cold-start, unit economics, trust, …) as optional lenses |
+| **Structured report** | Core 7 blocks + cascade signals + stress test + velocity |
+| **Deep analysis (opt-in)** | 2× Pass 1 + SPOF calibration (agreement High/Medium/Low) |
+| **Visuals** | Cascade graph (React Flow), resilience radar (Recharts) |
+| **BYOK** | OpenAI-compatible providers — key stays in the browser |
+| **Themes & i18n** | 5 themes; EN / ID UI **and** report prose |
+| **Eval harness** | Golden set + rubric + local baseline runner (`eval/`) |
+| **Safety** | Input validation, weighted rate limits, SSRF checks on base URLs |
 
-### Report core (product heart)
+### Report sections
 
 1. **Summary** — restatement of the idea  
 2. **Hidden assumptions** — 5–10 silent dependencies  
-3. **Single point of failure** — most fragile component + confidence + mechanism  
-4. **Failure cascade** — 7–12 ordered causal steps (graph)  
+3. **SPOF** — most fragile hinge + confidence + mechanism  
+4. **Failure cascade** — 7–12 causal steps, each with an **observable signal**  
 5. **Failure modes** — technical · business · security · legal · operations  
 6. **Likelihood** — qualitative band + reason  
-7. **Resilience scores** — 0–100 per dimension (never collapsed to one vanity number)  
+7. **Resilience** — 0–100 per dimension (never one vanity score)  
+8. **Stress test** — Yes / Maybe / No per failure archetype  
+9. **Failure velocity** — Fast / Medium / Slow + reason  
+10. **SPOF calibration** — Deep mode only  
 
-Deep definitions for each block: [`docs/project-overview.md`](./docs/project-overview.md)
+Details: [`docs/project-overview.md`](./docs/project-overview.md)
 
 ---
 
@@ -68,21 +66,42 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-1. Click **Provider** — set base URL, API key (optional for local Ollama), Pass 1 & Pass 2 model IDs  
-2. Optionally **Fetch models** / **Test connection**  
-3. Paste an idea, pick a category, choose language & theme  
+1. **Provider** — base URL, API key, Pass 1 & Pass 2 model IDs  
+2. Paste idea → category → language / theme  
+3. Optional: enable **Deep analysis**  
 4. **Analyze Failure**
 
-No server-side API key is required. Credentials are stored only in `localStorage` and sent with each analysis request (not persisted on the server).
+No server-side API key is required for the web UI. Credentials live in `localStorage` and are sent only with analyze requests (not stored server-side).
 
 ### Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm run start` | Serve production build |
+| `npm run build` / `npm start` | Production |
 | `npm run lint` | ESLint |
+| `npm run eval:assert-sample` | Smoke-test assertions (no API key) |
+| `npm run eval:baseline` | Run golden set via local BYOK env vars |
+
+---
+
+## Eval harness (quality baseline)
+
+Before claiming “the model got smarter,” measure it.
+
+```powershell
+# PowerShell
+$env:BIF_BASE_URL="https://api.openai.com/v1"
+$env:BIF_API_KEY="sk-..."
+$env:BIF_PASS1_MODEL="gpt-4o"
+$env:BIF_PASS2_MODEL="gpt-4o-mini"
+npm run eval:baseline
+```
+
+Or: `.\scripts\eval-baseline.ps1` (prompts for missing vars).
+
+Outputs → `eval/baselines/<timestamp>/`. Score with `eval/rubric.md` (max 34 pts).  
+Guide: [`eval/README.md`](./eval/README.md)
 
 ---
 
@@ -90,24 +109,18 @@ No server-side API key is required. Credentials are stored only in `localStorage
 
 | Layer | Choice |
 |-------|--------|
-| App | [Next.js](https://nextjs.org/) 16 (App Router), React 19, TypeScript |
-| Styling | Tailwind CSS v4, custom theme tokens |
-| Motion | Framer Motion |
-| Graph / chart | React Flow, Recharts |
-| Effects | PixelBlast (three.js), BorderGlow (React Bits–style) |
-| AI | OpenAI-compatible Chat Completions API (BYOK) |
-
----
-
-## Project structure
+| App | Next.js 16 (App Router), React 19, TypeScript |
+| Validation | Zod |
+| Styling | Tailwind CSS v4 |
+| Motion / graph / chart | Framer Motion, React Flow, Recharts |
+| AI | OpenAI-compatible Chat Completions (BYOK) |
 
 ```
-src/
-  app/                 # App Router, API routes, global styles
-  components/          # Shell, form, report, UI, visuals, effects
-  lib/                 # Pipeline, prompts, provider client, i18n, themes, rate limit
-  types/               # FailureAnalysis schema
-docs/                  # Product & technical documentation
+src/app/           API routes + pages
+src/components/    UI, report, visuals
+src/lib/           pipeline, prompts, archetypes, schema, rate limit
+eval/              golden fixtures, rubric, baseline runner
+docs/              product + technical docs
 ```
 
 ---
@@ -116,58 +129,60 @@ docs/                  # Product & technical documentation
 
 | Document | Contents |
 |----------|----------|
-| [docs/project-overview.md](./docs/project-overview.md) | **Product core** — every report section explained in depth |
+| [docs/project-overview.md](./docs/project-overview.md) | Product core — every report section |
 | [docs/guide.md](./docs/guide.md) | Setup, architecture, themes, i18n |
-| [docs/reference.md](./docs/reference.md) | API, schema, modules, components |
-| [docs/README.md](./docs/README.md) | Docs index |
+| [docs/reference.md](./docs/reference.md) | API & schema reference |
+| [docs/archive/masterplan.md](./docs/archive/masterplan.md) | Core development master plan |
+| [eval/README.md](./eval/README.md) | Eval harness |
 
 ---
 
 ## Configuration notes
 
-- **Provider presets:** OpenAI, OpenRouter, Ollama (`http://127.0.0.1:11434/v1`), custom  
-- **Rate limits (in-memory):** analyze ~8 / 15 min per IP+session; models ~40 / min  
-- **No database** in MVP — analysis is session-ephemeral unless the user copies it  
-- **Privacy:** API keys are not written to a backend store; treat the app host as a proxy you control  
-
-Full configuration details: [docs/guide.md](./docs/guide.md)
+- **Presets:** OpenAI, OpenRouter, Ollama (`http://127.0.0.1:11434/v1`), custom  
+- **Rate limits (in-memory):** 8 analyze slots / 15 min (Deep costs **2** slots); models 40 / min  
+- **API `maxDuration`:** 300s (Deep needs longer)  
+- **No database** in MVP — reports are ephemeral unless the user copies them  
+- **Multi-instance deploy:** swap in-memory rate limit for Redis before horizontal scale  
 
 ---
 
-## Roadmap (high level)
+## Deploy (checklist)
 
-- [x] MVP two-pass pipeline + structured report + visuals  
+1. `npm run build` succeeds  
+2. Host supports Node runtime + long server actions/routes (Deep can exceed 60–120s)  
+3. HTTPS only for non-local providers  
+4. Do not log API keys; stage timing logs are OK  
+5. Revisit rate limits for public traffic  
+6. Add a `LICENSE` if you open-source  
+
+---
+
+## Roadmap
+
+- [x] MVP pipeline + structured report + visuals  
 - [x] BYOK, rate limiting, themes, EN/ID  
-- [ ] Optional share / history (needs storage)  
-- [ ] v1.1 stages (early warning, stress test, timeline)  
-- [ ] Export (e.g. PDF) and specialized modes  
+- [x] Eval harness + Pass 2 hardening (Zod, retry)  
+- [x] Archetypes, critique pass, signals, stress test, velocity  
+- [x] Deep analysis (self-consistency) opt-in  
+- [ ] Baseline scores filled + prompt iteration from data  
+- [ ] Redis rate limit / multi-instance  
+- [ ] Export (PDF) / history (needs storage)  
 
 ---
 
 ## Contributing
 
-Issues and pull requests are welcome.
-
-1. Fork the repo and create a feature branch  
-2. Keep changes focused; match existing TypeScript and UI patterns  
-3. Run `npm run lint` and `npm run build` before opening a PR  
-4. For product semantics (SPOF, cascade, scores), read [docs/project-overview.md](./docs/project-overview.md) first  
+1. Fork and branch  
+2. Match existing TypeScript / UI patterns  
+3. `npm run lint` && `npm run build` (and `npm run eval:assert-sample` if you touch schema)  
+4. Read [docs/project-overview.md](./docs/project-overview.md) for product semantics  
 
 ---
 
 ## License
 
-No license file is committed yet. **All rights reserved** by the repository owner unless a `LICENSE` is added.
-
-If you intend open-source reuse, add an explicit license (e.g. MIT) to the repo root.
-
----
-
-## Acknowledgments
-
-- Design cues from modern dark product UIs (Linear / Vercel–style density and contrast)  
-- Visual building blocks inspired by [React Bits](https://reactbits.dev/)-style effects (BorderGlow, PixelBlast)  
-- Product framing: structured failure analysis over generic chat  
+No license file is committed yet. **All rights reserved** unless a `LICENSE` is added.
 
 ---
 

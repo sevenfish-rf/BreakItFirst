@@ -1,0 +1,15 @@
+{
+  "id": "05-hardware-fitness-ring",
+  "title": "Budget sleep-tracking fitness ring",
+  "category": "Hardware",
+  "locale": "en",
+  "fragile_hint": "true",
+  "idea": "A $49 sleep and HRV tracking ring aimed at SEA consumers undercutting Oura. Manufactured by a single OEM in Shenzhen on net-60 terms. App is white-label firmware + Flutter companion with subscription optional ($3/month for 'AI sleep coach'). First batch 5,000 units pre-ordered via Instagram. No medical certification; sold as wellness. Battery claim: 5 days. Returns handled by a 2-person Jakarta team shipping replacements from a home warehouse.",
+  "focus_notes": [
+    "OEM single-source / quality defect cascade",
+    "Margin vs returns and logistics at $49",
+    "Certification / wellness claims risk",
+    "Support ops cannot scale with viral demand"
+  ],
+  "expected_spof_themes": ["supply chain", "margins", "defects", "ops", "claims"]
+}

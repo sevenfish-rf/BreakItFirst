@@ -1,0 +1,44 @@
+{
+  "fixture_id": "REPLACE_WITH_FIXTURE_ID",
+  "scored_at": "",
+  "scorer": "",
+  "model_pass1": "",
+  "model_pass2": "",
+  "baseline_run_id": "",
+  "criteria": {
+    "S1": null,
+    "S2": null,
+    "A1": null,
+    "A2": null,
+    "A3": null,
+    "P1": null,
+    "P2": null,
+    "P3": null,
+    "C1": null,
+    "C2": null,
+    "C3": null,
+    "M1": null,
+    "M2": null,
+    "L1": null,
+    "L2": null,
+    "R1": null,
+    "R2": null
+  },
+  "global": {
+    "G1_not_template": null,
+    "G2_not_coach": null,
+    "G3_blind_spot": null
+  },
+  "block_notes": {
+    "summary": "",
+    "assumptions": "",
+    "spof": "",
+    "cascade": "",
+    "failure_modes": "",
+    "likelihood": "",
+    "resilience": ""
+  },
+  "total_points": null,
+  "max_points": 34,
+  "overall_notes": ""
+}

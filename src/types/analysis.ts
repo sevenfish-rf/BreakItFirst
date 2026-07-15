@@ -1,4 +1,4 @@
-/** MVP schema from spec §9.5 — used from Phase 2 onward. */
+/** Failure analysis report schema — Pass 2 structured output. */
 
 export type ConfidenceBand = "Low" | "Medium" | "High" | "Very High";
 export type LikelihoodBand =
@@ -7,6 +7,29 @@ export type LikelihoodBand =
   | "Medium"
   | "High"
   | "Very High";
+
+/** C.4 stress-test verdict per failure archetype */
+export type StressVerdict = "Yes" | "Maybe" | "No";
+
+/** C.5 qualitative failure velocity (no false numeric precision) */
+export type VelocityBand = "Fast" | "Medium" | "Slow";
+
+export type CascadeNode = {
+  /** Short causal step (~max 8 words) for the graph */
+  step: string;
+  /**
+   * C.3 Early warning — what would be observable in the real world if this
+   * step is happening. Observation only — never advice ("you should…").
+   */
+  observable_signal: string;
+};
+
+export type StressTestItem = {
+  /** Must match an id from the archetype library when possible */
+  archetype_id: string;
+  verdict: StressVerdict;
+  reason: string;
+};
 
 export interface FailureAnalysis {
   meta: {
@@ -23,7 +46,7 @@ export interface FailureAnalysis {
     explanation: string;
   };
   cascade: {
-    nodes: string[];
+    nodes: CascadeNode[];
   };
   failure_modes: {
     technical: string[];
@@ -42,6 +65,26 @@ export interface FailureAnalysis {
     legal: number;
     operations: number;
     trust: number;
+  };
+  /** C.4 — pattern checklist; do NOT collapse into one overall score */
+  stress_test: {
+    items: StressTestItem[];
+  };
+  /** C.5 — how quickly the failure path tends to materialize */
+  failure_velocity: {
+    band: VelocityBand;
+    reason: string;
+  };
+  /**
+   * C.6 — present only for Deep analysis (multi Pass 1).
+   * Measures SPOF convergence across independent reasoning runs.
+   */
+  self_consistency?: {
+    runs: number;
+    spof_agreement: "High" | "Medium" | "Low";
+    reason: string;
+    /** SPOF labels seen across drafts (1–3) */
+    candidate_spofs: string[];
   };
 }
 

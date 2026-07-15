@@ -52,7 +52,7 @@ PASS 2 — Structuring (hanya ekstraksi ke JSON schema)
   Tidak boleh menambah klaim baru. Hanya “mengompres” Pass 1.
         │
         ▼
-Validasi schema → UI report (7 blok core di bawah)
+Validasi schema → UI report (7 blok core + stress test + velocity; cascade node = step + signal)
 ```
 
 **Implikasi untuk developer:** bug di prompt Pass 1 merusak *semua* section. Bug di Pass 2/schema merusak *bentuk* dan konsistensi, meski reasoning bagus. UI hanya menampilkan; **kebenaran produk ada di kualitas & kaitan antar field schema**.
@@ -89,7 +89,11 @@ Failure modes ── risiko per domain (paralel, bukan urutan waktu)
     │
 Likelihood ── penilaian keseluruhan
     │
+Velocity ── seberapa cepat jalur gagal (Fast/Medium/Slow)
+    │
 Resilience ── profil ketahanan multi-dimensi (bukan 1 angka)
+    │
+Stress test ── paparan arketipe (Yes/Maybe/No) — terpisah dari resilience
 ```
 
 Kalau **Cascade** tidak merujuk SPOF/assumptions, atau **modes** tidak konsisten dengan SPOF → report “terasa template”.
@@ -226,9 +230,9 @@ Kalau **Cascade** tidak merujuk SPOF/assumptions, atau **modes** tidak konsisten
 
 | | |
 |--|--|
-| **Field schema** | `cascade.nodes: string[]` |
+| **Field schema** | `cascade.nodes: { step, observable_signal }[]` |
 | **Jumlah** | **7–12** node berurutan |
-| **UI** | Graf vertikal (React Flow), reveal node-by-node |
+| **UI** | Graf vertikal (React Flow), reveal node-by-node; signal di bawah step |
 
 **Fungsi core**
 
@@ -400,6 +404,16 @@ Cold-start supply kosong
 - Validasi 0–100 di schema.
 - Radar wajib 5 sumbu; jangan tambah “overall” di UI.
 - Animasi angka boleh; jangan menyiratkan presisi palsu di copy.
+
+---
+
+### 2.8 Stress test (arketipe) & failure velocity
+
+| Blok | Field | Catatan |
+|------|--------|---------|
+| **Stress test** | `stress_test.items[]` | Per arketipe: `archetype_id`, `verdict` Yes/Maybe/No, `reason`. **Jangan** digabung jadi overall danger score. |
+| **Velocity** | `failure_velocity` | `band`: Fast/Medium/Slow + `reason`. Kualitatif, bukan %. |
+| **Cascade signal** | `cascade.nodes[].observable_signal` | Observasi dunia nyata — **bukan** saran (“sebaiknya…”). |
 
 ---
 

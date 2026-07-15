@@ -16,41 +16,45 @@ import {
 import "@xyflow/react/dist/style.css";
 import { CascadeNode } from "@/components/visuals/cascade-node";
 import { useLanguage } from "@/lib/i18n/context";
+import type { CascadeNode as CascadeNodeModel } from "@/types/analysis";
 
 const NODE_TYPES: NodeTypes = {
   cascade: CascadeNode,
 };
 
-const NODE_WIDTH = 260;
-const NODE_GAP_Y = 108;
+const NODE_WIDTH = 280;
+const NODE_GAP_Y = 132;
 const STEP_MS = 180;
 
 type FailureCascadeGraphProps = {
-  nodes: string[];
+  nodes: CascadeNodeModel[];
 };
 
 function buildGraph(
-  labels: string[],
+  items: CascadeNodeModel[],
   visibleCount: number,
+  signalLabel: string,
 ): { nodes: Node[]; edges: Edge[] } {
-  const slice = labels.slice(0, visibleCount);
-  const nodes: Node[] = slice.map((label, i) => ({
+  const slice = items.slice(0, visibleCount);
+  const nodes: Node[] = slice.map((item, i) => ({
     id: `n-${i}`,
     type: "cascade",
     position: { x: 0, y: i * NODE_GAP_Y },
     data: {
-      label,
+      label: item.step,
+      signal: item.observable_signal,
+      signalLabel,
       index: i + 1,
-      total: labels.length,
+      total: items.length,
       isStart: i === 0,
-      isEnd: i === labels.length - 1 && visibleCount >= labels.length,
+      isEnd: i === items.length - 1 && visibleCount >= items.length,
     },
     style: { width: NODE_WIDTH },
   }));
 
   const edges: Edge[] = [];
   for (let i = 0; i < slice.length - 1; i++) {
-    const progress = labels.length <= 1 ? 0 : i / (labels.length - 1);
+    const progress = items.length <= 1 ? 0 : i / (items.length - 1);
     const opacity = 0.55 + progress * 0.35;
     edges.push({
       id: `e-${i}-${i + 1}`,
@@ -75,7 +79,7 @@ function buildGraph(
   return { nodes, edges };
 }
 
-function CascadeCanvas({ labels }: { labels: string[] }) {
+function CascadeCanvas({ items }: { items: CascadeNodeModel[] }) {
   const { t } = useLanguage();
   const [visibleCount, setVisibleCount] = useState(0);
   const [ready, setReady] = useState(false);
@@ -84,7 +88,7 @@ function CascadeCanvas({ labels }: { labels: string[] }) {
   useEffect(() => {
     setVisibleCount(0);
     setReady(false);
-    if (labels.length === 0) return;
+    if (items.length === 0) return;
 
     let cancelled = false;
     let i = 0;
@@ -93,7 +97,7 @@ function CascadeCanvas({ labels }: { labels: string[] }) {
       if (cancelled) return;
       i += 1;
       setVisibleCount(i);
-      if (i < labels.length) {
+      if (i < items.length) {
         window.setTimeout(tick, STEP_MS);
       } else {
         setReady(true);
@@ -105,11 +109,11 @@ function CascadeCanvas({ labels }: { labels: string[] }) {
       cancelled = true;
       window.clearTimeout(start);
     };
-  }, [labels]);
+  }, [items]);
 
   const { nodes, edges } = useMemo(
-    () => buildGraph(labels, visibleCount),
-    [labels, visibleCount],
+    () => buildGraph(items, visibleCount, t.report.signal),
+    [items, visibleCount, t.report.signal],
   );
 
   useEffect(() => {
@@ -124,14 +128,14 @@ function CascadeCanvas({ labels }: { labels: string[] }) {
     void fitView({ padding: 0.28, maxZoom: 1.05 });
   }, [fitView]);
 
-  const height = Math.max(360, Math.min(760, labels.length * NODE_GAP_Y + 120));
+  const height = Math.max(400, Math.min(900, items.length * NODE_GAP_Y + 120));
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2 text-[11px] text-text-muted">
         <span className="tabular-nums">
-          {t.report.step} {Math.min(visibleCount, labels.length)} {t.report.of}{" "}
-          {labels.length}
+          {t.report.step} {Math.min(visibleCount, items.length)} {t.report.of}{" "}
+          {items.length}
           {!ready && visibleCount > 0 ? " · …" : ""}
         </span>
         <span className="hidden sm:inline">Drag · scroll · zoom</span>
@@ -172,21 +176,28 @@ function CascadeCanvas({ labels }: { labels: string[] }) {
   );
 }
 
-export function FailureCascadeGraph({ nodes: labels }: FailureCascadeGraphProps) {
-  const safeLabels = useMemo(
-    () => labels.filter((n) => typeof n === "string" && n.trim()),
-    [labels],
+export function FailureCascadeGraph({ nodes }: FailureCascadeGraphProps) {
+  const safe = useMemo(
+    () =>
+      nodes.filter(
+        (n) =>
+          n &&
+          typeof n.step === "string" &&
+          n.step.trim() &&
+          typeof n.observable_signal === "string",
+      ),
+    [nodes],
   );
 
-  if (safeLabels.length === 0) {
+  if (safe.length === 0) {
     return <p className="text-sm text-text-muted">—</p>;
   }
 
-  const graphKey = safeLabels.join("|");
+  const graphKey = safe.map((n) => `${n.step}|${n.observable_signal}`).join("||");
 
   return (
     <ReactFlowProvider key={graphKey}>
-      <CascadeCanvas labels={safeLabels} />
+      <CascadeCanvas items={safe} />
     </ReactFlowProvider>
   );
 }

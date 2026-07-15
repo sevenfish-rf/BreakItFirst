@@ -6,10 +6,12 @@ import { cn } from "@/lib/utils";
 
 export type CascadeNodeData = {
   label: string;
+  signal?: string;
   index: number;
   total: number;
   isStart: boolean;
   isEnd: boolean;
+  signalLabel?: string;
 };
 
 function severityTone(index: number, total: number) {
@@ -26,7 +28,7 @@ function CascadeNodeComponent({ data }: NodeProps) {
   return (
     <div
       className={cn(
-        "group min-w-[220px] max-w-[280px] rounded-2xl border px-3.5 py-3 shadow-lg backdrop-blur-sm transition-transform duration-200",
+        "group min-w-[240px] max-w-[300px] rounded-2xl border px-3.5 py-3 shadow-lg backdrop-blur-sm transition-transform duration-200",
         "hover:scale-[1.02]",
         tone === "start" &&
           "border-accent/55 bg-gradient-to-br from-accent/25 to-surface shadow-accent/15",
@@ -51,9 +53,19 @@ function CascadeNodeComponent({ data }: NodeProps) {
         >
           {d.index}
         </span>
-        <p className="text-left text-[13px] font-medium leading-snug text-text">
-          {d.label}
-        </p>
+        <div className="min-w-0 space-y-1.5">
+          <p className="text-left text-[13px] font-medium leading-snug text-text">
+            {d.label}
+          </p>
+          {d.signal ? (
+            <p className="text-left text-[11px] leading-snug text-text-muted">
+              <span className="font-medium text-accent/90">
+                {d.signalLabel ?? "Signal"}:{" "}
+              </span>
+              {d.signal}
+            </p>
+          ) : null}
+        </div>
       </div>
       <Handle
         type="source"

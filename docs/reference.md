@@ -10,6 +10,7 @@
   "idea": "string (40–8000 chars)",
   "category": "Startup | Business | Software App | API | SaaS | Mobile App | AI Product | Game | Marketplace | Hardware | Other",
   "locale": "en | id",
+  "deepAnalysis": false,
   "provider": {
     "baseUrl": "https://api.openai.com/v1",
     "apiKey": "optional for local",
@@ -22,15 +23,21 @@
 
 | Status | Arti |
 |--------|------|
-| 200 | `{ ok: true, analysis, warnings? }` |
+| 200 | `{ ok: true, analysis, warnings?, meta? }` |
 | 400 | Input/provider invalid |
 | 422 | `not_analyzable` (pesan netral) |
 | 429 | Rate limited + `retryAfterSec` |
 | 502 | Provider / schema gagal |
 | 500 | Unexpected |
 
-**Rate limit analyze:** 8 / 15 menit; strict 2 / 15 menit setelah abuse strikes ≥ 3.  
-`maxDuration` 120s · `runtime` nodejs.
+**Rate limit analyze:** 8 slots / 15 menit (Deep analysis **cost = 2**); strict 2 / 15 menit setelah abuse strikes ≥ 3.  
+`maxDuration` 300s · `runtime` nodejs.
+
+`meta` (server timing):
+
+```ts
+{ deepAnalysis: boolean, stages: { stage, ms, ok }[], totalMs: number }
+```
 
 ### `POST /api/models`
 
@@ -43,20 +50,22 @@ Rate limit: 40 / menit. Fallback Ollama: `/api/tags` jika `/models` kosong.
 
 ---
 
-## 2. Schema output (MVP)
+## 2. Schema output
 
-Tipe: `src/types/analysis.ts` · validasi: `validateFailureAnalysis`.
+Tipe: `src/types/analysis.ts` · validasi Zod: `src/lib/schema.ts`.
 
 ```ts
 FailureAnalysis {
-  meta: { idea_input, category, generated_at }  // meta di-overwrite server
+  meta: { idea_input, category, generated_at }  // di-overwrite server
   summary: string
   assumptions: string[]            // 5–10
   single_point_of_failure: {
     component, confidence, confidence_reason, explanation
     // confidence: Low | Medium | High | Very High
   }
-  cascade: { nodes: string[] }     // 7–12
+  cascade: {
+    nodes: { step: string, observable_signal: string }[]  // 7–12
+  }
   failure_modes: {
     technical, business, security, legal, operations  // string[]
   }
@@ -65,95 +74,66 @@ FailureAnalysis {
     reason: string
   }
   resilience_score: {
-    technical, business, legal, operations, trust  // 0–100
+    technical, business, legal, operations, trust  // 0–100 int
+  }
+  stress_test: {
+    items: { archetype_id, verdict: Yes|Maybe|No, reason }[]
+  }
+  failure_velocity: {
+    band: Fast | Medium | Slow
+    reason: string
+  }
+  self_consistency?: {  // Deep analysis only
+    runs: number
+    spof_agreement: High | Medium | Low
+    reason: string
+    candidate_spofs: string[]
   }
 }
 ```
 
-Error Pass 2: `{ error: "not_analyzable", message }`.  
-Soft check: `cascadeLooksConnected` (log only, tidak block).
+Error Pass 2: `{ error: "not_analyzable", message }`.
 
-**Bukan MVP:** early_warning_signals, stress_test, timeline.
-
----
-
-## 3. Modules `src/lib`
-
-| File | Export utama | Peran |
-|------|--------------|--------|
-| `pipeline.ts` | `runFailureAnalysisPipeline` | Pass 1 + 2 + validate |
-| `prompts.ts` | `pass1SystemForCategory`, `buildPass*UserMessage`, `pass2SystemForLocale` | Prompt + language |
-| `provider-client.ts` | `callProvider`, `listProviderModels`, `testProviderConnection`, `assertSafeBaseUrl` | HTTP ke provider |
-| `provider-errors.ts` | `humanizeProviderFailure`, `redactSecrets` | Error aman untuk UI |
-| `provider-settings.ts` | `load/save/clearProviderSettings`, `isProviderConfigured`, presets | BYOK localStorage |
-| `schema.ts` | `validateFailureAnalysis`, `extractJsonObject`, `cascadeLooksConnected` | Schema guard |
-| `input-validation.ts` | `validateAnalyzeInput`, `validateProviderFields` | Input + safety |
-| `rate-limit.ts` | `checkRateLimit`, `recordAbuseStrike`, `getClientIp`, `getSessionId` | Throttle |
-| `analyze-client.ts` | `requestAnalysis` | Fetch dari browser |
-| `categories.ts` | `CATEGORIES`, `CATEGORY_LENSES`, `EXAMPLE_CHIPS`, `MIN_IDEA_LENGTH` | Kategori & lens |
-| `session.ts` | `getOrCreateSessionId` | Session id |
-| `themes.ts` | `THEMES`, `THEME_LIST`, `applyThemeToDocument` | Definisi theme |
-| `theme-context.tsx` | `ThemeProvider`, `useTheme` | React theme state |
-| `i18n/*` | `LanguageProvider`, `useLanguage`, `getDictionary` | EN/ID |
-| `utils.ts` | `cn` | className merge |
-
-### Konstanta penting
-
-| | |
-|--|--|
-| Min ide | 40 karakter (+ ≥5 unique words) |
-| Max ide | 8000 |
-| Rate analyze | 8 / 15m (strict 2) |
-| Rate models | 40 / m |
+Soft-checks (warnings, tidak block): cascade connected, SPOF↔modes, resilience sane, stress useful, signals observational, claim guard.
 
 ---
 
-## 4. Components
-
-### Shell & flow
-
-| | |
-|--|--|
-| `AppShell` | Providers, background, landing ↔ report |
-| `Header` | Brand, theme circles, EN/ID, provider |
-| `LandingForm` | Form + trigger analyze |
-| `AnalyzingOverlay` | Progress full-card saat loading |
-| `AnalysisReport` | Layout report |
-| `ProviderSettingsModal` | BYOK UI |
-
-### UI
-
-| | |
-|--|--|
-| `GlowCard` | BorderGlow + theme (`animated` default **true**) |
-| `Button` / `Input` / `Textarea` / `Label` | Controls |
-| `ThemeCircles` | 5 circle theme |
-
-### Effects
-
-| | |
-|--|--|
-| `BorderGlow` | Mesh border + edge glow (React Bits) |
-| `PixelBlastBackground` | WebGL bg (warna theme) |
-
-**BorderGlow (via GlowCard):** `glowColor`, `backgroundColor`, `colors[]` dari theme; `glowIntensity` ~1.3–2.1; `idleVisible` mesh idle.
-
-### Visuals report
-
-| | |
-|--|--|
-| `FailureCascadeGraph` | React Flow cascade |
-| `CascadeNode` | Node severity tone |
-| `ResilienceRadar` | Radar 5 dimensi |
-| `FailureModeCards` | 5 risk category |
-
-### Report layout
+## 3. Pipeline stages
 
 ```
-Sticky header
-SPOF | Likelihood
-Summary
-Assumptions | Resilience
-Cascade graph
-Failure modes
+Pass 1 (+ archetype knowledge)
+  [Deep: Pass 1 ×2 parallel]
+Pass 1.5 critique / calibration
+Pass 2 JSON (+ 1 validation retry)
+Zod validate + soft-checks
 ```
+
+Archetypes: `src/lib/archetypes.ts`  
+Prompts: `src/lib/prompts.ts`  
+Orchestration: `src/lib/pipeline.ts`
+
+---
+
+## 4. Modules `src/lib` (utama)
+
+| File | Peran |
+|------|--------|
+| `pipeline.ts` | Orchestrate passes + meta timing |
+| `schema.ts` | Zod + soft-checks + extract JSON |
+| `prompts.ts` | Pass 1 / 1.5 / 2 prompts |
+| `archetypes.ts` | C.1 knowledge library |
+| `provider-client.ts` | OpenAI-compatible fetch + SSRF guard |
+| `rate-limit.ts` | In-memory sliding window + cost |
+| `input-validation.ts` | Idea/category/provider validation |
+
+---
+
+## 5. Eval
+
+| Command | |
+|---------|--|
+| `npm run eval:assert-sample` | No provider |
+| `npm run eval:baseline` | Needs `BIF_*` env |
+| `.\scripts\eval-baseline.ps1` | Interactive PowerShell |
+
+See `eval/README.md`.

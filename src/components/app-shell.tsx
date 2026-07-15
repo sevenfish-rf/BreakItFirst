@@ -39,6 +39,7 @@ function AppShellInner() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [analysis, setAnalysis] = useState<FailureAnalysis | null>(null);
+  const [reportWarnings, setReportWarnings] = useState<string[]>([]);
 
   useEffect(() => {
     setSettings(loadProviderSettings());
@@ -171,7 +172,10 @@ function AppShellInner() {
                       providerReady={providerReady}
                       provider={settings}
                       onNeedProvider={() => setSettingsOpen(true)}
-                      onSuccess={setAnalysis}
+                      onSuccess={(next, warnings) => {
+                        setAnalysis(next);
+                        setReportWarnings(warnings ?? []);
+                      }}
                     />
                   </GlowCard>
                 </motion.div>
@@ -190,7 +194,11 @@ function AppShellInner() {
               >
                 <AnalysisReport
                   analysis={analysis}
-                  onReset={() => setAnalysis(null)}
+                  warnings={reportWarnings}
+                  onReset={() => {
+                    setAnalysis(null);
+                    setReportWarnings([]);
+                  }}
                 />
               </motion.div>
             )}

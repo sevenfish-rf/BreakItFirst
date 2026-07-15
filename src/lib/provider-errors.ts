@@ -42,18 +42,20 @@ export function extractProviderErrorMessage(body: string): string | null {
 export function humanizeProviderFailure(params: {
   status: number;
   body: string;
-  stage?: "pass1" | "pass2" | "models" | "test";
+  stage?: "pass1" | "pass1_5" | "pass2" | "models" | "test";
 }): string {
   const stageLabel =
     params.stage === "pass1"
       ? "Pass 1 (reasoning)"
-      : params.stage === "pass2"
-        ? "Pass 2 (structuring)"
-        : params.stage === "models"
-          ? "Model list"
-          : params.stage === "test"
-            ? "Connection test"
-            : "Provider";
+      : params.stage === "pass1_5"
+        ? "Pass 1.5 (critique)"
+        : params.stage === "pass2"
+          ? "Pass 2 (structuring)"
+          : params.stage === "models"
+            ? "Model list"
+            : params.stage === "test"
+              ? "Connection test"
+              : "Provider";
 
   const extracted = extractProviderErrorMessage(params.body);
   const detail = extracted ? redactSecrets(extracted) : null;
@@ -85,7 +87,7 @@ export function humanizeProviderFailure(params: {
 
 export function humanizeCaughtError(
   err: unknown,
-  stage?: "pass1" | "pass2" | "models" | "test",
+  stage?: "pass1" | "pass1_5" | "pass2" | "models" | "test",
 ): string {
   if (err && typeof err === "object" && "status" in err && "body" in err) {
     const pe = err as { status: number; body: string; message?: string };

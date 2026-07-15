@@ -23,7 +23,7 @@ type LandingFormProps = {
   providerReady: boolean;
   provider: ProviderSettings;
   onNeedProvider: () => void;
-  onSuccess: (analysis: FailureAnalysis) => void;
+  onSuccess: (analysis: FailureAnalysis, warnings?: string[]) => void;
 };
 
 export function LandingForm({
@@ -35,6 +35,7 @@ export function LandingForm({
   const { locale, t } = useLanguage();
   const [idea, setIdea] = useState("");
   const [category, setCategory] = useState<Category>("Startup");
+  const [deepAnalysis, setDeepAnalysis] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -89,6 +90,7 @@ export function LandingForm({
         category,
         provider,
         locale,
+        deepAnalysis,
       });
 
       if (!result.ok) {
@@ -100,7 +102,7 @@ export function LandingForm({
         return;
       }
 
-      onSuccess(result.analysis);
+      onSuccess(result.analysis, result.warnings);
     } catch {
       setError(t.errors.failed);
     } finally {
@@ -186,6 +188,24 @@ export function LandingForm({
             ))}
           </div>
         </div>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border/80 bg-background/40 px-3.5 py-3 transition-colors hover:border-accent/30">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 rounded border-border accent-[var(--accent,#FF6B6B)]"
+            checked={deepAnalysis}
+            disabled={loading}
+            onChange={(e) => setDeepAnalysis(e.target.checked)}
+          />
+          <span className="min-w-0">
+            <span className="block text-sm font-medium text-text">
+              {t.form.deepLabel}
+            </span>
+            <span className="mt-0.5 block text-[11px] leading-relaxed text-text-muted">
+              {t.form.deepHint}
+            </span>
+          </span>
+        </label>
 
         {error && (
           <motion.div

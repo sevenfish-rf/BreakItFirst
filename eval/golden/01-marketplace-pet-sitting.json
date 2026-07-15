@@ -1,0 +1,15 @@
+{
+  "id": "01-marketplace-pet-sitting",
+  "title": "Neighborhood pet-sitting marketplace",
+  "category": "Marketplace",
+  "locale": "en",
+  "fragile_hint": "true",
+  "idea": "A mobile marketplace where pet owners in the same apartment complex or neighborhood book last-minute dog walking and pet sitting from verified neighbors. Sitters get 80% of the fee; the platform takes 20%. Trust is built via government ID + video intro + first three bookings free for new sitters. No insurance partnership yet — owners waive liability in-app. Launch city is Jakarta high-rises only.",
+  "focus_notes": [
+    "Chicken-egg supply/demand inside buildings",
+    "Trust & safety / liability without insurance",
+    "Take-rate vs neighbor disintermediation (go off-app after intro)",
+    "Cold-start density per building"
+  ],
+  "expected_spof_themes": ["trust", "liability", "cold-start", "density", "disintermediation"]
+}

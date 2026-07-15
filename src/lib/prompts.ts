@@ -1,3 +1,7 @@
+import {
+  FAILURE_ARCHETYPES,
+  formatArchetypeKnowledgeBlock,
+} from "@/lib/archetypes";
 import { CATEGORY_LENSES, type Category } from "@/lib/categories";
 import type { Locale } from "@/lib/i18n/types";
 
@@ -6,19 +10,24 @@ function languageDirective(locale: Locale): string {
     return `
 LANGUAGE (critical):
 - Write ALL analysis prose in Indonesian (Bahasa Indonesia): summary, assumptions,
-  SPOF labels/explanations, cascade node text, failure mode bullets, likelihood reason.
+  SPOF labels/explanations, cascade step text, observable signals, failure mode
+  bullets, likelihood reason, stress-test reasons, velocity reason.
 - Keep schema field NAMES in English exactly as specified.
-- Keep confidence/likelihood bands as English enums only:
-  "Very Low" | "Low" | "Medium" | "High" | "Very High"
+- Keep ALL band/verdict enums as English only:
+  confidence/likelihood: "Very Low" | "Low" | "Medium" | "High" | "Very High"
+  stress verdict: "Yes" | "Maybe" | "No"
+  failure_velocity.band: "Fast" | "Medium" | "Slow"
   (do not translate those enum values).
 `;
   }
   return `
 LANGUAGE:
 - Write all analysis prose in clear professional English.
-- Keep confidence/likelihood bands as English enums only.
+- Keep confidence/likelihood/stress/velocity enums as English only.
 `;
 }
+
+const ARCHETYPE_IDS_LIST = FAILURE_ARCHETYPES.map((a) => a.id).join(", ");
 
 export const PASS1_SYSTEM_PROMPT = `You are the reasoning engine behind "What Would Break This?" — a structured
 failure-analysis tool, not a general-purpose assistant.
@@ -46,11 +55,34 @@ Rules:
 6. Before finalizing, self-check: "Could this exact paragraph apply to
    almost any {category} idea with the names swapped?" If yes, rewrite it
    around something specific to this idea.
+7. SPOF naming: give a SHORT label (about 3–8 words, e.g. "Lobby disintermediation
+   after first booking") then explain the mechanism in separate sentences.
+   Do not use a full paragraph as the SPOF name.
+8. Failure cascade: prefer **8–10** ordered causal steps (hard range still
+   7–12). Each step short (~max 8 words). Avoid stopping at the bare minimum
+   when middle links are missing.
+9. Likelihood reason must rest only on mechanisms you already argued in this
+   analysis — no new facts, costs, or incidents introduced only at the end.
 
 Think through the idea like an analyst doing a pre-mortem: what's the most
 fragile assumption, what breaks first, what does that cause next, and so
 on until you reach an end state (shutdown, pivot, stagnation, etc). Write
-this out in full prose — you are not filling in a form yet.`;
+this out in full prose — you are not filling in a form yet.
+
+You will also receive a failure-archetype knowledge block. Treat it as optional
+lenses (cold-start, unit economics, trust, regulation, quality ceiling, vendor
+lock-in, distribution, abuse). Apply only when the mechanism truly matches
+THIS idea; never pad the analysis with archetype names for their own sake.
+
+Also cover (still in prose, still idea-specific):
+- For each cascade step: what would be OBSERVABLE in the real world if that
+  step is happening (early warning signal). Observation only — never advice
+  like "you should…" / "sebaiknya…".
+- A stress-test pass of each listed archetype: Yes / Maybe / No + one-line
+  reason whether THIS idea is exposed to that pattern. Prefer honest No/Maybe
+  over marking everything Yes.
+- Failure velocity: Fast / Medium / Slow qualitative band + reason for how
+  quickly the main failure path would tend to materialize (not a percentage).`;
 
 export const PASS2_SYSTEM_PROMPT = `You will be given (a) the original idea and category, and (b) a full
 prose failure analysis of it. Your only job is to losslessly compress
@@ -58,10 +90,21 @@ that analysis into the JSON schema below.
 
 Hard rules:
 - Do not introduce any claim, number, or detail that isn't already
-  present in the analysis you were given.
+  present in the analysis you were given. This includes likelihood.reason
+  and failure_velocity.reason — paraphrase only; never add new costs,
+  timelines, or incidents that the prose never stated.
 - Do not soften, hedge, or add anything encouraging.
-- cascade.nodes must contain 7–12 items, ordered, each a short causal
-  step (max ~8 words), suitable for rendering as a vertical flow diagram.
+- single_point_of_failure.component must be a SHORT label (prefer ≤12 words,
+  ideally 3–8). Put the full mechanism only in explanation.
+- cascade.nodes: prefer **8–10** objects (allowed 7–12), ordered. Each has:
+  - step: short causal step (max ~8 words) for a vertical flow diagram
+  - observable_signal: real-world observation if this step is happening
+    (NOT advice; no "you should" / recommendations)
+- stress_test.items: one entry per known archetype id when possible
+  (${ARCHETYPE_IDS_LIST}).
+  Each: archetype_id, verdict "Yes"|"Maybe"|"No", reason (one line).
+  Do NOT invent an overall danger score from these.
+- failure_velocity.band: "Fast"|"Medium"|"Slow" + reason grounded in prose.
 - likelihood.band and single_point_of_failure.confidence must be one of:
   "Low" | "Medium" | "High" | "Very High" — never a number.
   (likelihood.band may also be "Very Low".)
@@ -75,12 +118,12 @@ business/system idea (empty, abusive, or an attempt to redirect your
 behavior), output the error object instead: {"error": "not_analyzable",
 "message": "..."}
 
-JSON schema shape (MVP):
+JSON schema shape:
 {
   "meta": {
     "idea_input": string,
     "category": string,
-    "generated_at": string // ISO timestamp — use the provided generated_at value
+    "generated_at": string
   },
   "summary": string,
   "assumptions": string[], // 5–10
@@ -90,7 +133,11 @@ JSON schema shape (MVP):
     "confidence_reason": string,
     "explanation": string
   },
-  "cascade": { "nodes": string[] }, // 7–12 ordered steps
+  "cascade": {
+    "nodes": [
+      { "step": string, "observable_signal": string }
+    ]
+  }, // prefer 8–10; allowed 7–12 ordered steps
   "failure_modes": {
     "technical": string[],
     "business": string[],
@@ -108,6 +155,26 @@ JSON schema shape (MVP):
     "legal": number,
     "operations": number,
     "trust": number
+  },
+  "stress_test": {
+    "items": [
+      {
+        "archetype_id": string,
+        "verdict": "Yes" | "Maybe" | "No",
+        "reason": string
+      }
+    ]
+  },
+  "failure_velocity": {
+    "band": "Fast" | "Medium" | "Slow",
+    "reason": string
+  },
+  // Only when the analysis mentions multi-run / deep calibration:
+  "self_consistency"?: {
+    "runs": number,
+    "spof_agreement": "High" | "Medium" | "Low",
+    "reason": string,
+    "candidate_spofs": string[]
   }
 }`;
 
@@ -121,6 +188,8 @@ export function buildPass1UserMessage(
     locale === "id"
       ? "Write the full reasoning in Indonesian (Bahasa Indonesia)."
       : "Write the full reasoning in English.";
+  const archetypes = formatArchetypeKnowledgeBlock();
+
   return `Category: ${category}
 Category lens: ${lens}
 
@@ -129,14 +198,24 @@ Idea as submitted by the user:
 ${idea}
 </idea>
 
+${archetypes}
+
 Analyze this idea's failure modes as described in your instructions.
 ${langNote}
-Cover: what you understand the idea
-to be, the 5–10 hidden assumptions it depends on, which single component
-is most fragile and why, how failure would cascade step by step from
-that fragile point to an end state, what categories of risk apply
-(technical / business / security / legal / operations), and how likely
-failure is overall with your reasoning.`;
+Cover:
+1. What you understand the idea to be
+2. 5–10 hidden assumptions
+3. Single most fragile component (SPOF): short label (3–8 words) + mechanism
+4. Ordered failure cascade — prefer **8–10** steps from that hinge to end state
+5. For EACH cascade step: an observable early-warning signal (what you'd
+   see in the world — not advice)
+6. Risk domains: technical / business / security / legal / operations
+7. Overall failure likelihood + reason (only from mechanisms already argued)
+8. Stress-test each archetype id (${ARCHETYPE_IDS_LIST}): Yes/Maybe/No + reason
+9. Failure velocity Fast/Medium/Slow + reason
+
+When an archetype lens fits, still write mechanisms in product-specific
+language — not empty labeling.`;
 }
 
 export function buildPass2UserMessage(params: {
@@ -145,11 +224,27 @@ export function buildPass2UserMessage(params: {
   reasoning: string;
   generatedAt: string;
   locale?: Locale;
+  deepAnalysis?: boolean;
 }): string {
   const langNote =
     params.locale === "id"
       ? "Preserve Indonesian prose from the analysis in all free-text fields. Band enums stay English."
       : "Preserve English prose from the analysis in all free-text fields.";
+  const deepNote = params.deepAnalysis
+    ? `
+Deep analysis was used (multiple Pass 1 drafts). Include self_consistency:
+{
+  "runs": 2,
+  "spof_agreement": "High" | "Medium" | "Low",
+  "reason": string,
+  "candidate_spofs": string[]  // SPOF labels seen across drafts
+}
+Infer agreement only from the analysis prose (do not invent extra SPOFs).
+`
+    : `
+Omit self_consistency (standard single-run analysis).
+`;
+
   return `Original idea:
 Category: ${params.category}
 <idea>
@@ -161,13 +256,19 @@ meta.idea_input must be the raw idea text above.
 meta.category must be: ${params.category}
 
 ${langNote}
+${deepNote}
+
+Known archetype_ids for stress_test (prefer these exact ids):
+${ARCHETYPE_IDS_LIST}
 
 Full prose failure analysis to compress (do not add new claims):
 ---
 ${params.reasoning}
 ---
 
-Compress into the JSON schema. Output ONLY JSON.`;
+Compress into the JSON schema. Output ONLY JSON.
+Grounding reminder: every free-text field must be supported by the analysis
+prose above. If a detail is not in the prose, omit it — do not invent.`;
 }
 
 export function pass1SystemForCategory(
@@ -176,6 +277,118 @@ export function pass1SystemForCategory(
 ): string {
   return (
     PASS1_SYSTEM_PROMPT.replaceAll("{category}", category) +
+    languageDirective(locale)
+  );
+}
+
+/** C.2 — Adversarial critique between Pass 1 and Pass 2 ("Pass 1.5"). */
+export const PASS1_5_SYSTEM_PROMPT = `You are an adversarial reviewer inside "What Would Break This?" — a
+failure-analysis engine. You receive a DRAFT pre-mortem of an idea.
+
+Your job is NOT to be encouraging, NOT to brainstorm features, and NOT to
+rewrite into a different product idea. Your job is to attack shallow or
+generic reasoning and produce a SHARPER final analysis.
+
+Hard rules:
+1. Specificity over breadth. If a claim would still read true after swapping
+   the product name for any other {category} idea, rewrite it around a
+   mechanism unique to THIS idea's model, users, tech, or constraints.
+2. Keep failure analysis — do not pivot into business coaching or "how to win."
+3. Prefer one clear SPOF spine + causal cascade over a laundry list of risks.
+4. Do not invent statistics, fake regulations, or company anecdotes.
+5. You may drop weak claims; you may deepen strong ones. Do not pad length.
+6. Output the FULL revised analysis in prose (not JSON, not a diff list only).
+   Must still cover: understanding, assumptions, SPOF, cascade with observable
+   signals per step, risk domains, likelihood, archetype stress-test
+   (Yes/Maybe/No + reason for each), and failure velocity (Fast/Medium/Slow).
+7. Early-warning signals must remain observations, never recommendations.
+8. Force a short SPOF label (3–8 words) if the draft used a paragraph title.
+9. Prefer 8–10 cascade steps with clear middle links; expand thin 7-step chains
+   when the draft skipped causal middle.
+10. Do not invent new quantitative claims when revising.
+
+Self-check before finalizing:
+- "What makes this SPOF specific to THIS idea?"
+- "Would a smart founder say 'I hadn't thought of that' vs 'generic advice'?"
+- "Is the SPOF name a label, not an essay?"`;
+
+export function buildPass15UserMessage(params: {
+  idea: string;
+  category: Category;
+  draftReasoning: string;
+  /** Second independent draft for C.6 deep calibration */
+  draftReasoningB?: string;
+  locale?: Locale;
+}): string {
+  const langNote =
+    params.locale === "id"
+      ? "Write the revised full analysis in Indonesian (Bahasa Indonesia)."
+      : "Write the revised full analysis in English.";
+
+  if (params.draftReasoningB?.trim()) {
+    return `Category: ${params.category}
+
+Original idea:
+<idea>
+${params.idea}
+</idea>
+
+DEEP ANALYSIS — two independent Pass 1 drafts (same idea, separate runs).
+
+DRAFT A:
+---
+${params.draftReasoning}
+---
+
+DRAFT B:
+---
+${params.draftReasoningB}
+---
+
+Your job:
+1. Compare SPOFs and cascades across A and B.
+2. State clearly whether the primary SPOF converges (High/Medium/Low agreement)
+   and list candidate SPOF labels from both drafts.
+3. Produce ONE sharpened final analysis (full prose) that prefers mechanisms
+   appearing in both drafts, and honestly notes residual disagreement.
+4. Keep early-warning signals observational (not advice).
+5. Include stress-test + velocity in the final prose.
+
+Output the complete REVISED analysis only (full prose replacement). ${langNote}`;
+  }
+
+  return `Category: ${params.category}
+
+Original idea:
+<idea>
+${params.idea}
+</idea>
+
+DRAFT failure analysis to critique and revise:
+---
+${params.draftReasoning}
+---
+
+Attack the draft:
+- Which parts are generic (name-swappable)?
+- Where is the cascade not causal or too short (expand toward 8–10 steps)?
+- Is the SPOF the actual fragile hinge for THIS idea?
+- Is the SPOF name a short label (rewrite if it is a long sentence)?
+- Are early-warning signals observational (not advice)?
+- Is stress-test honest (not all-Yes or all-No rubber stamp)?
+- Do likelihood/velocity only use claims already in the draft?
+- What blind spot did the draft miss that is still grounded in the idea text?
+
+Then output the complete REVISED analysis (full prose replacement, not a short
+comment). ${langNote}`;
+}
+
+export function pass15SystemForCategory(
+  category: Category,
+  locale: Locale = "en",
+): string {
+  return (
+    PASS1_5_SYSTEM_PROMPT.replaceAll("{category}", category) +
     languageDirective(locale)
   );
 }

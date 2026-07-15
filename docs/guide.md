@@ -23,7 +23,11 @@ Landing → paste ide → kategori → set provider (BYOK)
 
 | Fitur | Keterangan |
 |-------|------------|
-| Two-pass AI | Pass 1 reasoning → Pass 2 JSON schema |
+| Pipeline AI | Pass 1 (+ archetypes) → Pass 1.5 critique → Pass 2 JSON |
+| Deep analysis | Opt-in: 2× Pass 1 + calibration (C.6); 2 rate-limit slots |
+| Report extras | Signals · stress test · velocity · SPOF calibration (deep) |
+| Observability | Server logs stage timings on each analyze |
+| Eval harness | `npm run eval:baseline` (local BYOK) — lihat `eval/README.md` |
 | BYOK | Base URL + key + 2 model (localStorage) |
 | Visual | Cascade (React Flow), radar (Recharts), mode cards |
 | Theme | 5 circle: ember, violet, ocean, forest, gold |

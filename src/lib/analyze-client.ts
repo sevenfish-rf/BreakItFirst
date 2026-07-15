@@ -25,6 +25,8 @@ export async function requestAnalysis(params: {
   category: Category;
   provider: ProviderSettings;
   locale?: Locale;
+  /** C.6 multi Pass 1 calibration — slower / costs more rate-limit slots */
+  deepAnalysis?: boolean;
   signal?: AbortSignal;
 }): Promise<AnalyzeResult> {
   let res: Response;
@@ -39,6 +41,7 @@ export async function requestAnalysis(params: {
         idea: params.idea,
         category: params.category,
         locale: params.locale === "id" ? "id" : "en",
+        deepAnalysis: Boolean(params.deepAnalysis),
         provider: {
           baseUrl: params.provider.baseUrl,
           apiKey: params.provider.apiKey,
