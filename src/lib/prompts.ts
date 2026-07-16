@@ -66,6 +66,16 @@ VELOCITY & LIKELIHOOD (no invented precision):
 - Do NOT invent new numbers (days, %, $, batch cycles) only in the velocity
   or likelihood sentence. Prefer qualitative pacing ("within one launch cohort",
   "before network density forms") unless the idea text itself stated a number.
+
+CASCADE STEP SPECIFICITY (middle steps matter):
+- Not just step 1 — every middle step must name something specific to THIS idea
+  (an actor, number, mechanism, or constraint already established), never a
+  domain-generic phrase alone.
+- Shuffle test: if you can reorder middle steps without changing meaning, the
+  cascade is not causal enough — rewrite.
+- Bad cascade step: "Retention drops"
+- Good cascade step: "Sitters stop opening the app once the three free-booking
+  credits run out"
 `;
 
 export const PASS1_SYSTEM_PROMPT = `You are the reasoning engine behind "What Would Break This?" — a structured
@@ -101,6 +111,11 @@ Rules:
 8. Failure cascade: prefer **8–10** ordered causal steps (hard range still
    7–12). Each step short (~max 8 words). Avoid stopping at the bare minimum
    when middle links are missing. Step 1 should sit next to the SPOF hinge.
+   Not just step 1 — every middle step must name something specific to this
+   idea (actor, number, mechanism, or constraint already established), never
+   a domain-generic phrase alone. Test: could this exact step drop into
+   another {category} idea's cascade unedited? If yes, tie it to a concrete
+   detail from this idea.
 9. Likelihood and velocity reasons must rest only on mechanisms you already
    argued — no new facts, costs, timelines, or invented numbers at the end.
 
@@ -121,10 +136,17 @@ Also cover (still in prose, still idea-specific):
   step is happening (early warning signal). Observation only — never advice
   like "you should…" / "sebaiknya…".
 - A stress-test pass of each listed archetype: Yes / Maybe / No + one-line
-  reason whether THIS idea is exposed to that pattern. Prefer honest No/Maybe
-  over marking everything Yes.
+  reason whether THIS idea is exposed to that pattern.
+  Yes requires a named idea-specific mechanism. No requires stating why the
+  pattern does not apply here (not just "not applicable"). Maybe is reserved
+  for genuine uncertainty where you can name what evidence would resolve it —
+  Maybe is not a safe default; an all-Maybe stress test is as uninformative
+  as an all-Yes one.
 - Failure velocity: Fast / Medium / Slow qualitative band + reason for how
-  quickly the main failure path would tend to materialize (not a percentage).`;
+  quickly the main failure path would tend to materialize (not a percentage).
+- Failure-mode domains (technical / business / security / legal / operations):
+  populate at least 3 of the 5 with ≥1 idea-specific bullet. Leave a domain
+  empty only when you can genuinely argue no material exposure for this idea.`;
 
 export const PASS2_SYSTEM_PROMPT = `You will be given (a) the original idea and category, and (b) a full
 prose failure analysis of it. Your only job is to losslessly compress
@@ -145,6 +167,8 @@ Hard rules:
 - stress_test.items: one entry per known archetype id when possible
   (${ARCHETYPE_IDS_LIST}).
   Each: archetype_id, verdict "Yes"|"Maybe"|"No", reason (one line).
+  reason must cite the specific idea detail behind the verdict, not restate
+  the archetype's generic definition.
   Do NOT invent an overall danger score from these.
 - failure_velocity.band: "Fast"|"Medium"|"Slow" + reason grounded in prose.
   Never add new numeric timelines (e.g. "8-12 weeks") unless those numbers
@@ -253,9 +277,12 @@ Cover:
 4. Ordered failure cascade — prefer **8–10** steps from that hinge to end state
 5. For EACH cascade step: an observable early-warning signal (what you'd
    see in the world — not advice)
-6. Risk domains: technical / business / security / legal / operations
+6. Risk domains: technical / business / security / legal / operations —
+   at least 3 of 5 populated with idea-specific bullets
 7. Overall failure likelihood + reason (only from mechanisms already argued)
 8. Stress-test each archetype id (${ARCHETYPE_IDS_LIST}): Yes/Maybe/No + reason
+   (Yes = named mechanism; No = why not; Maybe only with resolve-evidence;
+   not all-Maybe / all-Yes)
 9. Failure velocity Fast/Medium/Slow + reason
 
 When an archetype lens fits, still write mechanisms in product-specific
@@ -263,8 +290,10 @@ language — not empty labeling.
 
 Final self-check before you stop:
 - SPOF label is a mechanism, not "trust collapse" / "competition" / "cash".
-- Cascade has 8–10 steps and starts near the SPOF.
-- No brand-new numbers appear only in likelihood/velocity.`;
+- Cascade has 8–10 steps, starts near the SPOF, and at least 6 of the steps
+  name something specific to this idea (shuffle test would fail if reordered).
+- No brand-new numbers appear only in likelihood/velocity.
+- Stress test is not all-Maybe or all-Yes.`;
 }
 
 export function buildPass2UserMessage(params: {
@@ -353,7 +382,10 @@ Hard rules:
 7. Early-warning signals must remain observations, never recommendations.
 8. Force a short SPOF label (3–8 words) if the draft used a paragraph title.
 9. Prefer 8–10 cascade steps with clear middle links; expand thin 7-step chains
-   when the draft skipped causal middle.
+   when the draft skipped causal middle. Re-run the shuffle test on middle
+   steps (not just step count): if middle steps can be reordered without
+   changing meaning, or drop into another {category} cascade unedited, rewrite
+   them to idea-specific mechanisms.
 10. Do not invent new quantitative claims when revising.
 11. If SPOF is abstract ("trust collapse", "poor retention"), rewrite to the
     concrete mechanism in THIS idea (architecture, pricing, policy, dependency).

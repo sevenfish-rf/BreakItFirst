@@ -290,6 +290,93 @@ export function stressTestNotAllYes(analysis: FailureAnalysis): boolean {
 }
 
 /**
+ * Soft: stress test not mostly-Maybe (uninformative hedging).
+ * Threshold 0.75 — ship as soft/log only (DIRECTIVES D2).
+ */
+export function stressTestNotAllMaybe(analysis: FailureAnalysis): boolean {
+  const items = analysis.stress_test.items;
+  if (items.length < 4) return true;
+  const maybeCount = items.filter((i) => i.verdict === "Maybe").length;
+  return maybeCount / items.length < 0.75;
+}
+
+/**
+ * Soft: at least 3 of 5 failure_modes domains non-empty (DIRECTIVES D3).
+ * Soft only — never hard-fail legitimately narrow ideas.
+ */
+export function failureModesCoverageLooksSane(
+  analysis: FailureAnalysis,
+): boolean {
+  const filled = Object.values(analysis.failure_modes).filter(
+    (arr) => Array.isArray(arr) && arr.length >= 1,
+  ).length;
+  return filled >= 3;
+}
+
+/**
+ * Soft: SPOF-relevant resilience dimension should not be among the highest
+ * scores (DIRECTIVES D5). Ambiguous SPOF → skip (return true).
+ */
+export function spofDimensionLooksLow(analysis: FailureAnalysis): boolean {
+  const text = [
+    analysis.single_point_of_failure.component,
+    analysis.single_point_of_failure.explanation,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  type Dim = keyof FailureAnalysis["resilience_score"];
+  const rules: { re: RegExp; dim: Dim }[] = [
+    { re: /\b(trust|safety|fraud|scam|reputation)\b/, dim: "trust" },
+    {
+      re: /\b(regulat|legal|liabilit|waiver|licen[sc]|compliance|lawsuit)\b/,
+      dim: "legal",
+    },
+    {
+      re: /\b(cost|margin|price|pricing|unit economics|cac|churn|revenue|take-?rate)\b/,
+      dim: "business",
+    },
+    {
+      re: /\b(oem|supply chain|defect|manufactur|logistics|returns?|support|ops|operations|scale)\b/,
+      dim: "operations",
+    },
+    {
+      re: /\b(api|firmware|ppg|hrv|model|hallucin|technical|infra|latency|uptime|scrape)\b/,
+      dim: "technical",
+    },
+  ];
+
+  const hits = new Map<Dim, number>();
+  for (const rule of rules) {
+    if (rule.re.test(text)) {
+      hits.set(rule.dim, (hits.get(rule.dim) ?? 0) + 1);
+    }
+  }
+  if (hits.size === 0) return true;
+
+  // Prefer single confident dimension; if multiple, pick the one with most hits
+  let best: Dim | null = null;
+  let bestN = 0;
+  for (const [dim, n] of hits) {
+    if (n > bestN) {
+      best = dim;
+      bestN = n;
+    }
+  }
+  if (!best || hits.size > 2) return true; // too ambiguous
+
+  const scores = analysis.resilience_score;
+  const values = Object.values(scores);
+  const target = scores[best];
+  const sorted = [...values].sort((a, b) => b - a);
+  // Soft-fail if SPOF dimension is highest or tied for top-2 highest
+  const isTop = target === sorted[0] || target === sorted[1];
+  // Only flag if it's clearly not fragile (mid-high)
+  if (isTop && target >= 50) return false;
+  return true;
+}
+
+/**
  * Soft: SPOF label should name a mechanism, not a vibey/generic theme.
  * (Length is checked separately by spofLabelLooksShort.)
  */
@@ -353,6 +440,18 @@ export function runSoftChecks(analysis: FailureAnalysis): SoftCheckResult[] {
         "Stress test marks every archetype Yes — may be over-eager (soft check)",
     },
     {
+      id: "stress_test_not_all_maybe",
+      ok: stressTestNotAllMaybe(analysis),
+      message:
+        "Stress test is mostly Maybe — may be uninformative hedging (soft check)",
+    },
+    {
+      id: "failure_modes_coverage",
+      ok: failureModesCoverageLooksSane(analysis),
+      message:
+        "Fewer than 3 failure_modes domains populated (soft check)",
+    },
+    {
       id: "signals_observational",
       ok: cascadeSignalsLookObservational(analysis),
       message:
@@ -375,6 +474,12 @@ export function runSoftChecks(analysis: FailureAnalysis): SoftCheckResult[] {
       ok: spofLabelLooksMechanistic(analysis),
       message:
         "SPOF label may be too abstract (prefer a concrete mechanism) (soft check)",
+    },
+    {
+      id: "resilience_matches_spof",
+      ok: spofDimensionLooksLow(analysis),
+      message:
+        "Resilience dimension tied to SPOF may be too high (soft check)",
     },
   ];
 }
@@ -436,6 +541,17 @@ export function pass2NovelClaimWarnings(
       text: analysis.failure_velocity.reason,
       // Stricter than likelihood — baseline residual invents were here
       threshold: 0.4,
+    },
+    // D4 — extend claim guard (looser thresholds: short list text)
+    {
+      label: "cascade.signals",
+      text: analysis.cascade.nodes.map((n) => n.observable_signal).join(" "),
+      threshold: 0.3,
+    },
+    {
+      label: "failure_modes",
+      text: Object.values(analysis.failure_modes).flat().join(" "),
+      threshold: 0.25,
     },
   ];
 

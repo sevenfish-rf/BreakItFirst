@@ -10,9 +10,12 @@ import {
   cascadeSignalsLookObservational,
   resilienceProfileLooksSane,
   spofAppearsInFailureModes,
+  failureModesCoverageLooksSane,
+  spofDimensionLooksLow,
   spofLabelLooksMechanistic,
   spofLabelLooksShort,
   stressTestLooksUseful,
+  stressTestNotAllMaybe,
   stressTestNotAllYes,
   validateFailureAnalysis,
 } from "../src/lib/schema";
@@ -204,9 +207,24 @@ export function runRegressionAssertions(
     "Stress test not all-Yes (soft)",
   );
   push(
+    "soft_stress_not_all_maybe",
+    stressTestNotAllMaybe(analysis),
+    "Stress test not mostly-Maybe (soft)",
+  );
+  push(
+    "soft_failure_modes_coverage",
+    failureModesCoverageLooksSane(analysis),
+    "Failure modes ≥3 domains (soft)",
+  );
+  push(
     "soft_spof_mechanistic",
     spofLabelLooksMechanistic(analysis),
     "SPOF label mechanistic (soft)",
+  );
+  push(
+    "soft_resilience_matches_spof",
+    spofDimensionLooksLow(analysis),
+    "Resilience tracks SPOF dimension (soft)",
   );
 
   push(
