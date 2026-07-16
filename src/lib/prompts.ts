@@ -29,6 +29,45 @@ LANGUAGE:
 
 const ARCHETYPE_IDS_LIST = FAILURE_ARCHETYPES.map((a) => a.id).join(", ");
 
+/**
+ * Sharpness directives from eval (baseline nits + owner ask for sharper core).
+ * Injected into Pass 1 / 1.5 — not shown to end users.
+ */
+const SHARPNESS_DIRECTIVE = `
+SPOF SHARPNESS (critical — product quality):
+Pick the hinge that is MOST SPECIFIC to THIS idea's architecture, incentives,
+or constraints — not a theme that fits any SaaS/app.
+
+Prefer (good patterns):
+- A concrete mechanism tied to a detail in the idea
+  e.g. "Weekly overwrite without human review"
+  e.g. "Keyword-only crisis filter"
+  e.g. "Lobby disintermediation after first booking"
+  e.g. "Fixed $0.02 vs rising scrape cost floor"
+
+Avoid as the SPOF label (too abstract / name-swappable):
+- "Trust collapse" / "trust erosion" alone
+- "Poor execution" / "lack of marketing" / "competition"
+- "Unit economics" without the idea's price, cost, or margin shape
+- "Regulatory risk" without which rule/market/claim from the idea
+- "AI quality" without which workflow or user expectation breaks
+
+If the idea LOOKS solid (polished SaaS, "active knowledge", etc.), attack the
+differentiator itself as the risk (the feature they think is the moat).
+
+NEGATIVE EXAMPLES (do not produce analysis that sounds like these):
+- "The company may run out of money before product-market fit."
+- "Users might not trust the brand enough."
+- "There is a lot of competition in this space."
+Rewrite any such claim into a mechanism unique to the submitted idea.
+
+VELOCITY & LIKELIHOOD (no invented precision):
+- Reasons must only use magnitudes already argued in your analysis.
+- Do NOT invent new numbers (days, %, $, batch cycles) only in the velocity
+  or likelihood sentence. Prefer qualitative pacing ("within one launch cohort",
+  "before network density forms") unless the idea text itself stated a number.
+`;
+
 export const PASS1_SYSTEM_PROMPT = `You are the reasoning engine behind "What Would Break This?" — a structured
 failure-analysis tool, not a general-purpose assistant.
 
@@ -57,12 +96,15 @@ Rules:
    around something specific to this idea.
 7. SPOF naming: give a SHORT label (about 3–8 words, e.g. "Lobby disintermediation
    after first booking") then explain the mechanism in separate sentences.
-   Do not use a full paragraph as the SPOF name.
+   Do not use a full paragraph as the SPOF name. The label must name a mechanism,
+   not a vibe ("trust collapse").
 8. Failure cascade: prefer **8–10** ordered causal steps (hard range still
    7–12). Each step short (~max 8 words). Avoid stopping at the bare minimum
-   when middle links are missing.
-9. Likelihood reason must rest only on mechanisms you already argued in this
-   analysis — no new facts, costs, or incidents introduced only at the end.
+   when middle links are missing. Step 1 should sit next to the SPOF hinge.
+9. Likelihood and velocity reasons must rest only on mechanisms you already
+   argued — no new facts, costs, timelines, or invented numbers at the end.
+
+${SHARPNESS_DIRECTIVE}
 
 Think through the idea like an analyst doing a pre-mortem: what's the most
 fragile assumption, what breaks first, what does that cause next, and so
@@ -105,6 +147,8 @@ Hard rules:
   Each: archetype_id, verdict "Yes"|"Maybe"|"No", reason (one line).
   Do NOT invent an overall danger score from these.
 - failure_velocity.band: "Fast"|"Medium"|"Slow" + reason grounded in prose.
+  Never add new numeric timelines (e.g. "8-12 weeks") unless those numbers
+  already appear in the analysis prose.
 - likelihood.band and single_point_of_failure.confidence must be one of:
   "Low" | "Medium" | "High" | "Very High" — never a number.
   (likelihood.band may also be "Very Low".)
@@ -215,7 +259,12 @@ Cover:
 9. Failure velocity Fast/Medium/Slow + reason
 
 When an archetype lens fits, still write mechanisms in product-specific
-language — not empty labeling.`;
+language — not empty labeling.
+
+Final self-check before you stop:
+- SPOF label is a mechanism, not "trust collapse" / "competition" / "cash".
+- Cascade has 8–10 steps and starts near the SPOF.
+- No brand-new numbers appear only in likelihood/velocity.`;
 }
 
 export function buildPass2UserMessage(params: {
@@ -306,11 +355,18 @@ Hard rules:
 9. Prefer 8–10 cascade steps with clear middle links; expand thin 7-step chains
    when the draft skipped causal middle.
 10. Do not invent new quantitative claims when revising.
+11. If SPOF is abstract ("trust collapse", "poor retention"), rewrite to the
+    concrete mechanism in THIS idea (architecture, pricing, policy, dependency).
+12. If the idea markets a clever differentiator, consider attacking that
+    differentiator as the SPOF rather than a generic risk theme.
+
+${SHARPNESS_DIRECTIVE}
 
 Self-check before finalizing:
 - "What makes this SPOF specific to THIS idea?"
 - "Would a smart founder say 'I hadn't thought of that' vs 'generic advice'?"
-- "Is the SPOF name a label, not an essay?"`;
+- "Is the SPOF name a mechanism label, not an essay or a vibe word?"
+- "Did I invent any new numbers only in velocity/likelihood?"`;
 
 export function buildPass15UserMessage(params: {
   idea: string;
@@ -372,11 +428,13 @@ ${params.draftReasoning}
 Attack the draft:
 - Which parts are generic (name-swappable)?
 - Where is the cascade not causal or too short (expand toward 8–10 steps)?
-- Is the SPOF the actual fragile hinge for THIS idea?
-- Is the SPOF name a short label (rewrite if it is a long sentence)?
+- Is the SPOF the actual fragile hinge for THIS idea — or just "trust/competition"?
+- If SPOF is abstract, replace with the idea's structural hinge (pricing, overwrite
+  policy, waiver, single OEM, keyword filter, etc.).
+- Is the SPOF name a short mechanism label (rewrite if long or vibey)?
 - Are early-warning signals observational (not advice)?
 - Is stress-test honest (not all-Yes or all-No rubber stamp)?
-- Do likelihood/velocity only use claims already in the draft?
+- Do likelihood/velocity only use claims already in the draft (strip invented numbers)?
 - What blind spot did the draft miss that is still grounded in the idea text?
 
 Then output the complete REVISED analysis (full prose replacement, not a short

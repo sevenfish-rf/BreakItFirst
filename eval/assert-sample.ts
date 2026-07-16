@@ -25,7 +25,7 @@ const sample: FailureAnalysis = {
     "Jakarta high-rise density produces liquid local markets",
   ],
   single_point_of_failure: {
-    component: "Trust cold-start without insurance",
+    component: "Waiver-only risk without insurance",
     confidence: "High",
     confidence_reason: "Liability gap blocks both sides of the market",
     explanation:

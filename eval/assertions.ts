@@ -10,6 +10,7 @@ import {
   cascadeSignalsLookObservational,
   resilienceProfileLooksSane,
   spofAppearsInFailureModes,
+  spofLabelLooksMechanistic,
   spofLabelLooksShort,
   stressTestLooksUseful,
   stressTestNotAllYes,
@@ -201,6 +202,11 @@ export function runRegressionAssertions(
     "soft_stress_not_all_yes",
     stressTestNotAllYes(analysis),
     "Stress test not all-Yes (soft)",
+  );
+  push(
+    "soft_spof_mechanistic",
+    spofLabelLooksMechanistic(analysis),
+    "SPOF label mechanistic (soft)",
   );
 
   push(

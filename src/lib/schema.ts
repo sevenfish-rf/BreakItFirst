@@ -289,6 +289,31 @@ export function stressTestNotAllYes(analysis: FailureAnalysis): boolean {
   return yesCount < items.length;
 }
 
+/**
+ * Soft: SPOF label should name a mechanism, not a vibey/generic theme.
+ * (Length is checked separately by spofLabelLooksShort.)
+ */
+export function spofLabelLooksMechanistic(analysis: FailureAnalysis): boolean {
+  const c = analysis.single_point_of_failure.component.toLowerCase().trim();
+  if (!c) return false;
+
+  // Pure abstract themes (often name-swappable)
+  const abstractOnly =
+    /^(trust(\s+collapse|\s+erosion|\s+issues?)?|competition|poor execution|lack of (marketing|funding|users)|product[- ]market fit|cash(\s+runway)?|retention|brand|quality|ai quality|unit economics|regulatory risk)$/i;
+  if (abstractOnly.test(c)) return false;
+
+  // Labels that are only vibe words without a mechanism cue
+  const vibeHeavy =
+    /\b(collapse|erosion|issues?|problems?|challenges?|concerns?)\b/i;
+  const mechanismCue =
+    /\b(without|with|after|before|only|single|fixed|batch|overwrite|waiver|filter|keyword|oem|scrape|margin|price|pricing|api|key|sla|lock-?in|cold[- ]start|chicken|disintermediation|ppg|hrv|provider|tos|app store|seat|take[- ]?rate)\b/i;
+  if (vibeHeavy.test(c) && !mechanismCue.test(c) && c.split(/\s+/).length <= 5) {
+    return false;
+  }
+
+  return true;
+}
+
 export type SoftCheckResult = {
   id: string;
   ok: boolean;
@@ -344,6 +369,12 @@ export function runSoftChecks(analysis: FailureAnalysis): SoftCheckResult[] {
       ok: cascadeDepthPreferred(analysis),
       message:
         "Cascade length outside preferred 8–10 nodes (soft check; hard still 7–12)",
+    },
+    {
+      id: "spof_label_mechanistic",
+      ok: spofLabelLooksMechanistic(analysis),
+      message:
+        "SPOF label may be too abstract (prefer a concrete mechanism) (soft check)",
     },
   ];
 }
@@ -403,7 +434,8 @@ export function pass2NovelClaimWarnings(
     {
       label: "failure_velocity.reason",
       text: analysis.failure_velocity.reason,
-      threshold: 0.3,
+      // Stricter than likelihood — baseline residual invents were here
+      threshold: 0.4,
     },
   ];
 
@@ -423,11 +455,21 @@ export function pass2NovelClaimWarnings(
       );
     }
 
-    // Extra: multi-digit numbers / money in Pass 2 field not present in reasoning
-    const nums = sample.text.match(/\$?\d+(?:\.\d+)?%?/g) ?? [];
+    // Multi-digit numbers / money / ranges not present in reasoning
+    const nums = sample.text.match(/\$?\d+(?:\.\d+)?%?|\d+\s*[-–]\s*\d+/g) ?? [];
     for (const n of nums) {
-      if (n.length < 2) continue;
-      if (!corpus.includes(n.toLowerCase()) && !corpus.includes(n.replace("$", ""))) {
+      const normalized = n.toLowerCase().replace(/\s+/g, "");
+      const corpusNorm = corpus.replace(/\s+/g, "");
+      if (n.replace(/\D/g, "").length < 1) continue;
+      // Single digit alone is often noise; require 2+ digits or $/% 
+      if (!/\$|%|\d{2,}|[-–]/.test(n) && n.replace(/\D/g, "").length < 2) {
+        continue;
+      }
+      if (
+        !corpus.includes(n.toLowerCase()) &&
+        !corpus.includes(n.replace("$", "")) &&
+        !corpusNorm.includes(normalized.replace("$", ""))
+      ) {
         warnings.push(
           `Pass 2 ${sample.label} may invent numeric detail "${n}" absent from Pass 1 (soft claim guard)`,
         );
