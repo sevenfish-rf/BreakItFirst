@@ -81,10 +81,12 @@ export function LandingForm({
   const [draftHydrated, setDraftHydrated] = useState(false);
 
   const ideaRef = useRef<HTMLTextAreaElement | null>(null);
-  /** Aborts only the status stream — never cancels the server job. */
+  /** Aborts only the status poll loop — never cancels the server job. */
   const watchAbortRef = useRef<AbortController | null>(null);
   const activeJobIdRef = useRef<string | null>(null);
   const userCancelledRef = useRef(false);
+  /** Prevent double POST (Strict Mode / double-click). */
+  const startingRef = useRef(false);
   const onSuccessRef = useRef(onSuccess);
   onSuccessRef.current = onSuccess;
   const localeRef = useRef(locale);
@@ -124,16 +126,21 @@ export function LandingForm({
           setError(tRef.current.form.cancelled);
           return;
         }
-        if (result.code === "job_not_found") {
+        if (
+          result.code === "job_not_found" ||
+          result.code === "job_orphaned"
+        ) {
           clearActiveJob();
           activeJobIdRef.current = null;
           setLoading(false);
           setLiveStage(null);
           setLiveDetail(null);
           setError(
-            localeRef.current === "id"
-              ? "Job analisis tidak ditemukan (server restart?). Jalankan Analyze lagi."
-              : "Analysis job not found (server restart?). Run Analyze again.",
+            result.code === "job_orphaned" && result.message
+              ? result.message
+              : localeRef.current === "id"
+                ? "Sesi analisis hilang (server reload). Ide masih di form — klik Analyze lagi."
+                : "Analysis session was lost (server reload). Your idea is still in the form — click Analyze again.",
           );
           return;
         }
@@ -164,7 +171,7 @@ export function LandingForm({
     async (jobId: string) => {
       activeJobIdRef.current = jobId;
 
-      // Cancel previous watch only
+      // Cancel previous poll loop only
       watchAbortRef.current?.abort();
       const controller = new AbortController();
       watchAbortRef.current = controller;
@@ -179,6 +186,7 @@ export function LandingForm({
         locale: localeRef.current,
         signal: controller.signal,
         onStage: (p) => {
+          // Always apply if this is still the active controller
           if (watchAbortRef.current !== controller) return;
           setLiveStage(p.stage);
           setLiveDetail(p.detail ?? null);
@@ -381,6 +389,11 @@ export function LandingForm({
       return;
     }
 
+    if (startingRef.current || loading) {
+      return;
+    }
+    startingRef.current = true;
+
     saveFormDraft({
       idea: input.idea,
       category: input.category,
@@ -393,38 +406,42 @@ export function LandingForm({
     setLiveDetail(null);
     setLoadedHint(null);
 
-    // 1) Start job (rate limit + provider work begins here)
-    const started = await startAnalysisJob({
-      idea: input.idea,
-      category: input.category,
-      provider,
-      locale,
-      deepAnalysis,
-    });
+    try {
+      // 1) Start job (rate limit + provider work begins here)
+      const started = await startAnalysisJob({
+        idea: input.idea,
+        category: input.category,
+        provider,
+        locale,
+        deepAnalysis,
+      });
 
-    if (!started.ok) {
-      setLoading(false);
-      setLiveStage(null);
-      if (started.code === "rate_limited" && started.retryAfterSec) {
-        setError(t.errors.rateLimited(started.retryAfterSec));
-      } else {
-        setError(started.message || t.errors.failed);
+      if (!started.ok) {
+        setLoading(false);
+        setLiveStage(null);
+        if (started.code === "rate_limited" && started.retryAfterSec) {
+          setError(t.errors.rateLimited(started.retryAfterSec));
+        } else {
+          setError(started.message || t.errors.failed);
+        }
+        return;
       }
-      return;
+
+      // 2) Persist jobId BEFORE watching — critical for refresh resume
+      activeJobIdRef.current = started.jobId;
+      saveActiveJob({
+        jobId: started.jobId,
+        startedAt: new Date().toISOString(),
+        idea: input.idea,
+        category: input.category,
+        deepAnalysis,
+      });
+
+      // 3) Poll status snapshot every ~1.2s (reliable stage % / labels)
+      await attachWatch(started.jobId);
+    } finally {
+      startingRef.current = false;
     }
-
-    // 2) Persist jobId BEFORE watching — critical for refresh resume
-    activeJobIdRef.current = started.jobId;
-    saveActiveJob({
-      jobId: started.jobId,
-      startedAt: new Date().toISOString(),
-      idea: input.idea,
-      category: input.category,
-      deepAnalysis,
-    });
-
-    // 3) Watch status stream (safe to drop on refresh)
-    await attachWatch(started.jobId);
   }
 
   return (

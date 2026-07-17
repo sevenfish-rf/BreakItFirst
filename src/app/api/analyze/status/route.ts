@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   getAnalyzeJob,
+  getJobSnapshot,
   isJobTerminal,
   subscribeJob,
   type AnalyzeJobEvent,
@@ -15,13 +16,16 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 /**
- * Stream (or resume) events for an analysis job.
- * Safe to reconnect after browser refresh — replays history then live tail.
- * Disconnecting this stream does NOT cancel the job.
+ * Job status:
+ * - mode=poll (default for clients): JSON snapshot — reliable stage progress
+ * - mode=stream: NDJSON live tail (optional)
+ *
+ * Disconnecting does NOT cancel the job.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const jobId = url.searchParams.get("jobId")?.trim() ?? "";
+  const mode = url.searchParams.get("mode")?.trim() || "poll";
 
   if (!jobId || jobId.length < 8 || jobId.length > 80) {
     return NextResponse.json(
@@ -43,6 +47,23 @@ export async function GET(request: Request) {
     );
   }
 
+  // ── Poll snapshot (primary — UI progress uses this) ────────────────
+  if (mode !== "stream") {
+    const snap = getJobSnapshot(job);
+    return NextResponse.json(
+      {
+        ok: true,
+        ...snap,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache",
+        },
+      },
+    );
+  }
+
+  // ── Optional NDJSON stream ─────────────────────────────────────────
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   const writer = writable.getWriter();
   let closed = false;
@@ -82,32 +103,33 @@ export async function GET(request: Request) {
 
     const onEvent = (event: AnalyzeJobEvent) => {
       void write(event).then(() => {
-        if (event.type === "result") {
-          finishStream();
-        }
+        if (event.type === "result") finishStream();
       });
     };
 
     try {
-      // Identity so client can confirm reconnect
       await write({
         type: "hello",
         jobId: job.id,
         status: job.status,
+        stage: job.currentStage,
+        detail: job.currentDetail,
         at: Date.now(),
       });
 
       unsub = subscribeJob(job, onEvent);
 
-      // If already finished, subscribeJob already replayed result
       if (isJobTerminal(job)) {
         finishStream();
       } else {
         heartbeat = setInterval(() => {
-          void write({ type: "ping", at: Date.now() });
-        }, 8_000);
-
-        // Stop this status stream only — does NOT cancel the job
+          void write({
+            type: "ping",
+            stage: job.currentStage,
+            detail: job.currentDetail,
+            at: Date.now(),
+          });
+        }, 5_000);
         request.signal.addEventListener("abort", finishStream, { once: true });
       }
 
@@ -121,8 +143,6 @@ export async function GET(request: Request) {
 
   return new Response(readable, {
     status: 200,
-    headers: {
-      ...NDJSON_STREAM_HEADERS,
-    },
+    headers: { ...NDJSON_STREAM_HEADERS },
   });
 }

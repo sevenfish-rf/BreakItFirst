@@ -31,6 +31,8 @@ export type StartAnalyzeResult =
   | { ok: true; jobId: string }
   | AnalyzeFailure;
 
+const POLL_MS = 1200;
+
 /**
  * Start a server-side job (survives browser refresh). Rate limit charged once.
  */
@@ -102,57 +104,164 @@ export async function startAnalysisJob(params: {
 }
 
 /**
- * Watch / resume a job via NDJSON status stream.
- * Refresh disconnects this stream only — job keeps running on the server.
+ * Watch job via JSON snapshot polling (reliable stage progress).
+ * Does NOT cancel the job when the signal aborts (refresh only).
  */
 export async function watchAnalysisJob(params: {
   jobId: string;
   locale?: Locale;
   signal?: AbortSignal;
   onStage?: (progress: AnalyzeStageProgress) => void;
-  onJobHello?: (info: { jobId: string; status: string }) => void;
 }): Promise<AnalyzeResult> {
-  let res: Response;
-  try {
-    res = await fetch(
-      `/api/analyze/status?jobId=${encodeURIComponent(params.jobId)}`,
-      {
-        method: "GET",
-        headers: {
-          Accept: "application/x-ndjson, application/json",
-          "X-Session-Id": getOrCreateSessionId(),
+  const { jobId, locale, signal, onStage } = params;
+  let lastStage = "";
+  let lastDetail = "";
+
+  while (true) {
+    if (signal?.aborted) {
+      return {
+        ok: false,
+        message:
+          locale === "id"
+            ? "Koneksi status terputus (refresh?). Menyambung ulang…"
+            : "Status connection lost (refresh?). Reconnecting…",
+        code: "stream_disconnected",
+      };
+    }
+
+    let res: Response;
+    try {
+      res = await fetch(
+        `/api/analyze/status?jobId=${encodeURIComponent(jobId)}&mode=poll`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "X-Session-Id": getOrCreateSessionId(),
+          },
+          signal,
+          cache: "no-store",
         },
-        signal: params.signal,
-        cache: "no-store",
-      },
-    );
-  } catch (err) {
-    return networkOrCancelFailure(err, params.locale);
+      );
+    } catch (err) {
+      if (signal?.aborted || isAbortError(err)) {
+        return {
+          ok: false,
+          message:
+            locale === "id"
+              ? "Koneksi status terputus (refresh?). Menyambung ulang…"
+              : "Status connection lost (refresh?). Reconnecting…",
+          code: "stream_disconnected",
+        };
+      }
+      // Transient network blip — retry
+      await sleep(POLL_MS, signal);
+      continue;
+    }
+
+    let data: unknown;
+    try {
+      data = await res.json();
+    } catch {
+      await sleep(POLL_MS, signal);
+      continue;
+    }
+
+    if (!data || typeof data !== "object") {
+      await sleep(POLL_MS, signal);
+      continue;
+    }
+
+    const payload = data as Record<string, unknown>;
+
+    if (!res.ok || payload.ok === false) {
+      if (payload.code === "job_not_found" || res.status === 404) {
+        return {
+          ok: false,
+          code: "job_not_found",
+          message:
+            typeof payload.message === "string"
+              ? payload.message
+              : "Analysis job not found or expired.",
+        };
+      }
+      // keep polling on other errors briefly
+      await sleep(POLL_MS, signal);
+      continue;
+    }
+
+    // Stage update
+    const stage =
+      typeof payload.stage === "string"
+        ? (payload.stage as PipelineLiveStage)
+        : null;
+    const detail =
+      typeof payload.detail === "string" ? payload.detail : undefined;
+
+    if (stage && (stage !== lastStage || detail !== lastDetail)) {
+      lastStage = stage;
+      lastDetail = detail ?? "";
+      if (process.env.NODE_ENV === "development") {
+        console.info("[analyze-client] poll stage", stage, detail ?? "");
+      }
+      onStage?.({
+        stage,
+        detail,
+        at: typeof payload.updatedAt === "number" ? payload.updatedAt : Date.now(),
+      });
+    }
+
+    const status = typeof payload.status === "string" ? payload.status : "";
+    const result = payload.result;
+
+    if (status === "running" || !result) {
+      await sleep(POLL_MS, signal);
+      continue;
+    }
+
+    // Terminal (done / error / cancelled / orphaned after server restart)
+    if (result && typeof result === "object") {
+      const mapped = mapPayload(result, 200);
+      // Surface orphaned code for client cleanup
+      if (
+        !mapped.ok &&
+        result &&
+        typeof result === "object" &&
+        "code" in result &&
+        (result as { code?: string }).code === "job_orphaned"
+      ) {
+        return {
+          ...mapped,
+          code: "job_orphaned",
+        };
+      }
+      return mapped;
+    }
+
+    if (status === "cancelled") {
+      return {
+        ok: false,
+        code: "cancelled",
+        message:
+          locale === "id" ? "Analisis dibatalkan." : "Analysis cancelled.",
+      };
+    }
+    if (status === "error" || status === "done") {
+      // Terminal without result payload — treat as lost session
+      return {
+        ok: false,
+        code: "job_orphaned",
+        message:
+          locale === "id"
+            ? "Sesi analisis berakhir tanpa hasil. Ide masih di form — klik Analyze lagi."
+            : "Analysis ended without a result. Your idea is still in the form — click Analyze again.",
+      };
+    }
+
+    await sleep(POLL_MS, signal);
   }
-
-  const contentType = res.headers.get("content-type") ?? "";
-
-  if (
-    contentType.includes("application/json") &&
-    !contentType.includes("ndjson")
-  ) {
-    return parseJsonResult(res);
-  }
-
-  if (!res.ok && !res.body) {
-    return parseJsonResult(res);
-  }
-
-  if (res.body) {
-    return readNdjsonStream(res, params);
-  }
-
-  return parseJsonResult(res);
 }
 
-/**
- * Explicit cancel — aborts provider calls. Refresh must NOT call this.
- */
 export async function cancelAnalysisJob(jobId: string): Promise<void> {
   try {
     await fetch("/api/analyze/cancel", {
@@ -169,11 +278,6 @@ export async function cancelAnalysisJob(jobId: string): Promise<void> {
   }
 }
 
-/**
- * Full flow: start job + watch. Prefer start+watch separately when resuming.
- * `signal` only aborts the status watch (e.g. page unload) — NOT the job itself.
- * Job start is never aborted by refresh; use cancelAnalysisJob for that.
- */
 export async function requestAnalysis(params: {
   idea: string;
   category: Category;
@@ -182,10 +286,8 @@ export async function requestAnalysis(params: {
   deepAnalysis?: boolean;
   signal?: AbortSignal;
   onStage?: (progress: AnalyzeStageProgress) => void;
-  /** Called as soon as the server assigns a job id (persist for refresh resume). */
   onJobId?: (jobId: string) => void;
 }): Promise<AnalyzeResult> {
-  // Do not pass signal to start — refresh must not kill job creation mid-flight
   const started = await startAnalysisJob({
     idea: params.idea,
     category: params.category,
@@ -206,18 +308,37 @@ export async function requestAnalysis(params: {
   });
 }
 
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal?.aborted) {
+      resolve();
+      return;
+    }
+    const id = setTimeout(resolve, ms);
+    signal?.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(id);
+        resolve();
+      },
+      { once: true },
+    );
+  });
+}
+
+function isAbortError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const name = "name" in err ? String((err as { name?: string }).name) : "";
+  const msg =
+    "message" in err ? String((err as { message?: string }).message) : "";
+  return name === "AbortError" || /aborted|cancelled/i.test(msg);
+}
+
 function networkOrCancelFailure(
   err: unknown,
   locale?: Locale,
 ): AnalyzeFailure {
-  const msg = err instanceof Error ? err.message : String(err);
-  if (
-    /aborted|cancelled/i.test(msg) ||
-    (err &&
-      typeof err === "object" &&
-      "name" in err &&
-      String((err as { name: string }).name).includes("Abort"))
-  ) {
+  if (isAbortError(err)) {
     return {
       ok: false,
       message:
@@ -230,141 +351,6 @@ function networkOrCancelFailure(
     message:
       "Cannot reach BreakItFirst backend (/api/analyze). Is `npm run dev` running?",
     code: "network",
-  };
-}
-
-async function parseJsonResult(res: Response): Promise<AnalyzeResult> {
-  let data: unknown;
-  try {
-    data = await res.json();
-  } catch {
-    return {
-      ok: false,
-      message: `Backend returned non-JSON (HTTP ${res.status}). Check the Next.js server logs.`,
-      code: "bad_response",
-    };
-  }
-  return mapPayload(data, res.status);
-}
-
-function yieldToUi(): Promise<void> {
-  return new Promise((resolve) => {
-    if (typeof requestAnimationFrame === "function") {
-      requestAnimationFrame(() => resolve());
-    } else {
-      setTimeout(resolve, 0);
-    }
-  });
-}
-
-async function readNdjsonStream(
-  res: Response,
-  params: {
-    locale?: Locale;
-    onStage?: (progress: AnalyzeStageProgress) => void;
-    onJobHello?: (info: { jobId: string; status: string }) => void;
-  },
-): Promise<AnalyzeResult> {
-  const reader = res.body!.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  let finalResult: AnalyzeResult | null = null;
-
-  const handleMessage = async (msg: Record<string, unknown>) => {
-    if (msg.type === "ping") return;
-
-    if (msg.type === "hello") {
-      params.onJobHello?.({
-        jobId: typeof msg.jobId === "string" ? msg.jobId : "",
-        status: typeof msg.status === "string" ? msg.status : "running",
-      });
-      return;
-    }
-
-    if (msg.type === "stage" && typeof msg.stage === "string") {
-      if (process.env.NODE_ENV === "development") {
-        console.info("[analyze-client] stage", msg.stage, msg.detail ?? "");
-      }
-      params.onStage?.({
-        stage: msg.stage as PipelineLiveStage,
-        detail: typeof msg.detail === "string" ? msg.detail : undefined,
-        at: typeof msg.at === "number" ? msg.at : undefined,
-      });
-      await yieldToUi();
-      return;
-    }
-
-    if (msg.type === "result") {
-      finalResult = mapPayload(msg, res.status);
-      return;
-    }
-
-    if ("ok" in msg && msg.type === undefined) {
-      finalResult = mapPayload(msg, res.status);
-    }
-  };
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith(":")) continue;
-        try {
-          await handleMessage(JSON.parse(trimmed) as Record<string, unknown>);
-        } catch {
-          /* skip bad lines */
-        }
-      }
-    }
-
-    const tail = buffer.trim();
-    if (tail && !tail.startsWith(":")) {
-      try {
-        await handleMessage(JSON.parse(tail) as Record<string, unknown>);
-      } catch {
-        /* ignore */
-      }
-    }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (/aborted|cancelled/i.test(msg)) {
-      // Status stream aborted (refresh) — NOT the same as job cancelled.
-      // Caller should reconnect; return a special code.
-      return {
-        ok: false,
-        message:
-          params.locale === "id"
-            ? "Koneksi status terputus (refresh?). Menyambung ulang…"
-            : "Status connection lost (refresh?). Reconnecting…",
-        code: "stream_disconnected",
-      };
-    }
-    return {
-      ok: false,
-      message:
-        params.locale === "id"
-          ? "Koneksi terputus saat menunggu model. Coba lagi."
-          : "Connection lost while waiting for the model. Retry.",
-      code: "network",
-    };
-  }
-
-  if (finalResult) return finalResult;
-
-  return {
-    ok: false,
-    message:
-      params.locale === "id"
-        ? "Stream berakhir tanpa hasil. Job mungkin masih jalan — refresh untuk sambung ulang."
-        : "Stream ended without a result. Job may still be running — refresh to reconnect.",
-    code: "bad_response",
   };
 }
 

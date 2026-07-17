@@ -33,12 +33,13 @@ function formatElapsed(ms: number) {
     : `0:${String(r).padStart(2, "0")}`;
 }
 
-/** Progress caps by real stage index — only crawl within current stage. */
-const STAGE_PROGRESS_CAPS = [12, 32, 52, 78, 96];
+/** Progress floors / caps by real stage index (server-driven). */
+const STAGE_PROGRESS_FLOOR = [4, 18, 38, 58, 82];
+const STAGE_PROGRESS_CAPS = [16, 36, 56, 80, 97];
 
 /**
  * Seamless full-card analyzing layer (no nested “boxes”).
- * Stage list is driven by real server events, not wall-clock heuristics.
+ * Stage list is driven by real server events (poll snapshot), not wall-clock.
  */
 export function AnalyzingOverlay({
   open,
@@ -55,9 +56,7 @@ export function AnalyzingOverlay({
   const [tipIndex, setTipIndex] = useState(0);
   const [progress, setProgress] = useState(4);
 
-  const stageIndex = liveStage
-    ? liveStageToUiIndex(liveStage)
-    : 0;
+  const stageIndex = liveStage ? liveStageToUiIndex(liveStage) : 0;
 
   useEffect(() => {
     if (!open) return;
@@ -65,6 +64,16 @@ export function AnalyzingOverlay({
     setTipIndex(0);
     setProgress(4);
   }, [open]);
+
+  // When server stage advances, jump progress floor immediately (no stuck 12%)
+  useEffect(() => {
+    if (!open) return;
+    const floor =
+      STAGE_PROGRESS_FLOOR[
+        Math.min(stageIndex, STAGE_PROGRESS_FLOOR.length - 1)
+      ] ?? 4;
+    setProgress((p) => Math.max(p, floor));
+  }, [open, stageIndex, liveStage]);
 
   useEffect(() => {
     if (!open) return;
@@ -75,22 +84,24 @@ export function AnalyzingOverlay({
     return () => window.clearInterval(id);
   }, [open]);
 
-  // Soft progress crawl within the *current real stage* only
+  // Soft crawl within the *current real stage* only
   useEffect(() => {
     if (!open) return;
     const id = window.setInterval(() => {
       setProgress((p) => {
         const cap =
-          STAGE_PROGRESS_CAPS[Math.min(stageIndex, STAGE_PROGRESS_CAPS.length - 1)] ??
-          96;
+          STAGE_PROGRESS_CAPS[
+            Math.min(stageIndex, STAGE_PROGRESS_CAPS.length - 1)
+          ] ?? 97;
+        const floor =
+          STAGE_PROGRESS_FLOOR[
+            Math.min(stageIndex, STAGE_PROGRESS_FLOOR.length - 1)
+          ] ?? 4;
+        if (p < floor) return floor;
         if (p >= cap) {
-          // Micro-pulse so bar doesn't look frozen while model is slow
-          return Math.min(cap, p + 0.01);
+          return Math.min(cap, p + 0.02);
         }
-        // Jump floor when stage advances
-        const floor = stageIndex === 0 ? 4 : STAGE_PROGRESS_CAPS[stageIndex - 1] ?? 4;
-        const base = Math.max(p, floor);
-        return Math.min(cap, base + (cap - base) * 0.04 + 0.15);
+        return Math.min(cap, p + (cap - p) * 0.05 + 0.2);
       });
     }, 160);
     return () => window.clearInterval(id);
