@@ -32,6 +32,19 @@ export type Dictionary = {
     tipProvider: string;
     deepLabel: string;
     deepHint: string;
+    draftRestored: string;
+    clearDraft: string;
+    cancelled: string;
+  };
+  analyzing: {
+    title: string;
+    subtitle: string;
+    elapsed: string;
+    stillWorking: string;
+    cancel: string;
+    cancelHint: string;
+    stages: { id: string; label: string; hint: string }[];
+    tips: string[];
   };
   report: {
     kicker: string;
@@ -109,14 +122,6 @@ export type Dictionary = {
     rateLimited: (s: number) => string;
     failed: string;
   };
-  analyzing: {
-    title: string;
-    subtitle: string;
-    elapsed: string;
-    stillWorking: string;
-    stages: { id: string; label: string; hint: string }[];
-    tips: string[];
-  };
 };
 
 const en: Dictionary = {
@@ -168,6 +173,10 @@ const en: Dictionary = {
     deepLabel: "Deep analysis",
     deepHint:
       "Runs Pass 1 twice and calibrates SPOF agreement. Slower, uses 2 rate-limit slots.",
+    draftRestored: "Draft restored from this browser",
+    clearDraft: "Clear draft",
+    cancelled:
+      "Analysis cancelled. Your idea is still here — you can run again anytime.",
   },
   report: {
     kicker: "Failure report",
@@ -266,6 +275,9 @@ const en: Dictionary = {
     elapsed: "Elapsed",
     stillWorking:
       "Model still generating — this is normal for slow providers. Stages advance only when the server finishes each pass. Keep this tab open.",
+    cancel: "Cancel analysis",
+    cancelHint:
+      "Stops waiting on this tab. The model may still finish on the provider side (tokens may still be billed).",
     stages: [
       {
         id: "ingest",
@@ -354,6 +366,10 @@ const id: Dictionary = {
       "Pass 1 dijalankan 2× lalu dikalibrasi. Lebih lambat, memakai 2 slot rate limit.",
     tipProvider:
       "Tip: buka Provider → Test connection / Fetch models untuk cek base URL, key, dan model.",
+    draftRestored: "Draf dipulihkan dari browser ini",
+    clearDraft: "Hapus draf",
+    cancelled:
+      "Analisis dibatalkan. Ide masih ada di form — bisa dijalankan lagi kapan saja.",
   },
   report: {
     kicker: "Laporan kegagalan",
@@ -452,6 +468,9 @@ const id: Dictionary = {
     elapsed: "Berjalan",
     stillWorking:
       "Model masih generate — normal untuk provider lambat. Stage maju hanya saat server selesai tiap pass. Jangan tutup tab ini.",
+    cancel: "Batalkan analisis",
+    cancelHint:
+      "Berhenti menunggu di tab ini. Model mungkin tetap selesai di sisi provider (token bisa tetap terhitung).",
     stages: [
       {
         id: "ingest",

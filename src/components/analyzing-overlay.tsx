@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Loader2, Sparkles } from "lucide-react";
+import { Check, Loader2, Sparkles, X } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
 import {
   liveStageToUiIndex,
@@ -20,6 +20,8 @@ type AnalyzingOverlayProps = {
   liveStage?: PipelineLiveStage | null;
   /** Optional detail from last stage event */
   liveDetail?: string | null;
+  /** Abort in-flight analysis without leaving the page */
+  onCancel?: () => void;
 };
 
 function formatElapsed(ms: number) {
@@ -42,6 +44,7 @@ export function AnalyzingOverlay({
   open,
   liveStage = null,
   liveDetail = null,
+  onCancel,
 }: AnalyzingOverlayProps) {
   const { t } = useLanguage();
   const { theme } = useTheme();
@@ -293,6 +296,22 @@ export function AnalyzingOverlay({
             </motion.p>
           </AnimatePresence>
         </div>
+
+        {onCancel ? (
+          <div className="w-full max-w-[20rem] space-y-2 pt-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-text"
+            >
+              <X className="h-4 w-4 shrink-0" />
+              {t.analyzing.cancel}
+            </button>
+            <p className="text-center text-[10px] leading-relaxed text-text-muted">
+              {t.analyzing.cancelHint}
+            </p>
+          </div>
+        ) : null}
       </div>
     </motion.div>
   );

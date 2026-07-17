@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { AnalyzingOverlay } from "@/components/analyzing-overlay";
@@ -14,9 +21,22 @@ import {
   type Category,
   type ExampleChip,
 } from "@/lib/categories";
+import {
+  cancelAnalysisJob,
+  startAnalysisJob,
+  watchAnalysisJob,
+  type AnalyzeResult,
+} from "@/lib/analyze-client";
+import {
+  clearActiveJob,
+  clearFormDraft,
+  loadActiveJob,
+  loadFormDraft,
+  saveActiveJob,
+  saveFormDraft,
+} from "@/lib/draft";
 import { validateAnalyzeInput } from "@/lib/input-validation";
 import type { ProviderSettings } from "@/lib/provider-settings";
-import { requestAnalysis } from "@/lib/analyze-client";
 import { useLanguage } from "@/lib/i18n/context";
 import type { PipelineLiveStage } from "@/lib/pipeline-stages";
 import type { FailureAnalysis } from "@/types/analysis";
@@ -58,7 +78,212 @@ export function LandingForm({
   const [liveDetail, setLiveDetail] = useState<string | null>(null);
   const [activeChip, setActiveChip] = useState<string | null>(null);
   const [loadedHint, setLoadedHint] = useState<string | null>(null);
+  const [draftHydrated, setDraftHydrated] = useState(false);
+
   const ideaRef = useRef<HTMLTextAreaElement | null>(null);
+  /** Aborts only the status stream — never cancels the server job. */
+  const watchAbortRef = useRef<AbortController | null>(null);
+  const activeJobIdRef = useRef<string | null>(null);
+  const userCancelledRef = useRef(false);
+  const onSuccessRef = useRef(onSuccess);
+  onSuccessRef.current = onSuccess;
+  const localeRef = useRef(locale);
+  localeRef.current = locale;
+  const tRef = useRef(t);
+  tRef.current = t;
+
+  const finishFromResult = useCallback(
+    (result: AnalyzeResult, _jobId: string) => {
+      if (userCancelledRef.current) {
+        clearActiveJob();
+        activeJobIdRef.current = null;
+        setLoading(false);
+        setLiveStage(null);
+        setLiveDetail(null);
+        setError(tRef.current.form.cancelled);
+        return;
+      }
+
+      if (!result.ok) {
+        if (
+          result.code === "cancelled" ||
+          result.code === "stream_disconnected"
+        ) {
+          // stream_disconnected = tab refresh; keep job for resume on next mount
+          if (result.code === "stream_disconnected") {
+            // Keep loading true only if still mounted with active job —
+            // usually component is unmounting. If still here, stay in loading
+            // and let effect reconnect.
+            return;
+          }
+          clearActiveJob();
+          activeJobIdRef.current = null;
+          setLoading(false);
+          setLiveStage(null);
+          setLiveDetail(null);
+          setError(tRef.current.form.cancelled);
+          return;
+        }
+        if (result.code === "job_not_found") {
+          clearActiveJob();
+          activeJobIdRef.current = null;
+          setLoading(false);
+          setLiveStage(null);
+          setLiveDetail(null);
+          setError(
+            localeRef.current === "id"
+              ? "Job analisis tidak ditemukan (server restart?). Jalankan Analyze lagi."
+              : "Analysis job not found (server restart?). Run Analyze again.",
+          );
+          return;
+        }
+        if (result.code === "rate_limited" && result.retryAfterSec) {
+          setError(tRef.current.errors.rateLimited(result.retryAfterSec));
+        } else {
+          setError(result.message || tRef.current.errors.failed);
+        }
+        clearActiveJob();
+        activeJobIdRef.current = null;
+        setLoading(false);
+        setLiveStage(null);
+        setLiveDetail(null);
+        return;
+      }
+
+      clearActiveJob();
+      activeJobIdRef.current = null;
+      setLoading(false);
+      setLiveStage(null);
+      setLiveDetail(null);
+      onSuccessRef.current(result.analysis, result.warnings);
+    },
+    [],
+  );
+
+  const attachWatch = useCallback(
+    async (jobId: string) => {
+      activeJobIdRef.current = jobId;
+
+      // Cancel previous watch only
+      watchAbortRef.current?.abort();
+      const controller = new AbortController();
+      watchAbortRef.current = controller;
+
+      // Overlay ON immediately
+      setLoading(true);
+      setError(null);
+      setLiveStage((s) => s ?? "ingest");
+
+      const result = await watchAnalysisJob({
+        jobId,
+        locale: localeRef.current,
+        signal: controller.signal,
+        onStage: (p) => {
+          if (watchAbortRef.current !== controller) return;
+          setLiveStage(p.stage);
+          setLiveDetail(p.detail ?? null);
+        },
+      });
+
+      // Superseded by a newer watch
+      if (watchAbortRef.current !== controller) {
+        return;
+      }
+
+      if (!result.ok && result.code === "stream_disconnected") {
+        // Refresh/unmount — do not clear active job; next mount resumes
+        return;
+      }
+
+      finishFromResult(result, jobId);
+    },
+    [finishFromResult],
+  );
+
+  // ── Restore draft + IMMEDIATELY reopen analyzer if job active ────────
+  useLayoutEffect(() => {
+    const draft = loadFormDraft();
+    if (draft) {
+      setIdea(draft.idea);
+      setCategory(draft.category);
+      setDeepAnalysis(draft.deepAnalysis);
+      if (draft.activeChip) setActiveChip(draft.activeChip);
+    }
+
+    const active = loadActiveJob();
+    if (active?.jobId) {
+      // Paint analyzer overlay before first paint if possible
+      setLoading(true);
+      setLiveStage("ingest");
+      setLoadedHint(
+        localeRef.current === "id"
+          ? "Menyambung ulang ke analisis yang sedang berjalan…"
+          : "Reconnecting to your running analysis…",
+      );
+      if (!draft?.idea.trim() && active.idea) {
+        setIdea(active.idea);
+        setCategory(active.category);
+        setDeepAnalysis(active.deepAnalysis);
+      } else if (draft?.idea.trim()) {
+        setLoadedHint(
+          localeRef.current === "id"
+            ? "Menyambung ulang ke analisis yang sedang berjalan…"
+            : "Reconnecting to your running analysis…",
+        );
+      }
+      activeJobIdRef.current = active.jobId;
+    } else if (draft?.idea.trim()) {
+      setLoadedHint(tRef.current.form.draftRestored);
+    }
+
+    setDraftHydrated(true);
+  }, []);
+
+  // Start/resume status watch for active job (re-runs cleanly after Strict Mode)
+  useEffect(() => {
+    if (!draftHydrated) return;
+
+    const active = loadActiveJob();
+    if (!active?.jobId) return;
+
+    let cancelled = false;
+
+    // Ensure overlay is showing
+    setLoading(true);
+    setLiveStage((s) => s ?? "ingest");
+    activeJobIdRef.current = active.jobId;
+
+    void (async () => {
+      if (cancelled) return;
+      await attachWatch(active.jobId);
+    })();
+
+    return () => {
+      cancelled = true;
+      // Only abort status stream — server job keeps running
+      watchAbortRef.current?.abort();
+    };
+  }, [draftHydrated, attachWatch]);
+
+  // Persist draft
+  useEffect(() => {
+    if (!draftHydrated) return;
+    const id = window.setTimeout(() => {
+      saveFormDraft({ idea, category, deepAnalysis, activeChip });
+    }, 350);
+    return () => window.clearTimeout(id);
+  }, [idea, category, deepAnalysis, activeChip, draftHydrated]);
+
+  // Soft browser warning while analyzing
+  useEffect(() => {
+    if (!loading) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [loading]);
 
   const charCount = idea.trim().length;
   const tooShort = charCount > 0 && charCount < MIN_IDEA_LENGTH;
@@ -89,7 +314,6 @@ export function LandingForm({
         ? `Template “${chip.label}” dimuat · ${text.length} karakter · ${chip.category}`
         : `Loaded “${chip.label}” · ${text.length} chars · ${chip.category}`,
     );
-    // Focus so user clearly sees the filled idea
     requestAnimationFrame(() => {
       const el = ideaRef.current;
       if (!el) return;
@@ -99,11 +323,37 @@ export function LandingForm({
     });
   }
 
+  function handleClearDraft() {
+    setIdea("");
+    setCategory("Startup");
+    setDeepAnalysis(false);
+    setActiveChip(null);
+    setLoadedHint(null);
+    setError(null);
+    clearFormDraft();
+  }
+
+  async function handleCancel() {
+    userCancelledRef.current = true;
+    const jobId = activeJobIdRef.current ?? loadActiveJob()?.jobId ?? null;
+    watchAbortRef.current?.abort();
+    if (jobId) {
+      await cancelAnalysisJob(jobId);
+    }
+    clearActiveJob();
+    activeJobIdRef.current = null;
+    setLoading(false);
+    setLiveStage(null);
+    setLiveDetail(null);
+    setError(t.form.cancelled);
+    userCancelledRef.current = false;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    userCancelledRef.current = false;
 
-    // Same rules as the API (verbose messages on the client)
     const input = validateAnalyzeInput(
       { idea, category },
       { verbose: true },
@@ -119,46 +369,65 @@ export function LandingForm({
       return;
     }
 
+    // Already running → reconnect only (no second API job)
+    const existing = loadActiveJob();
+    if (existing?.jobId) {
+      setLoadedHint(
+        locale === "id"
+          ? "Analisis masih berjalan — menyambung ulang (tanpa call API baru)."
+          : "Analysis still running — reconnecting (no new API call).",
+      );
+      await attachWatch(existing.jobId);
+      return;
+    }
+
+    saveFormDraft({
+      idea: input.idea,
+      category: input.category,
+      deepAnalysis,
+      activeChip,
+    });
+
     setLoading(true);
     setLiveStage("ingest");
     setLiveDetail(null);
     setLoadedHint(null);
 
-    try {
-      const result = await requestAnalysis({
-        idea: input.idea,
-        category: input.category,
-        provider,
-        locale,
-        deepAnalysis,
-        onStage: (p) => {
-          // Real server stages only (streamed NDJSON) — no timer heuristics
-          setLiveStage(p.stage);
-          setLiveDetail(p.detail ?? null);
-        },
-      });
+    // 1) Start job (rate limit + provider work begins here)
+    const started = await startAnalysisJob({
+      idea: input.idea,
+      category: input.category,
+      provider,
+      locale,
+      deepAnalysis,
+    });
 
-      if (!result.ok) {
-        if (result.code === "rate_limited" && result.retryAfterSec) {
-          setError(t.errors.rateLimited(result.retryAfterSec));
-        } else {
-          setError(result.message || t.errors.failed);
-        }
-        return;
-      }
-
-      onSuccess(result.analysis, result.warnings);
-    } catch {
-      setError(t.errors.failed);
-    } finally {
+    if (!started.ok) {
       setLoading(false);
       setLiveStage(null);
-      setLiveDetail(null);
+      if (started.code === "rate_limited" && started.retryAfterSec) {
+        setError(t.errors.rateLimited(started.retryAfterSec));
+      } else {
+        setError(started.message || t.errors.failed);
+      }
+      return;
     }
+
+    // 2) Persist jobId BEFORE watching — critical for refresh resume
+    activeJobIdRef.current = started.jobId;
+    saveActiveJob({
+      jobId: started.jobId,
+      startedAt: new Date().toISOString(),
+      idea: input.idea,
+      category: input.category,
+      deepAnalysis,
+    });
+
+    // 3) Watch status stream (safe to drop on refresh)
+    await attachWatch(started.jobId);
   }
 
   return (
-    /* Negative margin pulls overlay over GlowCard padding so no “inner box” shows */
     <div className="relative -m-6 min-h-[28rem] sm:-m-8">
       <form
         onSubmit={handleSubmit}
@@ -168,7 +437,19 @@ export function LandingForm({
         )}
       >
         <div>
-          <Label htmlFor="idea">{t.form.ideaLabel}</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="idea">{t.form.ideaLabel}</Label>
+            {charCount > 0 || category !== "Startup" || deepAnalysis ? (
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleClearDraft}
+                className="text-[11px] text-text-muted underline-offset-2 hover:text-text-secondary hover:underline"
+              >
+                {t.form.clearDraft}
+              </button>
+            ) : null}
+          </div>
           <Textarea
             id="idea"
             ref={ideaRef}
@@ -347,6 +628,7 @@ export function LandingForm({
               open={loading}
               liveStage={liveStage}
               liveDetail={liveDetail}
+              onCancel={handleCancel}
             />
           </div>
         )}
