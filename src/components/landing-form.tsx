@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { AnalyzingOverlay } from "@/components/analyzing-overlay";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,10 +12,13 @@ import {
   EXAMPLE_CHIPS,
   MIN_IDEA_LENGTH,
   type Category,
+  type ExampleChip,
 } from "@/lib/categories";
+import { validateAnalyzeInput } from "@/lib/input-validation";
 import type { ProviderSettings } from "@/lib/provider-settings";
 import { requestAnalysis } from "@/lib/analyze-client";
 import { useLanguage } from "@/lib/i18n/context";
+import type { PipelineLiveStage } from "@/lib/pipeline-stages";
 import type { FailureAnalysis } from "@/types/analysis";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +28,19 @@ type LandingFormProps = {
   onNeedProvider: () => void;
   onSuccess: (analysis: FailureAnalysis, warnings?: string[]) => void;
 };
+
+function ideaTextForLocale(chip: ExampleChip, locale: string): string {
+  if (locale === "id") {
+    return (chip.ideaId || chip.ideaEn || "").trim();
+  }
+  return (chip.ideaEn || chip.ideaId || "").trim();
+}
+
+function shouldShowProviderTip(message: string): boolean {
+  return /provider|model id|base url|api key|connection|network|backend|timeout|fetch models|pass 1|pass 2|mimo|openai/i.test(
+    message,
+  );
+}
 
 export function LandingForm({
   providerReady,
@@ -38,6 +54,11 @@ export function LandingForm({
   const [deepAnalysis, setDeepAnalysis] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [liveStage, setLiveStage] = useState<PipelineLiveStage | null>(null);
+  const [liveDetail, setLiveDetail] = useState<string | null>(null);
+  const [activeChip, setActiveChip] = useState<string | null>(null);
+  const [loadedHint, setLoadedHint] = useState<string | null>(null);
+  const ideaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const charCount = idea.trim().length;
   const tooShort = charCount > 0 && charCount < MIN_IDEA_LENGTH;
@@ -49,30 +70,46 @@ export function LandingForm({
     return t.form.helper;
   }, [charCount, tooShort, t]);
 
-  function applyChip(label: string, cat: Category) {
-    setIdea(
-      locale === "id"
-        ? `Ide produk: ${label}. Jelaskan cara kerjanya, siapa penggunanya, dan bagaimana model monetisasinya.`
-        : `A product idea: ${label}. Expand on how it works, who uses it, and how it makes money.`,
-    );
-    setCategory(cat);
+  function applyChip(chip: ExampleChip) {
+    const text = ideaTextForLocale(chip, locale);
+    if (!text) {
+      setError(
+        locale === "id"
+          ? "Template ini kosong — coba template lain."
+          : "This template has no text — try another.",
+      );
+      return;
+    }
+    setIdea(text);
+    setCategory(chip.category);
+    setActiveChip(chip.label);
     setError(null);
+    setLoadedHint(
+      locale === "id"
+        ? `Template “${chip.label}” dimuat · ${text.length} karakter · ${chip.category}`
+        : `Loaded “${chip.label}” · ${text.length} chars · ${chip.category}`,
+    );
+    // Focus so user clearly sees the filled idea
+    requestAnimationFrame(() => {
+      const el = ideaRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(0, 0);
+      el.scrollTop = 0;
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const trimmed = idea.trim();
-    if (trimmed.length < MIN_IDEA_LENGTH) {
-      setError(t.errors.detail);
-      return;
-    }
-
-    const words = trimmed.split(/\s+/).filter((w) => w.length >= 2);
-    const uniqueWords = new Set(words.map((w) => w.toLowerCase()));
-    if (uniqueWords.size < 5) {
-      setError(t.errors.detail);
+    // Same rules as the API (verbose messages on the client)
+    const input = validateAnalyzeInput(
+      { idea, category },
+      { verbose: true },
+    );
+    if (!input.ok) {
+      setError(input.message);
       return;
     }
 
@@ -83,14 +120,22 @@ export function LandingForm({
     }
 
     setLoading(true);
+    setLiveStage("ingest");
+    setLiveDetail(null);
+    setLoadedHint(null);
 
     try {
       const result = await requestAnalysis({
-        idea: trimmed,
-        category,
+        idea: input.idea,
+        category: input.category,
         provider,
         locale,
         deepAnalysis,
+        onStage: (p) => {
+          // Real server stages only (streamed NDJSON) — no timer heuristics
+          setLiveStage(p.stage);
+          setLiveDetail(p.detail ?? null);
+        },
       });
 
       if (!result.ok) {
@@ -107,6 +152,8 @@ export function LandingForm({
       setError(t.errors.failed);
     } finally {
       setLoading(false);
+      setLiveStage(null);
+      setLiveDetail(null);
     }
   }
 
@@ -124,9 +171,12 @@ export function LandingForm({
           <Label htmlFor="idea">{t.form.ideaLabel}</Label>
           <Textarea
             id="idea"
+            ref={ideaRef}
             value={idea}
             onChange={(e) => {
               setIdea(e.target.value);
+              setActiveChip(null);
+              setLoadedHint(null);
               setError(null);
             }}
             placeholder={t.form.ideaPlaceholder}
@@ -134,10 +184,25 @@ export function LandingForm({
             disabled={loading}
           />
           <div className="mt-2 flex items-center justify-between gap-3 text-[11px]">
-            <p className={cn(tooShort ? "text-warning" : "text-text-muted")}>
-              {helper}
+            <p
+              className={cn(
+                tooShort
+                  ? "text-warning"
+                  : loadedHint
+                    ? "text-healthy"
+                    : "text-text-muted",
+              )}
+            >
+              {loadedHint ?? helper}
             </p>
-            <p className="shrink-0 tabular-nums text-text-muted">
+            <p
+              className={cn(
+                "shrink-0 tabular-nums",
+                charCount >= MIN_IDEA_LENGTH
+                  ? "text-text-secondary"
+                  : "text-text-muted",
+              )}
+            >
               {charCount} {t.form.chars}
             </p>
           </div>
@@ -171,21 +236,44 @@ export function LandingForm({
         </div>
 
         <div>
-          <p className="mb-2 text-xs text-text-muted">{t.form.examplesLabel}</p>
-          <div className="flex flex-wrap gap-2">
-            {EXAMPLE_CHIPS.map((chip) => (
-              <motion.button
-                key={chip.label}
-                type="button"
-                disabled={loading}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => applyChip(chip.label, chip.category)}
-                className="rounded-full border border-dashed border-border bg-background/40 px-3 py-1.5 text-xs text-text-secondary transition-colors hover:border-accent/40 hover:text-text"
-              >
-                {chip.label}
-              </motion.button>
-            ))}
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs text-text-muted">{t.form.examplesLabel}</p>
+            <p className="text-[10px] tabular-nums text-text-muted/80">
+              {EXAMPLE_CHIPS.length} templates
+            </p>
+          </div>
+          <div className="max-h-[7.5rem] overflow-y-auto rounded-xl border border-border/50 bg-background/20 p-2 no-scrollbar">
+            <div className="flex flex-wrap gap-1.5">
+              {EXAMPLE_CHIPS.map((chip) => {
+                const selected = activeChip === chip.label;
+                return (
+                  <motion.button
+                    key={chip.label}
+                    type="button"
+                    disabled={loading}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    title={`${chip.category} · click to fill idea`}
+                    onClick={(ev) => {
+                      ev.preventDefault();
+                      ev.stopPropagation();
+                      applyChip(chip);
+                    }}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition-colors",
+                      selected
+                        ? "border-accent/50 bg-accent/15 text-accent"
+                        : "border-dashed border-border bg-background/40 text-text-secondary hover:border-accent/40 hover:text-text",
+                    )}
+                  >
+                    {selected ? (
+                      <Check className="h-3 w-3 shrink-0" strokeWidth={3} />
+                    ) : null}
+                    {chip.label}
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -216,7 +304,15 @@ export function LandingForm({
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <div className="min-w-0 space-y-1">
               <p className="break-words leading-relaxed">{error}</p>
-              <p className="text-[11px] text-accent/80">{t.form.tipProvider}</p>
+              {shouldShowProviderTip(error) ? (
+                <p className="text-[11px] text-accent/80">{t.form.tipProvider}</p>
+              ) : charCount === 0 ? (
+                <p className="text-[11px] text-accent/80">
+                  {locale === "id"
+                    ? "Tip: klik salah satu template di atas — teks ide harus muncul di kotak."
+                    : "Tip: click a template above — the idea box should fill with text."}
+                </p>
+              ) : null}
             </div>
           </motion.div>
         )}
@@ -247,7 +343,11 @@ export function LandingForm({
             className="absolute inset-0 z-20 overflow-hidden"
             style={{ borderRadius: 28 }}
           >
-            <AnalyzingOverlay open={loading} />
+            <AnalyzingOverlay
+              open={loading}
+              liveStage={liveStage}
+              liveDetail={liveDetail}
+            />
           </div>
         )}
       </AnimatePresence>

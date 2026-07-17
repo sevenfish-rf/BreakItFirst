@@ -14,6 +14,13 @@ export type StressVerdict = "Yes" | "Maybe" | "No";
 /** C.5 qualitative failure velocity (no false numeric precision) */
 export type VelocityBand = "Fast" | "Medium" | "Slow";
 
+export type FailureModeKey =
+  | "technical"
+  | "business"
+  | "security"
+  | "legal"
+  | "operations";
+
 export type CascadeNode = {
   /** Short causal step (~max 8 words) for the graph */
   step: string;
@@ -44,9 +51,19 @@ export interface FailureAnalysis {
     confidence: ConfidenceBand;
     confidence_reason: string;
     explanation: string;
+    /**
+     * F1 — 0-based indices into assumptions[] that this SPOF most depends on.
+     * Optional; omit if model cannot link cleanly.
+     */
+    critical_assumption_indices?: number[];
   };
   cascade: {
     nodes: CascadeNode[];
+    /**
+     * F2 — 0-based index into nodes[] where the chain becomes hard to reverse.
+     * Descriptive only — not advice. Optional if unclear.
+     */
+    point_of_no_return_index?: number;
   };
   failure_modes: {
     technical: string[];
@@ -54,6 +71,11 @@ export interface FailureAnalysis {
     security: string[];
     legal: string[];
     operations: string[];
+    /**
+     * F3 — optional note that two domains share one root trigger.
+     * Observation only; omit if none.
+     */
+    compounding_note?: string;
   };
   likelihood: {
     band: LikelihoodBand;

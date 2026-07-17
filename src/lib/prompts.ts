@@ -160,10 +160,19 @@ Hard rules:
 - Do not soften, hedge, or add anything encouraging.
 - single_point_of_failure.component must be a SHORT label (prefer ≤12 words,
   ideally 3–8). Put the full mechanism only in explanation.
+- single_point_of_failure.critical_assumption_indices (optional): 1–3 integers,
+  0-based indexes into assumptions[], naming which assumption(s) this SPOF
+  most directly depends on breaking. Pure linkage — no new claims. Omit if unclear.
 - cascade.nodes: prefer **8–10** objects (allowed 7–12), ordered. Each has:
   - step: short causal step (max ~8 words) for a vertical flow diagram
   - observable_signal: real-world observation if this step is happening
     (NOT advice; no "you should" / recommendations)
+- cascade.point_of_no_return_index (optional): 0-based index into cascade.nodes
+  for the step where the failure path becomes hard to reverse. Descriptive only —
+  never "you should intervene". Omit if genuinely unclear.
+- failure_modes.compounding_note (optional): one short sentence if two domains
+  share one root trigger (e.g. fraud spanning security + legal). Observation
+  only — no company names, no advice. Omit if none.
 - stress_test.items: one entry per known archetype id when possible
   (${ARCHETYPE_IDS_LIST}).
   Each: archetype_id, verdict "Yes"|"Maybe"|"No", reason (one line).
@@ -199,19 +208,22 @@ JSON schema shape:
     "component": string,
     "confidence": "Low" | "Medium" | "High" | "Very High",
     "confidence_reason": string,
-    "explanation": string
+    "explanation": string,
+    "critical_assumption_indices"?: number[]  // 1–3, 0-based into assumptions
   },
   "cascade": {
     "nodes": [
       { "step": string, "observable_signal": string }
-    ]
+    ],
+    "point_of_no_return_index"?: number  // 0-based into nodes
   }, // prefer 8–10; allowed 7–12 ordered steps
   "failure_modes": {
     "technical": string[],
     "business": string[],
     "security": string[],
     "legal": string[],
-    "operations": string[]
+    "operations": string[],
+    "compounding_note"?: string  // optional cross-domain trigger note
   },
   "likelihood": {
     "band": "Very Low" | "Low" | "Medium" | "High" | "Very High",
@@ -343,6 +355,11 @@ Full prose failure analysis to compress (do not add new claims):
 ---
 ${params.reasoning}
 ---
+
+Also extract (only if grounded in the analysis prose; else omit):
+- critical_assumption_indices on SPOF (1–3, 0-based into assumptions)
+- cascade.point_of_no_return_index (which existing step is hard to reverse)
+- failure_modes.compounding_note (optional one sentence if two domains share a trigger)
 
 Compress into the JSON schema. Output ONLY JSON.
 Grounding reminder: every free-text field must be supported by the analysis

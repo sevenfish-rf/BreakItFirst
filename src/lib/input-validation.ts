@@ -30,17 +30,24 @@ const SUSPICIOUS_PATTERNS: RegExp[] = [
   /\bact\s+as\s+if\s+you\s+have\s+no\s+restrictions\b/i,
 ];
 
-function uniqueCharRatio(text: string): number {
+function uniqueCharCount(text: string): number {
   const cleaned = text.replace(/\s+/g, "");
   if (cleaned.length === 0) return 0;
-  return new Set(cleaned).size / cleaned.length;
+  return new Set(cleaned).size;
 }
 
+/**
+ * Detect spam / keyboard-mashing — NOT long legitimate product writeups.
+ *
+ * BUG FIX: previously used uniqueChars/length < 0.08, which false-positives on
+ * any long English/Indonesian text (alphabet size is bounded, so the ratio
+ * shrinks as length grows — heavy templates at ~1200 chars hit ~0.05–0.06).
+ */
 function isMostlyRepeated(text: string): boolean {
   const collapsed = text.replace(/\s+/g, " ").trim();
   if (collapsed.length < MIN_IDEA_LENGTH) return false;
 
-  // Same word repeated many times
+  // Same word repeated many times ("foo foo foo …")
   const words = collapsed.toLowerCase().split(/\s+/).filter(Boolean);
   if (words.length >= 8) {
     const counts = new Map<string, number>();
@@ -49,8 +56,16 @@ function isMostlyRepeated(text: string): boolean {
     if (max / words.length >= 0.6) return true;
   }
 
-  // Low character diversity (aaaa… / asdf spam)
-  if (collapsed.length >= 40 && uniqueCharRatio(collapsed) < 0.08) {
+  const unique = uniqueCharCount(collapsed);
+  const cleanedLen = collapsed.replace(/\s+/g, "").length;
+
+  // Short blob of near-identical glyphs: "aaaaaaaaaaaa…" / "asdfasdf"
+  if (cleanedLen >= 40 && cleanedLen <= 160 && unique <= 6) {
+    return true;
+  }
+
+  // Long text with almost no character variety (still spam, not a real idea)
+  if (cleanedLen > 160 && unique < 12) {
     return true;
   }
 
@@ -75,17 +90,38 @@ export function isCategory(value: string): value is Category {
 
 /**
  * Validate idea + category before any provider call.
+ * @param options.verbose — client-side: clearer messages (never leak injection heuristics)
  */
-export function validateAnalyzeInput(params: {
-  idea: unknown;
-  category: unknown;
-}): IdeaValidation {
+export function validateAnalyzeInput(
+  params: {
+    idea: unknown;
+    category: unknown;
+  },
+  options?: { verbose?: boolean },
+): IdeaValidation {
+  const verbose = Boolean(options?.verbose);
   const idea = typeof params.idea === "string" ? params.idea.trim() : "";
   const category =
     typeof params.category === "string" ? params.category.trim() : "";
 
-  if (!idea || idea.length < MIN_IDEA_LENGTH) {
-    return { ok: false, message: NEUTRAL_IDEA_MESSAGE, code: "too_short" };
+  if (!idea) {
+    return {
+      ok: false,
+      message: verbose
+        ? "Idea is empty — pick a template or paste your idea first."
+        : NEUTRAL_IDEA_MESSAGE,
+      code: "too_short",
+    };
+  }
+
+  if (idea.length < MIN_IDEA_LENGTH) {
+    return {
+      ok: false,
+      message: verbose
+        ? `Idea is too short (${idea.length}/${MIN_IDEA_LENGTH} chars). Add more detail or pick a template.`
+        : NEUTRAL_IDEA_MESSAGE,
+      code: "too_short",
+    };
   }
 
   if (idea.length > MAX_IDEA_LENGTH) {
@@ -114,10 +150,20 @@ export function validateAnalyzeInput(params: {
   }
 
   // Require at least a few distinct words so "aaaa aaa aaa…" style fails earlier
-  const words = idea.split(/\s+/).filter((w) => w.length >= 2);
+  // Split on any unicode whitespace; strip light punctuation so "rules." still counts
+  const words = idea
+    .split(/\s+/u)
+    .map((w) => w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""))
+    .filter((w) => w.length >= 2);
   const uniqueWords = new Set(words.map((w) => w.toLowerCase()));
   if (uniqueWords.size < 5) {
-    return { ok: false, message: NEUTRAL_IDEA_MESSAGE, code: "too_short" };
+    return {
+      ok: false,
+      message: verbose
+        ? `Need at least 5 different words (found ${uniqueWords.size}). Pick a template or write a fuller description.`
+        : NEUTRAL_IDEA_MESSAGE,
+      code: "too_short",
+    };
   }
 
   return { ok: true, idea, category };

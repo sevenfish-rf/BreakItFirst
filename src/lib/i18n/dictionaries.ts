@@ -62,6 +62,40 @@ export type Dictionary = {
     of: string;
     deepBadge: string;
     warnings: string;
+    criticalAssumptions: string;
+    pointOfNoReturn: string;
+    compoundingNote: string;
+    expandSignals: string;
+    collapseSignals: string;
+    phaseEarly: string;
+    phaseLate: string;
+    stepDetail: string;
+    hoverForDetails: string;
+    cascadeGuideTitle: string;
+    cascadeGuideWhat: string;
+    cascadeLegendStart: string;
+    cascadeLegendStartDesc: string;
+    cascadeLegendMid: string;
+    cascadeLegendMidDesc: string;
+    cascadeLegendLate: string;
+    cascadeLegendLateDesc: string;
+    cascadeLegendPonr: string;
+    cascadeLegendPonrDesc: string;
+    cascadeLegendArrow: string;
+    cascadeLegendArrowDesc: string;
+    cascadeLegendSignal: string;
+    cascadeLegendSignalDesc: string;
+    cascadeLegendNumber: string;
+    cascadeLegendNumberDesc: string;
+    cascadeLegendHover: string;
+    cascadeLegendHoverDesc: string;
+    linkedToSpof: string;
+    emptyDomain: string;
+    exportMarkdown: string;
+    analysisBase: string;
+    analysisBaseHint: string;
+    systemReading: string;
+    systemReadingHint: string;
   };
   modes: {
     technical: string;
@@ -79,6 +113,7 @@ export type Dictionary = {
     title: string;
     subtitle: string;
     elapsed: string;
+    stillWorking: string;
     stages: { id: string; label: string; hint: string }[];
     tips: string[];
   };
@@ -165,7 +200,52 @@ const en: Dictionary = {
     step: "Step",
     of: "of",
     deepBadge: "Deep analysis",
-    warnings: "Pipeline notes",
+    warnings: "Notes",
+    criticalAssumptions: "Critical assumptions for this SPOF",
+    pointOfNoReturn: "Point of no return",
+    compoundingNote: "Compounding domains",
+    expandSignals: "Expand signals",
+    collapseSignals: "Collapse signals",
+    phaseEarly: "Build-up",
+    phaseLate: "Aftermath",
+    stepDetail: "Step detail",
+    hoverForDetails: "Hover a step for full signal",
+    cascadeGuideTitle: "How to read this flow",
+    cascadeGuideWhat:
+      "Each box is one step in a causal failure chain: earlier steps cause later ones. Follow the animated arrows — this is not a random list, and not advice on what to do.",
+    cascadeLegendStart: "Early step",
+    cascadeLegendStartDesc:
+      "Accent-tinted box (stronger red edge). Near the start of the chain — closer to the SPOF / first cracks.",
+    cascadeLegendMid: "Middle step",
+    cascadeLegendMidDesc:
+      "Neutral border. Intermediate cause-and-effect; still part of the same path.",
+    cascadeLegendLate: "Late step",
+    cascadeLegendLateDesc:
+      "Stronger accent tint toward the end. Near the end state (collapse, churn, shutdown, etc.).",
+    cascadeLegendPonr: "Point of no return",
+    cascadeLegendPonrDesc:
+      "Gold/warning outline + badge. From this step onward the path is hard to reverse — descriptive, not a “you should act” tip.",
+    cascadeLegendArrow: "Animated arrows",
+    cascadeLegendArrowDesc:
+      "Show order and direction of the chain. Gold arrows appear after the point of no return.",
+    cascadeLegendSignal: "Signal line",
+    cascadeLegendSignalDesc:
+      "What you’d observe in the real world if that step is happening (metrics, behavior, news). Observation only.",
+    cascadeLegendNumber: "Step number",
+    cascadeLegendNumberDesc:
+      "Order in the chain (1 → N). Same number as in the step counter above the chart.",
+    cascadeLegendHover: "Hover / select",
+    cascadeLegendHoverDesc:
+      "Opens a popup with the full step title and full signal text (nothing truncated).",
+    linkedToSpof: "Linked to SPOF",
+    emptyDomain: "No material risks flagged in this domain",
+    exportMarkdown: "Export Markdown",
+    analysisBase: "Idea analyzed",
+    analysisBaseHint:
+      "Your input after validation — the exact text the analysis pipeline used as source",
+    systemReading: "System reading",
+    systemReadingHint:
+      "How the model restated the idea before critiquing it (analysis contract)",
   },
   modes: {
     technical: "Technical",
@@ -182,33 +262,35 @@ const en: Dictionary = {
   analyzing: {
     title: "Running failure analysis",
     subtitle:
-      "Reasoning → critique → structure. This can take a couple of minutes.",
+      "Live stages from the server. Often 2–5+ minutes (longer with Deep / slow models).",
     elapsed: "Elapsed",
+    stillWorking:
+      "Model still generating — this is normal for slow providers. Stages advance only when the server finishes each pass. Keep this tab open.",
     stages: [
       {
         id: "ingest",
         label: "Ingest idea",
-        hint: "Parsing input & category lens",
+        hint: "Input accepted · starting pipeline",
       },
       {
         id: "pass1",
         label: "Pass 1 · Reasoning",
-        hint: "Deep pre-mortem with your model",
+        hint: "Waiting on your model (usually the longest step)",
       },
       {
         id: "pass1_5",
         label: "Pass 1.5 · Critique",
-        hint: "Attacking generic claims, sharpening SPOF",
+        hint: "Second model call · adversarial rewrite",
       },
       {
         id: "pass2",
         label: "Pass 2 · Structuring",
-        hint: "Compressing into failure schema",
+        hint: "Third model call · building failure JSON",
       },
       {
         id: "validate",
-        label: "Validate",
-        hint: "Schema check & cascade sanity",
+        label: "Validate / finalize",
+        hint: "Schema checks after model JSON returns (usually quick)",
       },
     ],
     tips: [
@@ -304,7 +386,52 @@ const id: Dictionary = {
     step: "Langkah",
     of: "dari",
     deepBadge: "Analisis mendalam",
-    warnings: "Catatan pipeline",
+    warnings: "Catatan",
+    criticalAssumptions: "Asumsi kritis untuk SPOF ini",
+    pointOfNoReturn: "Titik tanpa kembali",
+    compoundingNote: "Domain yang saling memperparah",
+    expandSignals: "Perluas sinyal",
+    collapseSignals: "Ciutkan sinyal",
+    phaseEarly: "Awal rantai",
+    phaseLate: "Akibat lanjut",
+    stepDetail: "Detail langkah",
+    hoverForDetails: "Arahkan kursor ke langkah untuk sinyal lengkap",
+    cascadeGuideTitle: "Cara membaca alur ini",
+    cascadeGuideWhat:
+      "Setiap kotak = satu langkah dalam rantai sebab-akibat kegagalan: langkah awal memicu langkah berikutnya. Ikuti panah beranimasi — ini bukan daftar acak, dan bukan saran “apa yang harus dilakukan”.",
+    cascadeLegendStart: "Langkah awal",
+    cascadeLegendStartDesc:
+      "Kotak dengan aksen merah lebih kuat. Dekat awal rantai — dekat SPOF / retakan pertama.",
+    cascadeLegendMid: "Langkah tengah",
+    cascadeLegendMidDesc:
+      "Outline netral. Sebab-akibat di tengah jalan; masih satu jalur yang sama.",
+    cascadeLegendLate: "Langkah akhir",
+    cascadeLegendLateDesc:
+      "Aksen lebih terasa di ujung rantai. Mendekati end state (runtuh, churn, shutdown, dll.).",
+    cascadeLegendPonr: "Titik tanpa kembali",
+    cascadeLegendPonrDesc:
+      "Outline emas/warning + badge. Mulai langkah ini jalur sulit dibalik — deskriptif, bukan saran “kamu harus bertindak”.",
+    cascadeLegendArrow: "Panah beranimasi",
+    cascadeLegendArrowDesc:
+      "Menunjukkan urutan dan arah rantai. Panah emas muncul setelah titik tanpa kembali.",
+    cascadeLegendSignal: "Baris sinyal",
+    cascadeLegendSignalDesc:
+      "Apa yang terlihat di dunia nyata jika langkah itu terjadi (metrik, perilaku, berita). Hanya observasi.",
+    cascadeLegendNumber: "Nomor langkah",
+    cascadeLegendNumberDesc:
+      "Urutan di rantai (1 → N). Sama dengan counter di atas chart.",
+    cascadeLegendHover: "Hover / pilih",
+    cascadeLegendHoverDesc:
+      "Membuka popup judul langkah + teks sinyal lengkap (tidak terpotong).",
+    linkedToSpof: "Terkait SPOF",
+    emptyDomain: "Tidak ada risiko material di domain ini",
+    exportMarkdown: "Ekspor Markdown",
+    analysisBase: "Ide yang dianalisis",
+    analysisBaseHint:
+      "Input kamu setelah validasi — teks yang dipakai pipeline sebagai sumber analisis",
+    systemReading: "Pembacaan sistem",
+    systemReadingHint:
+      "Bagaimana model merumuskan ulang ide sebelum mengkritik (kontrak pemahaman)",
   },
   modes: {
     technical: "Teknis",
@@ -321,33 +448,35 @@ const id: Dictionary = {
   analyzing: {
     title: "Menjalankan analisis kegagalan",
     subtitle:
-      "Penalaran → kritik → struktur. Proses ini bisa beberapa menit.",
+      "Stage real dari server. Sering 2–5+ menit (lebih lama Deep / model lambat).",
     elapsed: "Berjalan",
+    stillWorking:
+      "Model masih generate — normal untuk provider lambat. Stage maju hanya saat server selesai tiap pass. Jangan tutup tab ini.",
     stages: [
       {
         id: "ingest",
         label: "Ingest ide",
-        hint: "Parse input & lens kategori",
+        hint: "Input diterima · pipeline mulai",
       },
       {
         id: "pass1",
         label: "Pass 1 · Penalaran",
-        hint: "Pre-mortem mendalam lewat modelmu",
+        hint: "Menunggu modelmu (biasanya langkah terlama)",
       },
       {
         id: "pass1_5",
         label: "Pass 1.5 · Kritik",
-        hint: "Serang klaim generik, tajamkan SPOF",
+        hint: "Panggilan model ke-2 · rewrite adversarial",
       },
       {
         id: "pass2",
         label: "Pass 2 · Struktur",
-        hint: "Kompres ke skema kegagalan",
+        hint: "Panggilan model ke-3 · bangun JSON kegagalan",
       },
       {
         id: "validate",
-        label: "Validasi",
-        hint: "Cek schema & koneksi cascade",
+        label: "Validasi / finalisasi",
+        hint: "Cek skema setelah JSON model kembali (biasanya cepat)",
       },
     ],
     tips: [

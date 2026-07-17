@@ -4,14 +4,16 @@ import { motion } from "framer-motion";
 import {
   Activity,
   AlertOctagon,
+  Download,
+  FileText,
   Gauge,
   GitBranch,
-  Layers,
   ListChecks,
   RotateCcw,
   Shield,
   Target,
   Scale,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
@@ -20,6 +22,8 @@ import { FailureModeCards } from "@/components/visuals/failure-mode-cards";
 import { ResilienceRadar } from "@/components/visuals/resilience-radar";
 import { StressTestPanel } from "@/components/visuals/stress-test-panel";
 import { useLanguage } from "@/lib/i18n/context";
+import { downloadAnalysisMarkdown } from "@/lib/report-markdown";
+import { toUserFacingWarnings } from "@/lib/user-warnings";
 import type { FailureAnalysis, VelocityBand } from "@/types/analysis";
 import { cn } from "@/lib/utils";
 
@@ -111,7 +115,8 @@ export function AnalysisReport({
   const velocity = analysis.failure_velocity;
   const calibration = analysis.self_consistency;
   const isDeep = Boolean(calibration);
-  const softWarnings = warnings.filter(Boolean);
+  /** Never surface claim-guard / soft-check jargon to end users */
+  const softWarnings = toUserFacingWarnings(warnings, locale);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5 pb-10">
@@ -143,15 +148,31 @@ export function AnalysisReport({
                 )}
               </p>
             </div>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={onReset}
-            >
-              <RotateCcw className="h-4 w-4" />
-              {t.report.newAnalysis}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  downloadAnalysisMarkdown(analysis, {
+                    locale,
+                    warnings: softWarnings,
+                  })
+                }
+              >
+                <Download className="h-4 w-4" />
+                {t.report.exportMarkdown}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={onReset}
+              >
+                <RotateCcw className="h-4 w-4" />
+                {t.report.newAnalysis}
+              </Button>
+            </div>
           </div>
         </GlowCard>
       </motion.div>
@@ -170,6 +191,39 @@ export function AnalysisReport({
           </ul>
         </motion.div>
       ) : null}
+
+      {/* Analysis base: validated user input that fed the pipeline */}
+      <Panel
+        icon={<FileText className="h-4 w-4" />}
+        title={t.report.analysisBase}
+        hint={t.report.analysisBaseHint}
+        delay={0.02}
+        glowIntensity={1.2}
+      >
+        <div className="rounded-xl border border-border/60 bg-background/50 px-3.5 py-3">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">
+            {analysis.meta.idea_input}
+          </p>
+        </div>
+        <p className="mt-2 text-[10px] text-text-muted">
+          {analysis.meta.category}
+          {" · "}
+          {analysis.meta.idea_input.trim().split(/\s+/).filter(Boolean).length}{" "}
+          words
+        </p>
+      </Panel>
+
+      {/* System reading = model summary (refined restatement) */}
+      <Panel
+        icon={<Sparkles className="h-4 w-4" />}
+        title={t.report.systemReading}
+        hint={t.report.systemReadingHint}
+        delay={0.03}
+      >
+        <p className="text-sm leading-relaxed text-text-secondary">
+          {analysis.summary}
+        </p>
+      </Panel>
 
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <Panel
@@ -195,6 +249,31 @@ export function AnalysisReport({
           <p className="mt-4 text-sm leading-relaxed text-text-secondary">
             {spof.explanation}
           </p>
+          {spof.critical_assumption_indices &&
+          spof.critical_assumption_indices.length > 0 ? (
+            <div className="mt-4 rounded-xl border border-border/70 bg-background/40 px-3 py-2.5">
+              <p className="text-[11px] font-semibold text-text">
+                {t.report.criticalAssumptions}
+              </p>
+              <ul className="mt-2 space-y-1.5">
+                {spof.critical_assumption_indices.map((idx) => {
+                  const text = analysis.assumptions[idx];
+                  if (!text) return null;
+                  return (
+                    <li
+                      key={idx}
+                      className="flex gap-2 text-xs leading-relaxed text-text-secondary"
+                    >
+                      <span className="shrink-0 font-semibold tabular-nums text-accent">
+                        #{idx + 1}
+                      </span>
+                      <span className="min-w-0">{text}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
           {calibration ? (
             <div className="mt-5 rounded-xl border border-border/70 bg-background/50 px-3 py-3">
               <div className="mb-2 flex items-center gap-2 text-xs font-medium text-text">
@@ -299,40 +378,55 @@ export function AnalysisReport({
         </div>
       </div>
 
-      <Panel
-        icon={<Layers className="h-4 w-4" />}
-        title={t.report.summary}
-        delay={0.12}
-      >
-        <p className="text-sm leading-relaxed text-text-secondary">
-          {analysis.summary}
-        </p>
-      </Panel>
-
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel
           icon={<ListChecks className="h-4 w-4" />}
           title={t.report.assumptions}
           delay={0.14}
         >
-          <ol className="space-y-3">
-            {analysis.assumptions.map((item, i) => (
-              <motion.li
-                key={`${i}-${item.slice(0, 24)}`}
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.14 + i * 0.03 }}
-                className="flex items-start gap-3 text-sm leading-relaxed text-text-secondary"
-              >
-                <span
-                  className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-[11px] font-semibold tabular-nums text-accent ring-1 ring-accent/20"
-                  aria-hidden
+          <ol className="space-y-0 divide-y divide-border/40">
+            {analysis.assumptions.map((item, i) => {
+              const isCritical =
+                analysis.single_point_of_failure.critical_assumption_indices?.includes(
+                  i,
+                );
+              return (
+                <motion.li
+                  key={`${i}-${item.slice(0, 24)}`}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.14 + i * 0.03 }}
+                  className={cn(
+                    "relative flex items-start gap-3 py-3 text-sm leading-relaxed first:pt-0 last:pb-0",
+                    isCritical
+                      ? "border-l-2 border-l-accent pl-3 text-text"
+                      : "pl-[calc(0.75rem+2px)] text-text-secondary",
+                  )}
                 >
-                  {i + 1}
-                </span>
-                <span className="min-w-0 pt-0.5">{item}</span>
-              </motion.li>
-            ))}
+                  <span
+                    className={cn(
+                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold tabular-nums",
+                      isCritical
+                        ? "bg-accent text-background"
+                        : "bg-white/[0.04] text-text-muted ring-1 ring-border/80",
+                    )}
+                    aria-hidden
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    {isCritical ? (
+                      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-accent">
+                        {t.report.linkedToSpof}
+                      </p>
+                    ) : null}
+                    <p className={cn(isCritical ? "text-text" : undefined)}>
+                      {item}
+                    </p>
+                  </div>
+                </motion.li>
+              );
+            })}
           </ol>
         </Panel>
 
@@ -353,28 +447,29 @@ export function AnalysisReport({
         delay={0.18}
         glowIntensity={1.8}
       >
-        <FailureCascadeGraph nodes={analysis.cascade.nodes} />
+        <FailureCascadeGraph
+          nodes={analysis.cascade.nodes}
+          pointOfNoReturnIndex={analysis.cascade.point_of_no_return_index}
+        />
       </Panel>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel
-          icon={<Target className="h-4 w-4" />}
-          title={t.report.stressTest}
-          hint={t.report.stressTestHint}
-          delay={0.2}
-          glowIntensity={1.7}
-        >
-          <StressTestPanel items={analysis.stress_test.items} />
-        </Panel>
+      <Panel
+        icon={<Target className="h-4 w-4" />}
+        title={t.report.stressTest}
+        hint={t.report.stressTestHint}
+        delay={0.2}
+        glowIntensity={1.7}
+      >
+        <StressTestPanel items={analysis.stress_test.items} />
+      </Panel>
 
-        <Panel
-          icon={<Shield className="h-4 w-4" />}
-          title={t.report.failureModes}
-          delay={0.22}
-        >
-          <FailureModeCards modes={analysis.failure_modes} />
-        </Panel>
-      </div>
+      <Panel
+        icon={<Shield className="h-4 w-4" />}
+        title={t.report.failureModes}
+        delay={0.22}
+      >
+        <FailureModeCards modes={analysis.failure_modes} />
+      </Panel>
     </div>
   );
 }

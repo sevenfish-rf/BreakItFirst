@@ -54,17 +54,18 @@ export function StressTestPanel({ items }: StressTestPanelProps) {
   }
 
   return (
-    <ul className="space-y-2.5">
+    <ul className="grid gap-3 sm:grid-cols-2">
       {sorted.map((item, i) => {
         const name =
-          ARCHETYPE_NAME[item.archetype_id] ?? item.archetype_id.replace(/_/g, " ");
+          ARCHETYPE_NAME[item.archetype_id] ??
+          item.archetype_id.replace(/_/g, " ");
         return (
           <motion.li
             key={`${item.archetype_id}-${i}`}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.04 + i * 0.03 }}
-            className="rounded-xl border border-border/70 bg-background/40 px-3 py-2.5"
+            className="flex h-full flex-col rounded-xl border border-border/70 bg-background/40 px-3.5 py-3"
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium text-text">{name}</span>
@@ -77,7 +78,7 @@ export function StressTestPanel({ items }: StressTestPanelProps) {
                 {verdictLabel(item.verdict, t.report.stressVerdict)}
               </span>
             </div>
-            <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
+            <p className="mt-2 flex-1 text-xs leading-relaxed text-text-secondary">
               {item.reason}
             </p>
           </motion.li>

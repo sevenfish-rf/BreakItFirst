@@ -4,11 +4,22 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Loader2, Sparkles } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/context";
+import {
+  liveStageToUiIndex,
+  type PipelineLiveStage,
+} from "@/lib/pipeline-stages";
 import { useTheme } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
 type AnalyzingOverlayProps = {
   open: boolean;
+  /**
+   * Real pipeline stage from server NDJSON stream.
+   * When null, stay on "ingest" until first event (no fake timer advance).
+   */
+  liveStage?: PipelineLiveStage | null;
+  /** Optional detail from last stage event */
+  liveDetail?: string | null;
 };
 
 function formatElapsed(ms: number) {
@@ -20,25 +31,34 @@ function formatElapsed(ms: number) {
     : `0:${String(r).padStart(2, "0")}`;
 }
 
+/** Progress caps by real stage index — only crawl within current stage. */
+const STAGE_PROGRESS_CAPS = [12, 32, 52, 78, 96];
+
 /**
  * Seamless full-card analyzing layer (no nested “boxes”).
- * Covers parent completely with solid theme bg + soft ambient only.
+ * Stage list is driven by real server events, not wall-clock heuristics.
  */
-export function AnalyzingOverlay({ open }: AnalyzingOverlayProps) {
+export function AnalyzingOverlay({
+  open,
+  liveStage = null,
+  liveDetail = null,
+}: AnalyzingOverlayProps) {
   const { t } = useLanguage();
   const { theme } = useTheme();
   const stages = t.analyzing.stages;
   const tips = t.analyzing.tips;
 
   const [elapsedMs, setElapsedMs] = useState(0);
-  const [stageIndex, setStageIndex] = useState(0);
   const [tipIndex, setTipIndex] = useState(0);
   const [progress, setProgress] = useState(4);
+
+  const stageIndex = liveStage
+    ? liveStageToUiIndex(liveStage)
+    : 0;
 
   useEffect(() => {
     if (!open) return;
     setElapsedMs(0);
-    setStageIndex(0);
     setTipIndex(0);
     setProgress(4);
   }, [open]);
@@ -52,27 +72,24 @@ export function AnalyzingOverlay({ open }: AnalyzingOverlayProps) {
     return () => window.clearInterval(id);
   }, [open]);
 
-  useEffect(() => {
-    if (!open) return;
-    // Heuristic UI stages (not server-synced): ingest → pass1 → pass1.5 → pass2 → validate
-    const timers = [
-      window.setTimeout(() => setStageIndex(1), 900),
-      window.setTimeout(() => setStageIndex(2), 18_000),
-      window.setTimeout(() => setStageIndex(3), 50_000),
-      window.setTimeout(() => setStageIndex(4), 75_000),
-    ];
-    return () => timers.forEach((x) => window.clearTimeout(x));
-  }, [open]);
-
+  // Soft progress crawl within the *current real stage* only
   useEffect(() => {
     if (!open) return;
     const id = window.setInterval(() => {
       setProgress((p) => {
-        const caps = [18, 38, 62, 82, 92];
-        const cap = caps[Math.min(stageIndex, caps.length - 1)] ?? 92;
-        return Math.min(cap, p + (cap - p) * 0.04 + 0.15);
+        const cap =
+          STAGE_PROGRESS_CAPS[Math.min(stageIndex, STAGE_PROGRESS_CAPS.length - 1)] ??
+          96;
+        if (p >= cap) {
+          // Micro-pulse so bar doesn't look frozen while model is slow
+          return Math.min(cap, p + 0.01);
+        }
+        // Jump floor when stage advances
+        const floor = stageIndex === 0 ? 4 : STAGE_PROGRESS_CAPS[stageIndex - 1] ?? 4;
+        const base = Math.max(p, floor);
+        return Math.min(cap, base + (cap - base) * 0.04 + 0.15);
       });
-    }, 120);
+    }, 160);
     return () => window.clearInterval(id);
   }, [open, stageIndex]);
 
@@ -85,6 +102,9 @@ export function AnalyzingOverlay({ open }: AnalyzingOverlayProps) {
   }, [open, tips.length]);
 
   const orbitDots = useMemo(() => [0, 1, 2, 3, 4, 5], []);
+
+  // Long wait tip: show after 90s on any stage that talks to the model
+  const showStillWorking = elapsedMs > 90_000 && stageIndex >= 1;
 
   if (!open) return null;
 
@@ -172,6 +192,14 @@ export function AnalyzingOverlay({ open }: AnalyzingOverlayProps) {
           <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
             {t.analyzing.subtitle}
           </p>
+          {showStillWorking ? (
+            <p className="mt-2 text-[11px] leading-relaxed text-warning/90">
+              {t.analyzing.stillWorking}
+            </p>
+          ) : null}
+          {liveDetail && stageIndex >= 1 ? (
+            <p className="mt-1.5 text-[10px] text-text-muted/90">{liveDetail}</p>
+          ) : null}
           <p className="mt-2.5 font-mono text-[11px] tabular-nums text-text-muted">
             {t.analyzing.elapsed} {formatElapsed(elapsedMs)}
           </p>
@@ -196,7 +224,7 @@ export function AnalyzingOverlay({ open }: AnalyzingOverlayProps) {
           </div>
         </div>
 
-        {/* Stages — clean list, no nested cards */}
+        {/* Stages — driven by server, not clock */}
         <ul className="w-full max-w-[20rem] space-y-0">
           {stages.map((stage, i) => {
             const done = i < stageIndex;
@@ -229,7 +257,11 @@ export function AnalyzingOverlay({ open }: AnalyzingOverlayProps) {
                   <p
                     className={cn(
                       "text-xs font-medium",
-                      active ? "text-text" : done ? "text-text-secondary" : "text-text-muted",
+                      active
+                        ? "text-text"
+                        : done
+                          ? "text-text-secondary"
+                          : "text-text-muted",
                     )}
                   >
                     {stage.label}

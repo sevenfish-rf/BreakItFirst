@@ -30,8 +30,10 @@ const sample: FailureAnalysis = {
     confidence_reason: "Liability gap blocks both sides of the market",
     explanation:
       "Without insurance, a single pet injury story collapses supply and demand density in the same buildings the product depends on.",
+    critical_assumption_indices: [0, 3],
   },
   cascade: {
+    point_of_no_return_index: 4,
     nodes: [
       {
         step: "Insurance gap scares early sitters",
@@ -76,6 +78,8 @@ const sample: FailureAnalysis = {
     security: ["Sitter identity fraud"],
     legal: ["Liability after pet injury without insurance coverage"],
     operations: ["Support cannot mediate disputes at scale"],
+    compounding_note:
+      "Legal liability and trust share one trigger: a pet injury in a shared building without insurance coverage.",
   },
   likelihood: {
     band: "High",

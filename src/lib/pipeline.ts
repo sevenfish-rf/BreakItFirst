@@ -21,7 +21,17 @@ import {
 } from "@/lib/schema";
 import type { Category } from "@/lib/categories";
 import type { Locale } from "@/lib/i18n/types";
+import type {
+  PipelineLiveStage,
+  PipelineStageEvent,
+} from "@/lib/pipeline-stages";
 import type { AnalysisError, FailureAnalysis } from "@/types/analysis";
+
+export type {
+  PipelineLiveStage,
+  PipelineStageEvent,
+} from "@/lib/pipeline-stages";
+export { liveStageToUiIndex } from "@/lib/pipeline-stages";
 
 /** Max Pass 2 re-attempts after a failed parse/validation (masterplan F3 = 1). */
 const PASS2_MAX_RETRIES = 1;
@@ -149,8 +159,10 @@ export async function runFailureAnalysisPipeline(params: {
   /** C.6 — second Pass 1 + calibration critique (opt-in, more cost/latency) */
   deepAnalysis?: boolean;
   signal?: AbortSignal;
+  /** Real-time stage updates for UI streaming (not timer heuristics). */
+  onStage?: (event: PipelineStageEvent) => void;
 }): Promise<PipelineResult> {
-  const { idea, category, provider, signal } = params;
+  const { idea, category, provider, signal, onStage } = params;
   const locale: Locale = params.locale === "id" ? "id" : "en";
   const deepAnalysis = Boolean(params.deepAnalysis);
   const warnings: string[] = [];
@@ -173,10 +185,20 @@ export async function runFailureAnalysisPipeline(params: {
     totalMs: Date.now() - pipelineStarted,
   });
 
+  const emit = (stage: PipelineLiveStage, detail?: string) => {
+    try {
+      onStage?.({ stage, detail });
+    } catch {
+      /* never break pipeline on UI callback errors */
+    }
+  };
+
   const logStage = (msg: string) => {
     // Visible in eval CLI and server logs
     console.info(`[pipeline] ${msg}`);
   };
+
+  emit("ingest", "Input accepted");
 
   // ── Pass 1: freeform reasoning (×2 if deep) ─────────────────────────
   let reasoningA: string;
@@ -185,6 +207,7 @@ export async function runFailureAnalysisPipeline(params: {
   try {
     if (deepAnalysis) {
       logStage("Pass 1 ×2 (deep) starting…");
+      emit("pass1", "Deep: two parallel Pass 1 drafts");
       const [a, b] = await Promise.all([
         timed("pass1", stages, () =>
           callProvider({
@@ -230,6 +253,7 @@ export async function runFailureAnalysisPipeline(params: {
       logStage(`Pass 1 ×2 done (${stages.filter((s) => s.stage.startsWith("pass1")).map((s) => `${s.stage}=${s.ms}ms`).join(", ")})`);
     } else {
       logStage("Pass 1 starting…");
+      emit("pass1", "Waiting for model reasoning");
       reasoningA = await timed("pass1", stages, () =>
         callProvider({
           ...shared,
@@ -289,6 +313,7 @@ export async function runFailureAnalysisPipeline(params: {
   let reasoning = reasoningA;
   try {
     logStage("Pass 1.5 critique starting…");
+    emit("pass1_5", "Adversarial critique");
     const revised = await timed("pass1_5", stages, () =>
       callProvider({
         ...shared,
@@ -355,6 +380,12 @@ export async function runFailureAnalysisPipeline(params: {
           ? "Pass 2 structuring starting…"
           : "Pass 2 retry starting…",
       );
+      emit(
+        attempt === 0 ? "pass2" : "pass2_retry",
+        attempt === 0
+          ? "Structuring JSON"
+          : "Retry structuring after validation feedback",
+      );
       structuredRaw = await timed("pass2", stages, () =>
         callPass2Once({
           shared,
@@ -385,6 +416,8 @@ export async function runFailureAnalysisPipeline(params: {
         meta: buildMeta(),
       };
     }
+
+    emit("validate", "Parsing & schema checks");
 
     let parsed: unknown;
     try {
@@ -488,6 +521,7 @@ export async function runFailureAnalysisPipeline(params: {
     }
 
     const meta = buildMeta();
+    emit("done", `Complete in ${meta.totalMs}ms`);
     console.info("[pipeline] complete", {
       deepAnalysis,
       totalMs: meta.totalMs,

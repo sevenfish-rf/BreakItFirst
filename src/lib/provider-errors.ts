@@ -70,12 +70,21 @@ export function humanizeProviderFailure(params: {
       return `${stageLabel}: endpoint or model not found (404). Verify base URL ends with /v1 and model id is correct.${detail ? ` — ${detail}` : ""}`;
     case 408:
     case 504:
-      return `${stageLabel}: timed out. Try a faster model or shorter idea.`;
+      return `${stageLabel}: timed out waiting for the model (often slow provider or Deep mode). Try without Deep, a faster model, or retry later.${detail ? ` — ${detail}` : ""}`;
     case 429:
       return `${stageLabel}: rate limited (429). Wait and retry.${detail ? ` — ${detail}` : ""}`;
     case 400:
-    case 422:
-      return `${stageLabel}: bad request (${params.status}). Often wrong model id or unsupported params.${detail ? ` — ${detail}` : ""}`;
+      return `${stageLabel}: bad request (400). Often wrong model id or unsupported params.${detail ? ` — ${detail}` : ""}`;
+    case 422: {
+      // Used both for true HTTP 422 and our client-side "unparseable body" mapping
+      if (
+        detail &&
+        /parse text|unexpected JSON|empty text|reasoning/i.test(detail)
+      ) {
+        return `${stageLabel}: model replied but the response shape was unexpected (not a network outage).${detail ? ` — ${detail}` : ""} Try another model id, or disable deep-thinking if the provider supports it.`;
+      }
+      return `${stageLabel}: unprocessable (422). Often wrong model id or unsupported params.${detail ? ` — ${detail}` : ""}`;
+    }
     case 500:
     case 502:
     case 503:
@@ -99,6 +108,17 @@ export function humanizeCaughtError(
   }
 
   const msg = err instanceof Error ? err.message : String(err);
+  if (/timed out|aborted/i.test(msg)) {
+    const stageLabel =
+      stage === "pass1"
+        ? "Pass 1"
+        : stage === "pass1_5"
+          ? "Pass 1.5"
+          : stage === "pass2"
+            ? "Pass 2"
+            : "Provider";
+    return `${stageLabel}: timed out waiting for the model. Try without Deep analysis or a faster model.`;
+  }
 
   if (/fetch failed|ECONNREFUSED|ENOTFOUND|network|Failed to fetch/i.test(msg)) {
     return humanizeProviderFailure({ status: 0, body: msg, stage });

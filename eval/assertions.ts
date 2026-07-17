@@ -10,7 +10,9 @@ import {
   cascadeSignalsLookObservational,
   resilienceProfileLooksSane,
   spofAppearsInFailureModes,
+  criticalAssumptionsLookLinked,
   failureModesCoverageLooksSane,
+  pointOfNoReturnLooksSane,
   spofDimensionLooksLow,
   spofLabelLooksMechanistic,
   spofLabelLooksShort,
@@ -225,6 +227,16 @@ export function runRegressionAssertions(
     "soft_resilience_matches_spof",
     spofDimensionLooksLow(analysis),
     "Resilience tracks SPOF dimension (soft)",
+  );
+  push(
+    "soft_critical_assumptions",
+    criticalAssumptionsLookLinked(analysis),
+    "SPOF critical assumptions linked (soft)",
+  );
+  push(
+    "soft_ponr_sane",
+    pointOfNoReturnLooksSane(analysis),
+    "Point of no return sane (soft)",
   );
 
   push(

@@ -13,8 +13,27 @@ const likelihoodBandSchema = z.enum([
 const stressVerdictSchema = z.enum(["Yes", "Maybe", "No"]);
 const velocityBandSchema = z.enum(["Fast", "Medium", "Slow"]);
 
-const int0to100 = z.number().int().min(0).max(100);
+/** Models often return 42.0 — coerce so Pass 2 doesn't hard-fail after long wait. */
+const int0to100 = z.preprocess((v) => {
+  if (typeof v === "string" && v.trim() !== "" && Number.isFinite(Number(v))) {
+    return Math.round(Number(v));
+  }
+  if (typeof v === "number" && Number.isFinite(v)) {
+    return Math.round(v);
+  }
+  return v;
+}, z.number().int().min(0).max(100));
+
 const nonEmptyString = z.string().trim().min(1);
+
+const optionalTrimmedString = z.preprocess((v) => {
+  if (v === null || v === undefined) return undefined;
+  if (typeof v === "string") {
+    const t = v.trim();
+    return t.length ? t : undefined;
+  }
+  return undefined;
+}, z.string().optional());
 
 const cascadeNodeSchema = z.object({
   step: nonEmptyString,
@@ -44,12 +63,20 @@ export const failureAnalysisSchema = z.object({
     confidence: confidenceBandSchema,
     confidence_reason: z.string(),
     explanation: z.string(),
+    /** F1 — optional; empty/null stripped in normalize */
+    critical_assumption_indices: z
+      .array(z.number().int().min(0))
+      .min(1)
+      .max(3)
+      .optional(),
   }),
   cascade: z.object({
     nodes: z
       .array(cascadeNodeSchema)
       .min(7, "cascade.nodes must contain 7–12 items")
       .max(12, "cascade.nodes must contain 7–12 items"),
+    /** F2 — optional; invalid values stripped in normalize */
+    point_of_no_return_index: z.number().int().min(0).optional(),
   }),
   failure_modes: z.object({
     technical: z.array(z.string()),
@@ -57,6 +84,8 @@ export const failureAnalysisSchema = z.object({
     security: z.array(z.string()),
     legal: z.array(z.string()),
     operations: z.array(z.string()),
+    /** F3 — optional; null/empty stripped */
+    compounding_note: optionalTrimmedString,
   }),
   likelihood: z.object({
     band: likelihoodBandSchema,
@@ -108,13 +137,63 @@ export function isAnalysisError(value: unknown): value is AnalysisError {
   );
 }
 
+const MODE_KEYS = [
+  "technical",
+  "business",
+  "security",
+  "legal",
+  "operations",
+] as const;
+
 /**
- * Normalize legacy cascade.nodes: string[] → { step, observable_signal }[]
- * so slightly off-schema models still parse when possible.
+ * Normalize legacy shapes + graceful drop of invalid F1/F2/F3 add-ons
+ * (do not fail the whole analysis over optional fields).
  */
 export function normalizeAnalysisPayload(value: unknown): unknown {
   if (typeof value !== "object" || value === null) return value;
   const root = { ...(value as Record<string, unknown>) };
+
+  const assumptions = Array.isArray(root.assumptions)
+    ? (root.assumptions as unknown[])
+    : [];
+  const assumptionCount = assumptions.length;
+
+  if (isRecord(root.single_point_of_failure)) {
+    const spof = { ...root.single_point_of_failure };
+    // Drop nullish optional F1 so Zod optional() doesn't see null
+    if (
+      spof.critical_assumption_indices === null ||
+      spof.critical_assumption_indices === undefined
+    ) {
+      delete spof.critical_assumption_indices;
+    } else if (Array.isArray(spof.critical_assumption_indices)) {
+      const cleaned = [
+        ...new Set(
+          spof.critical_assumption_indices
+            .map((n) => {
+              if (typeof n === "number" && Number.isFinite(n)) {
+                return Math.floor(n);
+              }
+              if (typeof n === "string" && n.trim() !== "" && Number.isFinite(Number(n))) {
+                return Math.floor(Number(n));
+              }
+              return NaN;
+            })
+            .filter(
+              (n) => Number.isFinite(n) && n >= 0 && n < assumptionCount,
+            ),
+        ),
+      ].slice(0, 3);
+      if (cleaned.length >= 1) {
+        spof.critical_assumption_indices = cleaned;
+      } else {
+        delete spof.critical_assumption_indices;
+      }
+    } else {
+      delete spof.critical_assumption_indices;
+    }
+    root.single_point_of_failure = spof;
+  }
 
   if (isRecord(root.cascade)) {
     const cascade = { ...root.cascade };
@@ -146,10 +225,84 @@ export function normalizeAnalysisPayload(value: unknown): unknown {
         return node;
       });
     }
+    const nodeCount = Array.isArray(cascade.nodes) ? cascade.nodes.length : 0;
+    let ponrRaw: unknown = cascade.point_of_no_return_index;
+    if (typeof ponrRaw === "string" && ponrRaw.trim() !== "") {
+      ponrRaw = Number(ponrRaw);
+    }
+    if (typeof ponrRaw === "number" && Number.isFinite(ponrRaw)) {
+      const idx = Math.floor(ponrRaw);
+      if (idx >= 0 && idx < nodeCount) {
+        cascade.point_of_no_return_index = idx;
+      } else {
+        delete cascade.point_of_no_return_index;
+      }
+    } else {
+      delete cascade.point_of_no_return_index;
+    }
     root.cascade = cascade;
   }
 
-  // Default empty stress_test / velocity only if completely missing — validation still fails if empty reason
+  if (isRecord(root.failure_modes)) {
+    const modes = { ...root.failure_modes };
+    // Ensure each domain is always an array (models sometimes omit keys)
+    for (const key of MODE_KEYS) {
+      if (!Array.isArray(modes[key])) {
+        modes[key] = [];
+      }
+    }
+    if (
+      modes.compounding_note === null ||
+      modes.compounding_note === undefined
+    ) {
+      delete modes.compounding_note;
+    } else if (typeof modes.compounding_note === "string") {
+      const note = modes.compounding_note.trim();
+      if (!note) {
+        delete modes.compounding_note;
+      } else {
+        const lower = note.toLowerCase();
+        let mentionsEmpty = false;
+        for (const key of MODE_KEYS) {
+          const arr = modes[key];
+          const empty = !Array.isArray(arr) || arr.length === 0;
+          if (empty && lower.includes(key)) {
+            mentionsEmpty = true;
+            break;
+          }
+        }
+        if (mentionsEmpty) {
+          delete modes.compounding_note;
+        } else {
+          modes.compounding_note = note;
+        }
+      }
+    } else {
+      delete modes.compounding_note;
+    }
+    root.failure_modes = modes;
+  }
+
+  // Coerce resilience floats / string numbers
+  if (isRecord(root.resilience_score)) {
+    const rs = { ...root.resilience_score };
+    for (const key of [
+      "technical",
+      "business",
+      "legal",
+      "operations",
+      "trust",
+    ] as const) {
+      const v = rs[key];
+      if (typeof v === "number" && Number.isFinite(v)) {
+        rs[key] = Math.round(Math.min(100, Math.max(0, v)));
+      } else if (typeof v === "string" && Number.isFinite(Number(v))) {
+        rs[key] = Math.round(Math.min(100, Math.max(0, Number(v))));
+      }
+    }
+    root.resilience_score = rs;
+  }
+
   return root;
 }
 
@@ -481,7 +634,54 @@ export function runSoftChecks(analysis: FailureAnalysis): SoftCheckResult[] {
       message:
         "Resilience dimension tied to SPOF may be too high (soft check)",
     },
+    {
+      id: "critical_assumptions_overlap",
+      ok: criticalAssumptionsLookLinked(analysis),
+      message:
+        "SPOF critical_assumption_indices may not match assumption themes (soft check)",
+    },
+    {
+      id: "ponr_in_range_ok",
+      ok: pointOfNoReturnLooksSane(analysis),
+      message:
+        "Cascade point_of_no_return_index missing or edge-only (soft check)",
+    },
   ];
+}
+
+/** F1 soft: flagged assumptions share theme tokens with SPOF */
+export function criticalAssumptionsLookLinked(
+  analysis: FailureAnalysis,
+): boolean {
+  const idxs = analysis.single_point_of_failure.critical_assumption_indices;
+  if (!idxs || idxs.length === 0) return true; // optional field
+  const spofText = [
+    analysis.single_point_of_failure.component,
+    analysis.single_point_of_failure.explanation,
+  ].join(" ");
+  const spofTokens = tokenizeSignificant(spofText, 10);
+  if (spofTokens.length === 0) return true;
+
+  return idxs.some((i) => {
+    const assumption = analysis.assumptions[i];
+    if (!assumption) return false;
+    const tokens = tokenizeSignificant(assumption, 8);
+    return tokens.some((t) => spofText.toLowerCase().includes(t));
+  });
+}
+
+/**
+ * F2 soft: if present, index shouldn't always be first/last only
+ * (weak signal) — still pass if middle; pass if absent.
+ */
+export function pointOfNoReturnLooksSane(analysis: FailureAnalysis): boolean {
+  const idx = analysis.cascade.point_of_no_return_index;
+  if (idx === undefined) return true;
+  const n = analysis.cascade.nodes.length;
+  if (idx < 0 || idx >= n) return false;
+  // Prefer not the very first step (usually still recoverable framing)
+  if (n >= 4 && idx === 0) return false;
+  return true;
 }
 
 const STOPWORDS = new Set([
@@ -530,7 +730,6 @@ export function pass2NovelClaimWarnings(
       text: analysis.single_point_of_failure.explanation,
       threshold: 0.22,
     },
-    // Stricter: baseline 05 failed likelihood grounding
     {
       label: "likelihood.reason",
       text: analysis.likelihood.reason,
@@ -539,10 +738,8 @@ export function pass2NovelClaimWarnings(
     {
       label: "failure_velocity.reason",
       text: analysis.failure_velocity.reason,
-      // Stricter than likelihood — baseline residual invents were here
       threshold: 0.4,
     },
-    // D4 — extend claim guard (looser thresholds: short list text)
     {
       label: "cascade.signals",
       text: analysis.cascade.nodes.map((n) => n.observable_signal).join(" "),
@@ -550,10 +747,18 @@ export function pass2NovelClaimWarnings(
     },
     {
       label: "failure_modes",
-      text: Object.values(analysis.failure_modes).flat().join(" "),
+      text: MODE_KEYS.flatMap((k) => analysis.failure_modes[k]).join(" "),
       threshold: 0.25,
     },
   ];
+
+  if (analysis.failure_modes.compounding_note?.trim()) {
+    samples.push({
+      label: "failure_modes.compounding_note",
+      text: analysis.failure_modes.compounding_note,
+      threshold: 0.28,
+    });
+  }
 
   for (const sample of samples) {
     const words = contentWords(sample.text);

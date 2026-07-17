@@ -16,6 +16,13 @@ export const DEFAULT_PROVIDER_SETTINGS: ProviderSettings = {
 
 export const PROVIDER_PRESETS = [
   {
+    id: "mimo",
+    label: "Xiaomi MiMo",
+    baseUrl: "https://api.xiaomimimo.com/v1",
+    pass1Model: "mimo-v2.5-pro",
+    pass2Model: "mimo-v2.5-pro",
+  },
+  {
     id: "openai",
     label: "OpenAI",
     baseUrl: "https://api.openai.com/v1",
