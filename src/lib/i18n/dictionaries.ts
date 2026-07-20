@@ -55,6 +55,7 @@ export type Dictionary = {
     summary: string;
     spof: string;
     likelihood: string;
+    likelihoodHint: string;
     assumptions: string;
     cascade: string;
     cascadeHint: string;
@@ -189,7 +190,9 @@ const en: Dictionary = {
     newAnalysis: "New analysis",
     summary: "Summary",
     spof: "Single Point of Failure",
-    likelihood: "Failure likelihood",
+    likelihood: "Pathway likelihood",
+    likelihoodHint:
+      "Chance this failure path materializes — not overall odds the company fails",
     assumptions: "Hidden assumptions",
     cascade: "Failure cascade",
     cascadeHint:
@@ -197,7 +200,8 @@ const en: Dictionary = {
     signal: "Signal",
     failureModes: "Failure modes",
     resilience: "Resilience score",
-    resilienceHint: "0–100 per dimension — lower is more fragile",
+    resilienceHint:
+      "0–100 ability to absorb this failure path — lower is more fragile",
     stressTest: "Archetype stress test",
     stressTestHint:
       "Pattern exposure checklist — not one overall danger score",
@@ -386,7 +390,9 @@ const id: Dictionary = {
     newAnalysis: "Analisis baru",
     summary: "Ringkasan",
     spof: "Single Point of Failure",
-    likelihood: "Kemungkinan gagal",
+    likelihood: "Kemungkinan jalur gagal",
+    likelihoodHint:
+      "Peluang jalur kegagalan ini terjadi — bukan peluang keseluruhan perusahaan gagal",
     assumptions: "Asumsi tersembunyi",
     cascade: "Rantai kegagalan",
     cascadeHint:
@@ -394,7 +400,8 @@ const id: Dictionary = {
     signal: "Sinyal",
     failureModes: "Mode kegagalan",
     resilience: "Skor ketahanan",
-    resilienceHint: "0–100 per dimensi — semakin rendah semakin rapuh",
+    resilienceHint:
+      "0–100 kemampuan menahan jalur gagal ini — semakin rendah semakin rapuh",
     stressTest: "Stress test arketipe",
     stressTestHint:
       "Ceklis paparan pola — bukan satu skor bahaya keseluruhan",

@@ -641,12 +641,61 @@ export function runSoftChecks(analysis: FailureAnalysis): SoftCheckResult[] {
         "SPOF critical_assumption_indices may not match assumption themes (soft check)",
     },
     {
+      id: "critical_assumptions_present",
+      ok: criticalAssumptionsPresent(analysis),
+      message:
+        "SPOF has no critical_assumption_indices (soft check — prefer 1–3 links)",
+    },
+    {
+      id: "failure_modes_track_cascade",
+      ok: failureModesTrackCascade(analysis),
+      message:
+        "Many failure_modes bullets may not track SPOF/cascade themes (soft check)",
+    },
+    {
       id: "ponr_in_range_ok",
       ok: pointOfNoReturnLooksSane(analysis),
       message:
         "Cascade point_of_no_return_index missing or edge-only (soft check)",
     },
   ];
+}
+
+/** Soft: prefer explicit assumption→SPOF linkage when model can provide it */
+export function criticalAssumptionsPresent(analysis: FailureAnalysis): boolean {
+  const idxs = analysis.single_point_of_failure.critical_assumption_indices;
+  return Array.isArray(idxs) && idxs.length >= 1;
+}
+
+/**
+ * Soft: non-empty failure_mode bullets should mostly share theme tokens with
+ * SPOF + cascade (orphan domain laundry list detection).
+ * Threshold ~40% of bullets hit; empty analysis of modes → pass (coverage soft elsewhere).
+ */
+export function failureModesTrackCascade(analysis: FailureAnalysis): boolean {
+  const bullets = Object.values(analysis.failure_modes)
+    .flat()
+    .filter((b): b is string => typeof b === "string" && b.trim().length > 0);
+  if (bullets.length === 0) return true;
+
+  const spine = [
+    analysis.single_point_of_failure.component,
+    analysis.single_point_of_failure.explanation,
+    cascadeStepsText(analysis),
+  ].join(" ");
+  const spineLower = spine.toLowerCase();
+  // Need some spine substance; otherwise skip (avoid false soft-fail)
+  if (tokenizeSignificant(spine, 8).length === 0) return true;
+
+  let hits = 0;
+  for (const bullet of bullets) {
+    const tokens = tokenizeSignificant(bullet, 8);
+    if (tokens.some((t) => spineLower.includes(t))) {
+      hits += 1;
+    }
+  }
+
+  return hits / bullets.length >= 0.4;
 }
 
 /** F1 soft: flagged assumptions share theme tokens with SPOF */

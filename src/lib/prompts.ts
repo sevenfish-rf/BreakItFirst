@@ -78,6 +78,43 @@ CASCADE STEP SPECIFICITY (middle steps matter):
   credits run out"
 `;
 
+/**
+ * Selection + traceability refine (DIRECTIVES-2026-07-20 spirit).
+ * Prompt-only multi-hypothesis — no extra API calls, no graph schema.
+ * Injected into Pass 1 / 1.5 — not shown to end users.
+ */
+const REASONING_REFINE_DIRECTIVE = `
+SELECTION & TRACEABILITY (critical — reasoning discipline):
+Do not lock the first SPOF you notice. Internally:
+
+1. MULTI-HYPOTHESIS (internal only): Generate 3 distinct SPOF candidates,
+   each with a one-line mechanism tied to THIS idea. Rank by (a) specificity
+   to this idea's architecture/incentives/constraints and (b) causal leverage
+   on how the idea collapses. Keep ONLY the winner in the written analysis —
+   do not present all three as equal risks or a laundry list.
+
+2. DOMINANCE: Before locking the winner, ask: "Is there another hinge that
+   better explains how this idea collapses?" If yes, replace the SPOF.
+
+3. COUNTERFACTUAL: Ask: "If this SPOF mechanism could not fail (or did not
+   exist in the design), would this cascade still happen?" If YES, the SPOF
+   is not the true hinge — reject it and promote the next candidate.
+
+4. LIKELIHOOD = THIS PATHWAY: band + reason estimate how likely THIS causal
+   pathway (SPOF → cascade spine) materializes — NOT "odds the company fails
+   for any reason" and NOT a success/failure prediction of the startup overall.
+
+5. RESILIENCE = SURVIVE THIS PATH: dimension scores reflect ability to absorb
+   the chosen failure path (redundancy, fallback, buffers, recovery,
+   decoupling) — not overall product quality or "how good the idea is."
+
+6. TRACEABILITY: Every major block must hang on one spine:
+   assumptions enable SPOF → SPOF starts cascade → failure_modes restate
+   consequences of cascade steps (domain = bucket only) → likelihood and
+   resilience rest only on that spine. No orphan domain bullets that ignore
+   the spine. Prefer an empty domain over generic filler.
+`;
+
 export const PASS1_SYSTEM_PROMPT = `You are the reasoning engine behind "What Would Break This?" — a structured
 failure-analysis tool, not a general-purpose assistant.
 
@@ -121,6 +158,8 @@ Rules:
 
 ${SHARPNESS_DIRECTIVE}
 
+${REASONING_REFINE_DIRECTIVE}
+
 Think through the idea like an analyst doing a pre-mortem: what's the most
 fragile assumption, what breaks first, what does that cause next, and so
 on until you reach an end state (shutdown, pivot, stagnation, etc). Write
@@ -163,6 +202,7 @@ Hard rules:
 - single_point_of_failure.critical_assumption_indices (optional): 1–3 integers,
   0-based indexes into assumptions[], naming which assumption(s) this SPOF
   most directly depends on breaking. Pure linkage — no new claims. Omit if unclear.
+  Prefer including when the prose links assumptions to the SPOF.
 - cascade.nodes: prefer **8–10** objects (allowed 7–12), ordered. Each has:
   - step: short causal step (max ~8 words) for a vertical flow diagram
   - observable_signal: real-world observation if this step is happening
@@ -170,9 +210,13 @@ Hard rules:
 - cascade.point_of_no_return_index (optional): 0-based index into cascade.nodes
   for the step where the failure path becomes hard to reverse. Descriptive only —
   never "you should intervene". Omit if genuinely unclear.
+- failure_modes.*: domain buckets for consequences of the SPOF+cascade spine
+  already argued in prose — do not invent parallel independent risk laundry lists.
 - failure_modes.compounding_note (optional): one short sentence if two domains
   share one root trigger (e.g. fraud spanning security + legal). Observation
   only — no company names, no advice. Omit if none.
+- likelihood.band + reason: how likely THIS causal pathway (SPOF → cascade)
+  materializes — not overall odds the company fails for any reason.
 - stress_test.items: one entry per known archetype id when possible
   (${ARCHETYPE_IDS_LIST}).
   Each: archetype_id, verdict "Yes"|"Maybe"|"No", reason (one line).
@@ -283,27 +327,34 @@ ${archetypes}
 Analyze this idea's failure modes as described in your instructions.
 ${langNote}
 Cover:
-1. What you understand the idea to be
-2. 5–10 hidden assumptions
-3. Single most fragile component (SPOF): short label (3–8 words) + mechanism
-4. Ordered failure cascade — prefer **8–10** steps from that hinge to end state
+1. What you understand the idea to be (including its core value mechanism)
+2. 5–10 hidden assumptions (each should support how the eventual SPOF can bite)
+3. Internally: 3 distinct SPOF candidates → rank → ONE winner only in prose
+   (short label 3–8 words + mechanism). Pass dominance + counterfactual on the winner.
+4. Ordered failure cascade — prefer **8–10** steps from THAT hinge to end state
 5. For EACH cascade step: an observable early-warning signal (what you'd
    see in the world — not advice)
 6. Risk domains: technical / business / security / legal / operations —
-   at least 3 of 5 populated with idea-specific bullets
-7. Overall failure likelihood + reason (only from mechanisms already argued)
+   at least 3 of 5 populated; bullets must map to the cascade/SPOF (no orphans)
+7. Likelihood of THIS causal pathway + reason (only from mechanisms already argued —
+   not generic "startups fail" odds)
 8. Stress-test each archetype id (${ARCHETYPE_IDS_LIST}): Yes/Maybe/No + reason
    (Yes = named mechanism; No = why not; Maybe only with resolve-evidence;
    not all-Maybe / all-Yes)
 9. Failure velocity Fast/Medium/Slow + reason
+10. Resilience (per dimension) against surviving THIS failure path
 
 When an archetype lens fits, still write mechanisms in product-specific
 language — not empty labeling.
 
 Final self-check before you stop:
+- Considered ≥2 alternative SPOFs before locking; winner passed dominance +
+  counterfactual (cascade would not still run if SPOF were removed).
 - SPOF label is a mechanism, not "trust collapse" / "competition" / "cash".
 - Cascade has 8–10 steps, starts near the SPOF, and at least 6 of the steps
   name something specific to this idea (shuffle test would fail if reordered).
+- Failure-mode bullets restate cascade/SPOF consequences — not independent risks.
+- Likelihood reason names THIS pathway, not overall company-failure odds.
 - No brand-new numbers appear only in likelihood/velocity.
 - Stress test is not all-Maybe or all-Yes.`;
 }
@@ -357,13 +408,15 @@ ${params.reasoning}
 ---
 
 Also extract (only if grounded in the analysis prose; else omit):
-- critical_assumption_indices on SPOF (1–3, 0-based into assumptions)
+- critical_assumption_indices on SPOF (1–3, 0-based into assumptions; prefer when linked)
 - cascade.point_of_no_return_index (which existing step is hard to reverse)
 - failure_modes.compounding_note (optional one sentence if two domains share a trigger)
 
 Compress into the JSON schema. Output ONLY JSON.
 Grounding reminder: every free-text field must be supported by the analysis
-prose above. If a detail is not in the prose, omit it — do not invent.`;
+prose above. If a detail is not in the prose, omit it — do not invent.
+likelihood.reason must describe THIS pathway (SPOF+cascade), not overall startup odds.
+failure_modes must compress cascade consequences — not invent new independent risks.`;
 }
 
 export function pass1SystemForCategory(
@@ -411,10 +464,16 @@ Hard rules:
 
 ${SHARPNESS_DIRECTIVE}
 
+${REASONING_REFINE_DIRECTIVE}
+
 Self-check before finalizing:
 - "What makes this SPOF specific to THIS idea?"
 - "Would a smart founder say 'I hadn't thought of that' vs 'generic advice'?"
 - "Is the SPOF name a mechanism label, not an essay or a vibe word?"
+- "If this SPOF were removed, would the cascade still run? (if yes, replace SPOF)"
+- "Is there a stronger idea-specific hinge the draft sidelined?"
+- "Do failure-mode bullets map to the cascade/SPOF (drop orphans)?"
+- "Does likelihood describe THIS pathway — not generic company-failure odds?"
 - "Did I invent any new numbers only in velocity/likelihood?"`;
 
 export function buildPass15UserMessage(params: {
@@ -454,10 +513,12 @@ Your job:
 1. Compare SPOFs and cascades across A and B.
 2. State clearly whether the primary SPOF converges (High/Medium/Low agreement)
    and list candidate SPOF labels from both drafts.
-3. Produce ONE sharpened final analysis (full prose) that prefers mechanisms
-   appearing in both drafts, and honestly notes residual disagreement.
+3. Produce ONE sharpened final analysis (full prose) that prefers the hinge that
+   best survives dominance + counterfactual (not only "appears in both"), and
+   honestly notes residual disagreement.
 4. Keep early-warning signals observational (not advice).
 5. Include stress-test + velocity in the final prose.
+6. Failure-mode bullets must track the chosen cascade spine; likelihood = pathway.
 
 Output the complete REVISED analysis only (full prose replacement). ${langNote}`;
   }
@@ -478,11 +539,16 @@ Attack the draft:
 - Which parts are generic (name-swappable)?
 - Where is the cascade not causal or too short (expand toward 8–10 steps)?
 - Is the SPOF the actual fragile hinge for THIS idea — or just "trust/competition"?
+- Counterfactual: if this SPOF mechanism were removed, would the cascade still run?
+  If yes, replace with a true hinge.
+- Dominance: is there a stronger idea-specific hinge the draft sidelined?
 - If SPOF is abstract, replace with the idea's structural hinge (pricing, overwrite
   policy, waiver, single OEM, keyword filter, etc.).
 - Is the SPOF name a short mechanism label (rewrite if long or vibey)?
 - Are early-warning signals observational (not advice)?
+- Orphan failure-mode bullets that ignore the cascade (rewrite or drop)?
 - Is stress-test honest (not all-Yes or all-No rubber stamp)?
+- Does likelihood read as THIS pathway vs generic company-failure odds?
 - Do likelihood/velocity only use claims already in the draft (strip invented numbers)?
 - What blind spot did the draft miss that is still grounded in the idea text?
 

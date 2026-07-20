@@ -324,6 +324,7 @@ export function AnalysisReport({
           <Panel
             icon={<Activity className="h-4 w-4" />}
             title={t.report.likelihood}
+            hint={t.report.likelihoodHint}
             delay={0.08}
             glowIntensity={1.7}
           >
