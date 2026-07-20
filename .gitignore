@@ -27,6 +27,11 @@
 # local analysis job snapshots (dev resume)
 .breakitfirst-jobs/
 
+# third-party agent skills / tools (local only — do not push)
+.vendor/
+.agents/
+.agent-native/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

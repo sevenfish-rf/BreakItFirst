@@ -11,6 +11,12 @@ import { PixelBlastBackground } from "@/components/effects/pixel-blast-backgroun
 import { GlowCard } from "@/components/ui/glow-card";
 import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
 import { ThemeProvider } from "@/lib/theme-context";
+import { loadActiveJob } from "@/lib/draft";
+import {
+  clearSavedReport,
+  loadSavedReport,
+  saveReport,
+} from "@/lib/report-storage";
 import {
   DEFAULT_PROVIDER_SETTINGS,
   isProviderConfigured,
@@ -40,13 +46,45 @@ function AppShellInner() {
   const [hydrated, setHydrated] = useState(false);
   const [analysis, setAnalysis] = useState<FailureAnalysis | null>(null);
   const [reportWarnings, setReportWarnings] = useState<string[]>([]);
+  const [restoredFromStorage, setRestoredFromStorage] = useState(false);
 
   useEffect(() => {
     setSettings(loadProviderSettings());
+
+    // Priority: active job (analyzing) > saved report > empty form
+    // LandingForm handles active-job resume when analysis is null.
+    const activeJob = loadActiveJob();
+    if (!activeJob?.jobId) {
+      const saved = loadSavedReport();
+      if (saved) {
+        setAnalysis(saved.analysis);
+        setReportWarnings(saved.warnings);
+        setRestoredFromStorage(true);
+      }
+    }
+
     setHydrated(true);
   }, []);
 
   const providerReady = hydrated && isProviderConfigured(settings);
+
+  function handleAnalysisSuccess(
+    next: FailureAnalysis,
+    warnings?: string[],
+  ) {
+    const w = warnings ?? [];
+    setAnalysis(next);
+    setReportWarnings(w);
+    setRestoredFromStorage(false);
+    saveReport(next, w);
+  }
+
+  function handleResetReport() {
+    setAnalysis(null);
+    setReportWarnings([]);
+    setRestoredFromStorage(false);
+    clearSavedReport();
+  }
 
   return (
     <div className="relative flex min-h-full flex-1 flex-col overflow-x-hidden">
@@ -172,10 +210,7 @@ function AppShellInner() {
                       providerReady={providerReady}
                       provider={settings}
                       onNeedProvider={() => setSettingsOpen(true)}
-                      onSuccess={(next, warnings) => {
-                        setAnalysis(next);
-                        setReportWarnings(warnings ?? []);
-                      }}
+                      onSuccess={handleAnalysisSuccess}
                     />
                   </GlowCard>
                 </motion.div>
@@ -192,13 +227,15 @@ function AppShellInner() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.32 }}
               >
+                {restoredFromStorage ? (
+                  <p className="mb-3 text-center text-[11px] text-text-muted">
+                    {t.report.restoredFromBrowser}
+                  </p>
+                ) : null}
                 <AnalysisReport
                   analysis={analysis}
                   warnings={reportWarnings}
-                  onReset={() => {
-                    setAnalysis(null);
-                    setReportWarnings([]);
-                  }}
+                  onReset={handleResetReport}
                 />
               </motion.div>
             )}

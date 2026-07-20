@@ -109,6 +109,7 @@ export type Dictionary = {
     analysisBaseHint: string;
     systemReading: string;
     systemReadingHint: string;
+    restoredFromBrowser: string;
   };
   modes: {
     technical: string;
@@ -255,6 +256,8 @@ const en: Dictionary = {
     systemReading: "System reading",
     systemReadingHint:
       "How the model restated the idea before critiquing it (analysis contract)",
+    restoredFromBrowser:
+      "Restored last report from this browser (local storage)",
   },
   modes: {
     technical: "Technical",
@@ -448,6 +451,8 @@ const id: Dictionary = {
     systemReading: "Pembacaan sistem",
     systemReadingHint:
       "Bagaimana model merumuskan ulang ide sebelum mengkritik (kontrak pemahaman)",
+    restoredFromBrowser:
+      "Laporan terakhir dipulihkan dari browser ini (local storage)",
   },
   modes: {
     technical: "Teknis",
