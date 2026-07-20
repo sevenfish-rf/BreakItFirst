@@ -1,5 +1,5 @@
 # BreakItFirst Engine Architecture vNext
-**Status:** Internal Design Notes
+**Status:** Design notes — **partially applied 2026-07-20** as prompt/soft-check *refine* (multi-hyp, dominance, counterfactual, pathway likelihood, modes↔cascade). Full multi-call hypothesis engine + formal causal-graph schema **not** implemented (by design).
 **Audience:** Programmer / AI Engineer
 **Purpose:** Refine Pass 1 reasoning architecture without changing the external product.
 
@@ -9,9 +9,10 @@
 
 BreakItFirst is **not** a risk analysis tool.
 
-BreakItFirst is an **AI Red Team for Ideas**.
+BreakItFirst is a **premortem / failure-analysis engine for unbuilt ideas**
+(adversarial *idea* critique — **not** security AI red-teaming of a live platform).
 
-It is powered by a **Premortem Engine** that uses **Failure Reasoning** to construct the most plausible failure argument before execution.
+It uses **Failure Reasoning** to construct the most plausible failure argument before execution.
 
 ---
 

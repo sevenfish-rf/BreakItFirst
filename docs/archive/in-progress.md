@@ -1,37 +1,40 @@
-# BreakItFirst — In Progress (dari masterplan)
+# Status snapshot (archive)
 
-**Sumber:** `docs/archive/masterplan.md`  
-**Status:** **Official baseline** `230859` mean **33.8**.  
-**Shipped (unmeasured vs 33.8):** F1 critical assumptions · F2 point-of-no-return · F3 compounding note (Pass 2 + soft-check + minimal UI).
+**Last updated:** 2026-07-20  
+**Live docs:** `docs/product.md`, `guide.md`, `reference.md`
 
 ---
 
-## Status fitur
+## Shipped (code)
 
-| Area | Status |
+| Area | Notes |
 |------|--------|
-| B.1 Eval harness | OK |
-| B.1 Baseline data | **current 230859 (33.8)** |
-| B.2 Pass 2 ketat | Zod, retry×1, soft-checks (14+ soft gates, F1–F3) |
-| C.1–C.6 | shipped (Deep opt-in) |
-| DIRECTIVES-2026-07-16 | applied + re-measured |
-| Redis / full observability | deferred |
-| UI polish | deferred by owner |
+| Pipeline Pass 1 → 1.5 → Pass 2 | + Deep 2× Pass 1 |
+| Archetypes, signals, stress, velocity | C.1–C.5 |
+| F1 / F2 / F3 | critical_assumption_indices, point_of_no_return_index, compounding_note |
+| Sharpness + DIRECTIVES-2026-07-16 | Prompt + soft-checks |
+| Reasoning refine (2026-07-20) | Multi-hyp, dominance, counterfactual, pathway likelihood, modes↔cascade (prompts + soft-checks; **not** full architecture rewrite) |
+| Async jobs + poll + cancel + single-flight | Session resilience |
+| Draft / report restore / history (localStorage) | Max 10 history |
+| Eval harness | Official baseline **230859** mean **33.8** (2026-07-16) |
 
----
+## Deferred
 
-## Optional next
+| Area | Notes |
+|------|--------|
+| Redis / multi-instance jobs + rate limit | Single-process + `.breakitfirst-jobs` disk today |
+| Server DB / share links | Client-only history |
+| Production fixed provider (non-BYOK UX) | BYOK remains owner/dev path |
+| Full re-baseline after 2026-07-20 prompt refine | Optional / expensive |
 
-1. Further core tuning only if real-user pain (mean already at ceiling)  
-2. Deploy / multi-instance rate limit  
-3. UI polish  
+## Identity note
 
----
+BreakItFirst = **premortem for unbuilt ideas**, not security AI red-teaming of a live platform. See `docs/product.md` §1.
 
-## Changelog
+## Changelog (high level)
 
-| Tanggal | Update |
-|---------|--------|
-| 2026-07-16 | Core B+C, eval, polish, sharpness, DIRECTIVES D1–D5 |
-| 2026-07-16 | Re-eval `230859` mean 33.8; **owner locked as current official baseline** |
-| 2026-07-17 | **F1+F2+F3** Pass2 fields: critical_assumption_indices, point_of_no_return_index, compounding_note + UI |
+| Date | Update |
+|------|--------|
+| 2026-07-16 | Core B+C, eval, sharpness, DIRECTIVES D1–D5; baseline 33.8 locked |
+| 2026-07-17 | F1+F2+F3 fields + UI |
+| 2026-07-20 | Session resilience (jobs/poll/cancel/single-flight/history); reasoning refine P0+P1; docs reorg |

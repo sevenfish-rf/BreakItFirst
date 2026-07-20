@@ -1,11 +1,18 @@
 # BreakItFirst — Docs
 
-| Dokumen | Isi |
-|---------|-----|
-| **[project-overview.md](./project-overview.md)** | **Core produk** + penjelasan tiap output report, fitur, outcomes |
-| [guide.md](./guide.md) | Setup, arsitektur, theme, i18n (teknis ringkas) |
-| [reference.md](./reference.md) | API, schema, modules, komponen |
+Three live docs. Everything else is **archive** (history, not day-to-day).
 
-**Baca dulu:** [project-overview.md](./project-overview.md)  
-**Setup dev:** [guide.md](./guide.md) → section Setup  
-**API / kode:** [reference.md](./reference.md)
+| Doc | Read when |
+|-----|-----------|
+| **[product.md](./product.md)** | What the product is, report semantics, quality bar |
+| **[guide.md](./guide.md)** | Setup, architecture, session UX, deploy |
+| **[reference.md](./reference.md)** | API, schema, modules, soft-checks |
+
+**Eval / baselines:** [../eval/README.md](../eval/README.md)  
+**Historical plans & directives:** [archive/](./archive/)
+
+### Quick paths
+
+- New contributor → `product.md` §1–4, then `guide.md` setup  
+- Touching prompts/schema → `product.md` + `reference.md`  
+- Jobs / refresh / cancel → `guide.md` §3 + `reference.md` §1  

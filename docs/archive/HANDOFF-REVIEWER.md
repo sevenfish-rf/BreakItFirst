@@ -43,7 +43,7 @@ no single overall danger score; cascade is linear; Deep analysis stays opt-in.
 # What to read (in order)
 1. docs/archive/masterplan.md — A (philosophy), C/D (mechanisms), E (done)
 2. docs/archive/in-progress.md — current status
-3. docs/project-overview.md — Baik/Buruk per report block
+3. docs/product.md — product identity + report block quality bar
 4. src/lib/prompts.ts — Pass 1 / 1.5 / 2 (main lever)
 5. src/lib/pipeline.ts — stage order only (don't redesign unless necessary)
 6. src/lib/archetypes.ts — knowledge layer
@@ -116,7 +116,7 @@ to prompts without asking what you meant.
 | `docs/archive/HANDOFF-REVIEWER.md` (file ini) |
 | `docs/archive/masterplan.md` |
 | `docs/archive/in-progress.md` |
-| `docs/project-overview.md` |
+| `docs/product.md` |
 | `src/lib/prompts.ts` |
 | `src/lib/pipeline.ts` |
 | `src/lib/archetypes.ts` |
@@ -212,6 +212,7 @@ Saat file `DIRECTIVES-*.md` sudah ada dan owner bilang gas:
 3. Jangan UI  
 4. `npm run eval:assert-sample` + `tsc`  
 5. Minta owner re-eval vs **33.8** bila mau claim improvement  
-6. Update `docs/archive/in-progress.md` singkat  
+6. Update `docs/archive/in-progress.md` + live `docs/product.md` / `reference.md` if semantics change  
+
 
 **Jangan** mulai implement sebelum file DIRECTIVES dari reviewer ada.
