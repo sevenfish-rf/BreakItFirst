@@ -10,7 +10,8 @@
     "eval:baseline": "tsx --tsconfig tsconfig.json eval/run-baseline.ts",
     "eval:assert-sample": "tsx --tsconfig tsconfig.json eval/assert-sample.ts",
     "eval:baseline:ps1": "powershell -ExecutionPolicy Bypass -File ./scripts/eval-baseline.ps1",
-    "eval:compare": "tsx --tsconfig tsconfig.json eval/compare-baseline.ts"
+    "eval:compare": "tsx --tsconfig tsconfig.json eval/compare-baseline.ts",
+    "smoke:session": "tsx --tsconfig tsconfig.json scripts/smoke-session-resilience.ts"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.2",

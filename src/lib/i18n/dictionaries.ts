@@ -35,6 +35,8 @@ export type Dictionary = {
     draftRestored: string;
     clearDraft: string;
     cancelled: string;
+    recentReports: string;
+    deleteReport: string;
   };
   analyzing: {
     title: string;
@@ -178,6 +180,8 @@ const en: Dictionary = {
     clearDraft: "Clear draft",
     cancelled:
       "Analysis cancelled. Your idea is still here — you can run again anytime.",
+    recentReports: "Recent reports",
+    deleteReport: "Remove from history",
   },
   report: {
     kicker: "Failure report",
@@ -373,6 +377,8 @@ const id: Dictionary = {
     clearDraft: "Hapus draf",
     cancelled:
       "Analisis dibatalkan. Ide masih ada di form — bisa dijalankan lagi kapan saja.",
+    recentReports: "Laporan terbaru",
+    deleteReport: "Hapus dari riwayat",
   },
   report: {
     kicker: "Laporan kegagalan",

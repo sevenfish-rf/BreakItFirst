@@ -40,6 +40,8 @@ import type { ProviderSettings } from "@/lib/provider-settings";
 import { useLanguage } from "@/lib/i18n/context";
 import type { PipelineLiveStage } from "@/lib/pipeline-stages";
 import type { FailureAnalysis } from "@/types/analysis";
+import type { SavedReport } from "@/lib/report-storage";
+import { ReportHistory } from "@/components/report-history";
 import { cn } from "@/lib/utils";
 
 type LandingFormProps = {
@@ -47,6 +49,8 @@ type LandingFormProps = {
   provider: ProviderSettings;
   onNeedProvider: () => void;
   onSuccess: (analysis: FailureAnalysis, warnings?: string[]) => void;
+  onOpenHistoryReport?: (report: SavedReport) => void;
+  historyRefreshKey?: number;
 };
 
 function ideaTextForLocale(chip: ExampleChip, locale: string): string {
@@ -67,6 +71,8 @@ export function LandingForm({
   provider,
   onNeedProvider,
   onSuccess,
+  onOpenHistoryReport,
+  historyRefreshKey = 0,
 }: LandingFormProps) {
   const { locale, t } = useLanguage();
   const [idea, setIdea] = useState("");
@@ -574,6 +580,13 @@ export function LandingForm({
             </div>
           </div>
         </div>
+
+        {onOpenHistoryReport ? (
+          <ReportHistory
+            refreshKey={historyRefreshKey}
+            onOpen={onOpenHistoryReport}
+          />
+        ) : null}
 
         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border/80 bg-background/40 px-3.5 py-3 transition-colors hover:border-accent/30">
           <input

@@ -16,6 +16,7 @@ import {
   clearSavedReport,
   loadSavedReport,
   saveReport,
+  type SavedReport,
 } from "@/lib/report-storage";
 import {
   DEFAULT_PROVIDER_SETTINGS,
@@ -47,6 +48,7 @@ function AppShellInner() {
   const [analysis, setAnalysis] = useState<FailureAnalysis | null>(null);
   const [reportWarnings, setReportWarnings] = useState<string[]>([]);
   const [restoredFromStorage, setRestoredFromStorage] = useState(false);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
 
   useEffect(() => {
     setSettings(loadProviderSettings());
@@ -77,13 +79,22 @@ function AppShellInner() {
     setReportWarnings(w);
     setRestoredFromStorage(false);
     saveReport(next, w);
+    setHistoryRefreshKey((k) => k + 1);
+  }
+
+  function handleOpenHistoryReport(report: SavedReport) {
+    setAnalysis(report.analysis);
+    setReportWarnings(report.warnings);
+    setRestoredFromStorage(true);
   }
 
   function handleResetReport() {
+    // Back to form — keep history list; only clear "current" pointer
     setAnalysis(null);
     setReportWarnings([]);
     setRestoredFromStorage(false);
     clearSavedReport();
+    setHistoryRefreshKey((k) => k + 1);
   }
 
   return (
@@ -211,6 +222,8 @@ function AppShellInner() {
                       provider={settings}
                       onNeedProvider={() => setSettingsOpen(true)}
                       onSuccess={handleAnalysisSuccess}
+                      onOpenHistoryReport={handleOpenHistoryReport}
+                      historyRefreshKey={historyRefreshKey}
                     />
                   </GlowCard>
                 </motion.div>

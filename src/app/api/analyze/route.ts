@@ -3,6 +3,7 @@ import {
   completeJobFailure,
   completeJobSuccess,
   createAnalyzeJob,
+  findRunningJobForSession,
   publishJobEvent,
 } from "@/lib/analyze-jobs";
 import {
@@ -49,6 +50,8 @@ export async function POST(request: Request) {
   const ip = getClientIp(request);
   const sessionId = getSessionId(request);
   const strict = isStrictMode({ ip, sessionId });
+  /** One running job per browser session (single-flight). */
+  const sessionKey = `${ip}::${sessionId || "anon"}`;
 
   let body: AnalyzeBody;
   try {
@@ -61,6 +64,24 @@ export async function POST(request: Request) {
   }
 
   const deepAnalysis = body.deepAnalysis === true;
+
+  // Single-flight BEFORE rate limit — reconnect does not burn another slot
+  const existing = findRunningJobForSession(sessionKey);
+  if (existing) {
+    console.info("[analyze] single-flight reuse", {
+      jobId: existing.id,
+      sessionKey,
+      stage: existing.currentStage,
+    });
+    return NextResponse.json({
+      ok: true,
+      jobId: existing.id,
+      reused: true,
+      stage: existing.currentStage,
+      message:
+        "An analysis is already running for this session. Reconnect to the same job.",
+    });
+  }
 
   const limitResult = checkRateLimit({
     ip,
@@ -126,7 +147,7 @@ export async function POST(request: Request) {
   }
 
   const locale = body.locale === "id" ? "id" : "en";
-  const job = createAnalyzeJob();
+  const job = createAnalyzeJob({ sessionKey });
 
   console.info("[analyze] job started", {
     jobId: job.id,

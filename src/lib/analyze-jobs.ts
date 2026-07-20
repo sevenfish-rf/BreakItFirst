@@ -43,6 +43,8 @@ export type AnalyzeJobStatus = "running" | "done" | "error" | "cancelled";
 export type AnalyzeJob = {
   id: string;
   status: AnalyzeJobStatus;
+  /** Session/IP key for single-flight (one running job per client) */
+  sessionKey?: string;
   currentStage: PipelineLiveStage;
   currentDetail?: string;
   events: AnalyzeJobEvent[];
@@ -68,6 +70,7 @@ export type AnalyzeJobSnapshot = {
 type PersistedJob = {
   id: string;
   status: AnalyzeJobStatus;
+  sessionKey?: string;
   currentStage: PipelineLiveStage;
   currentDetail?: string;
   events: AnalyzeJobEvent[];
@@ -115,6 +118,7 @@ function persistJob(job: AnalyzeJob): void {
     const payload: PersistedJob = {
       id: job.id,
       status: job.status,
+      sessionKey: job.sessionKey,
       currentStage: job.currentStage,
       currentDetail: job.currentDetail,
       // keep last stages + result only (smaller file)
@@ -188,6 +192,8 @@ function loadPersisted(id: string): AnalyzeJob | undefined {
     const job: AnalyzeJob = {
       id: data.id,
       status,
+      sessionKey:
+        typeof data.sessionKey === "string" ? data.sessionKey : undefined,
       currentStage: currentStage as PipelineLiveStage,
       currentDetail,
       events: Array.isArray(data.events) ? data.events : [],
@@ -260,11 +266,31 @@ function pruneJobs(now = Date.now()): void {
   }
 }
 
-export function createAnalyzeJob(): AnalyzeJob {
+/**
+ * Find a still-running job for this client session (single-flight).
+ * Only checks in-memory store — disk orphans are not "running" pipelines.
+ */
+export function findRunningJobForSession(
+  sessionKey: string,
+): AnalyzeJob | undefined {
+  if (!sessionKey.trim()) return undefined;
+  pruneJobs();
+  for (const job of jobStore().values()) {
+    if (job.status === "running" && job.sessionKey === sessionKey) {
+      return job;
+    }
+  }
+  return undefined;
+}
+
+export function createAnalyzeJob(options?: {
+  sessionKey?: string;
+}): AnalyzeJob {
   pruneJobs();
   const job: AnalyzeJob = {
     id: newId(),
     status: "running",
+    sessionKey: options?.sessionKey?.trim() || undefined,
     currentStage: "ingest",
     currentDetail: "Queued",
     events: [],
@@ -275,8 +301,28 @@ export function createAnalyzeJob(): AnalyzeJob {
   };
   jobStore().set(job.id, job);
   persistJob(job);
-  console.info("[analyze-jobs] created", job.id, "storeSize=", jobStore().size);
+  console.info(
+    "[analyze-jobs] created",
+    job.id,
+    "session=",
+    job.sessionKey ?? "-",
+    "storeSize=",
+    jobStore().size,
+  );
   return job;
+}
+
+/** Test helper: drop all in-memory jobs (does not wipe disk). */
+export function __resetJobsForTests(): void {
+  const store = jobStore();
+  for (const job of store.values()) {
+    try {
+      if (job.status === "running") job.abort.abort();
+    } catch {
+      /* ignore */
+    }
+  }
+  store.clear();
 }
 
 export function getAnalyzeJob(id: string): AnalyzeJob | undefined {
