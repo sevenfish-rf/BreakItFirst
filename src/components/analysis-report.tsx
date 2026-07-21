@@ -246,6 +246,33 @@ export function AnalysisReport({
             </span>
           </div>
           <p className="mt-2 text-xs text-text-muted">{spof.confidence_reason}</p>
+          {(() => {
+            const idxs = spof.critical_assumption_indices ?? [];
+            const linked = idxs
+              .map((i) => analysis.assumptions[i])
+              .filter((s): s is string => Boolean(s?.trim()));
+            const why =
+              linked.length > 0
+                ? linked.slice(0, 2).join(" · ")
+                : spof.explanation
+                    ?.split(/(?<=[.!?])\s+/)
+                    .map((s) => s.trim())
+                    .find((s) => s.length > 24 && s.length < 220);
+            if (!why) return null;
+            return (
+              <div className="mt-3 rounded-lg border border-accent/25 bg-accent/5 px-3 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-accent">
+                  {t.report.spofWhyHinge}
+                </p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-text-muted">
+                  {t.report.spofWhyHingeHint}
+                </p>
+                <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
+                  {why}
+                </p>
+              </div>
+            );
+          })()}
           <p className="mt-4 text-sm leading-relaxed text-text-secondary">
             {spof.explanation}
           </p>

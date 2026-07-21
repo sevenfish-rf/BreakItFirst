@@ -658,7 +658,32 @@ export function runSoftChecks(analysis: FailureAnalysis): SoftCheckResult[] {
       message:
         "Cascade point_of_no_return_index missing or edge-only (soft check)",
     },
+    {
+      id: "security_legal_when_data_path",
+      ok: securityOrLegalFilledWhenDataPath(analysis),
+      message:
+        "Idea mentions data/keys/free-tier/consent but security and legal modes are empty (soft check)",
+    },
   ];
+}
+
+/**
+ * Soft: when idea text suggests data, free-tier abuse, or consent, prefer at
+ * least one non-empty security or legal mode (E8 / E16 signal).
+ */
+export function securityOrLegalFilledWhenDataPath(
+  analysis: FailureAnalysis,
+): boolean {
+  const idea = (analysis.meta?.idea_input ?? "").toLowerCase();
+  if (!idea.trim()) return true;
+  const needsDataPath =
+    /api key|free tier|transcript|consent|cdn|cache|pii|privacy|recording|encryption|oauth|bearer|session cookie|clipboard/i.test(
+      idea,
+    );
+  if (!needsDataPath) return true;
+  const sec = analysis.failure_modes.security?.filter((s) => s.trim()) ?? [];
+  const legal = analysis.failure_modes.legal?.filter((s) => s.trim()) ?? [];
+  return sec.length > 0 || legal.length > 0;
 }
 
 /** Soft: prefer explicit assumption→SPOF linkage when model can provide it */

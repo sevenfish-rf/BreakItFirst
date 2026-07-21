@@ -54,6 +54,8 @@ export type Dictionary = {
     newAnalysis: string;
     summary: string;
     spof: string;
+    spofWhyHinge: string;
+    spofWhyHingeHint: string;
     likelihood: string;
     likelihoodHint: string;
     assumptions: string;
@@ -138,24 +140,24 @@ const en: Dictionary = {
     language: "Language",
   },
   landing: {
-    kicker: "Failure Analysis Engine",
+    kicker: "Premortem for unbuilt ideas",
     headline: "Build less. Break less.",
     subhead:
-      "Paste your startup, app, API, or product idea. We'll tell you how it fails before reality does.",
+      "Paste your idea. Get one idea-specific failure hinge and causal cascade — not multi-pass marketing, not a chat dump, not how-to-win coaching.",
     footerNote:
-      "Not a brainstorming tool. No feature ideas, no pep talks — only causal failure analysis.",
+      "Structured premortem engine. Success = a path you had not considered — not generic startup advice.",
     features: [
       {
-        title: "Causal, not cosmetic",
-        body: "Pre-mortem reasoning that traces fragile assumptions to end states.",
+        title: "One dominant hinge",
+        body: "A single structural SPOF with a causal spine — earlier and more specific than the risk you already feared.",
       },
       {
-        title: "Structured cascade",
-        body: "Ordered failure chain, SPOF, and multi-dimension resilience — not a chat dump.",
+        title: "Cascade · signals · stress · velocity",
+        body: "Ordered failure path with observables, archetype stress, path speed, and multi-dimension resilience on that path.",
       },
       {
-        title: "Bring your own model",
-        body: "OpenAI-compatible providers. Your key stays in the browser.",
+        title: "BYOK for testing",
+        body: "OpenAI-compatible providers while you develop. Your key stays in the browser.",
       },
     ],
   },
@@ -190,6 +192,9 @@ const en: Dictionary = {
     newAnalysis: "New analysis",
     summary: "Summary",
     spof: "Single Point of Failure",
+    spofWhyHinge: "Why this hinge",
+    spofWhyHingeHint:
+      "Structural assumptions this SPOF depends on — not the generic risk everyone already names",
     likelihood: "Pathway likelihood",
     likelihoodHint:
       "Chance this failure path materializes — not overall odds the company fails",
@@ -204,10 +209,11 @@ const en: Dictionary = {
       "0–100 ability to absorb this failure path — lower is more fragile",
     stressTest: "Archetype stress test",
     stressTestHint:
-      "Pattern exposure checklist — not one overall danger score",
+      "Named product value: pattern exposure for this idea — not one vanity danger score",
     stressVerdict: { yes: "Yes", maybe: "Maybe", no: "No" },
     velocity: "Failure velocity",
-    velocityHint: "How quickly the main failure path tends to unfold",
+    velocityHint:
+      "Named product value: how quickly THIS failure path tends to unfold",
     calibration: "SPOF calibration",
     calibrationHint:
       "Deep analysis only — agreement across independent reasoning runs",
@@ -337,24 +343,24 @@ const id: Dictionary = {
     language: "Bahasa",
   },
   landing: {
-    kicker: "Mesin Analisis Kegagalan",
+    kicker: "Premortem untuk ide belum dibangun",
     headline: "Bangun lebih sedikit. Gagal lebih sedikit.",
     subhead:
-      "Tempel ide startup, app, API, atau produkmu. Kami tunjukkan cara gagalnya sebelum kenyataan melakukannya.",
+      "Tempel ide. Dapat satu hinge kegagalan yang spesifik + rantai kausal — bukan marketing multi-pass, bukan chat dump, bukan coaching cara menang.",
     footerNote:
-      "Bukan tool brainstorming. Tanpa saran fitur, tanpa motivasi — hanya analisis kegagalan kausal.",
+      "Mesin premortem terstruktur. Sukses = jalur yang belum terpikir — bukan nasihat startup generik.",
     features: [
       {
-        title: "Kausal, bukan kosmetik",
-        body: "Pre-mortem yang menelusuri asumsi rapuh sampai end state.",
+        title: "Satu hinge dominan",
+        body: "SPOF struktural dengan spine kausal — lebih awal dan spesifik daripada risiko yang sudah ditakuti.",
       },
       {
-        title: "Cascade terstruktur",
-        body: "Rantai kegagalan berurutan, SPOF, dan skor ketahanan multi-dimensi.",
+        title: "Cascade · sinyal · stress · velocity",
+        body: "Jalur gagal berurutan dengan observasi, stress arketipe, kecepatan jalur, dan ketahanan multi-dimensi pada jalur itu.",
       },
       {
-        title: "Bawa model sendiri",
-        body: "Provider kompatibel OpenAI. Kunci API tetap di browser.",
+        title: "BYOK untuk testing",
+        body: "Provider kompatibel OpenAI saat develop. Kunci API tetap di browser.",
       },
     ],
   },
@@ -390,6 +396,9 @@ const id: Dictionary = {
     newAnalysis: "Analisis baru",
     summary: "Ringkasan",
     spof: "Single Point of Failure",
+    spofWhyHinge: "Kenapa hinge ini",
+    spofWhyHingeHint:
+      "Asumsi struktural yang SPOF ini andalkan — bukan risiko generik yang sudah semua sebut",
     likelihood: "Kemungkinan jalur gagal",
     likelihoodHint:
       "Peluang jalur kegagalan ini terjadi — bukan peluang keseluruhan perusahaan gagal",
@@ -404,10 +413,11 @@ const id: Dictionary = {
       "0–100 kemampuan menahan jalur gagal ini — semakin rendah semakin rapuh",
     stressTest: "Stress test arketipe",
     stressTestHint:
-      "Ceklis paparan pola — bukan satu skor bahaya keseluruhan",
+      "Nilai produk: paparan pola untuk ide ini — bukan satu skor bahaya vanity",
     stressVerdict: { yes: "Ya", maybe: "Mungkin", no: "Tidak" },
     velocity: "Kecepatan kegagalan",
-    velocityHint: "Seberapa cepat jalur gagal utama cenderung terjadi",
+    velocityHint:
+      "Nilai produk: seberapa cepat JALUR gagal ini cenderung terjadi",
     calibration: "Kalibrasi SPOF",
     calibrationHint:
       "Hanya deep analysis — kesepakatan antar run penalaran independen",

@@ -115,6 +115,65 @@ Do not lock the first SPOF you notice. Internally:
    the spine. Prefer an empty domain over generic filler.
 `;
 
+/**
+ * Quality-gap suite learnings (scoring A–E). Compact — do not bloat further.
+ * Injected into Pass 1 / 1.5 only.
+ */
+const SUITE_REFINE_DIRECTIVE = `
+SUITE QUALITY RULES (critical — from eval suite):
+
+EARLIEST HINGE & FOUNDER-FEAR (E1/E2):
+- When ranking SPOF candidates, prefer the earliest load-bearing hinge on the
+  causal chain if specificity is similar (not the late symptom everyone names).
+- If the winning SPOF is already the risk a smart founder fears as #1, search
+  one deeper structural hinge before locking.
+
+ONE SPINE ONLY (E18):
+- One dominant causal pathway. Do not pack independent causes (e.g. compute +
+  key rotation + cache + marketing) into one cascade as if they were one hinge.
+
+IDEA AS STATED — NO INVENT-THEN-ATTACK (E9/E10):
+- Attack the idea as written. Do NOT invent missing stack (RAG, fine-tune,
+  grounding, features, certifications) that the idea never claimed, then make
+  that invention the SPOF.
+- Prefer failure of the stated value prop over an architecture wishlist.
+
+FALSE SPECIFICITY / CAMOUFLAGE (E11):
+- For LLM-wrapper, analysis, premortem, or "AI report" ideas: include a candidate
+  SPOF that output LOOKS idea-specific but is structurally generic (camouflage).
+
+PIPELINE DIFFERENTIATORS (E6):
+- If the moat is a multi-step pipeline (extract → write → publish, map → edit),
+  consider stacked sub-problems as the SPOF (each step must work; one failure
+  collapses the chain).
+
+API / METERED / FREE-TIER (E16/E17):
+- If free tier, API keys, CDN, cache, or per-request pricing appear: multi-hyp
+  MUST include (a) abuse paths (key share, cache bust, locality collapse) and
+  (b) bill-unit vs cost-unit mismatch (e.g. charge per request, cost per
+  bytes/CPU/egress) when pricing is usage-based.
+
+HARDWARE / PHYSICAL (E13/E15):
+- Cascade opens internal-first (physics, sensor, BOM, process) before external
+  detection (reviewers, press). If hardware + subscription both monetize, state
+  when one hinge collapses both pillars simultaneously.
+
+CONSISTENCY (E7/E14):
+- Prefer grounded quantified observables + explicit point-of-no-return when
+  magnitudes were already argued. No new numbers only in velocity/likelihood.
+- No assumption that contradicts the later cascade (e.g. "firmware can fix" if
+  the spine says hardware ceiling makes upgrade impossible).
+
+DOMAINS & BLEED (E8/E12):
+- Transcripts, multi-reader docs, consent, PII, public API keys, free-tier abuse:
+  security and/or legal must not be empty without a real argument why.
+- Do not bleed privacy/provider/security modes unless the chosen SPOF requires it.
+
+GEO / CULTURE (E3):
+- If the idea names a place, language, or local channel (e.g. WA RT, city, market),
+  bind at least one cascade step or assumption to that local constraint.
+`;
+
 export const PASS1_SYSTEM_PROMPT = `You are the reasoning engine behind "What Would Break This?" — a structured
 failure-analysis tool, not a general-purpose assistant.
 
@@ -159,6 +218,8 @@ Rules:
 ${SHARPNESS_DIRECTIVE}
 
 ${REASONING_REFINE_DIRECTIVE}
+
+${SUITE_REFINE_DIRECTIVE}
 
 Think through the idea like an analyst doing a pre-mortem: what's the most
 fragile assumption, what breaks first, what does that cause next, and so
@@ -230,7 +291,10 @@ Hard rules:
   "Low" | "Medium" | "High" | "Very High" — never a number.
   (likelihood.band may also be "Very Low".)
 - resilience_score fields are integers 0–100 (this one IS numeric, unlike
-  the qualitative confidence/likelihood fields above).
+  the qualitative confidence/likelihood fields above). Scores must reflect
+  ability to absorb THIS failure path — not generic product quality.
+- Prefer single_point_of_failure.critical_assumption_indices when prose links
+  assumptions to the SPOF (1–3 indices).
 - Output ONLY valid JSON matching the schema. No markdown, no preamble,
   no trailing commentary.
 
@@ -327,35 +391,42 @@ ${archetypes}
 Analyze this idea's failure modes as described in your instructions.
 ${langNote}
 Cover:
-1. What you understand the idea to be (including its core value mechanism)
-2. 5–10 hidden assumptions (each should support how the eventual SPOF can bite)
-3. Internally: 3 distinct SPOF candidates → rank → ONE winner only in prose
-   (short label 3–8 words + mechanism). Pass dominance + counterfactual on the winner.
-4. Ordered failure cascade — prefer **8–10** steps from THAT hinge to end state
-5. For EACH cascade step: an observable early-warning signal (what you'd
-   see in the world — not advice)
+1. What you understand the idea to be (including its core value mechanism) —
+   only as stated; do not invent missing stack (RAG, fine-tune, etc.).
+2. 5–10 hidden assumptions (each supports how the eventual SPOF can bite;
+   none may contradict the cascade you write).
+3. Internally: 3 distinct SPOF candidates → rank by specificity, causal leverage,
+   and earliest load-bearing position → ONE winner in prose (label 3–8 words +
+   mechanism). Include domain candidates when relevant (API abuse/metering;
+   pipeline stacked failures; LLM camouflage). Dominance + counterfactual +
+   founder-fear depth check on the winner.
+4. Ordered failure cascade — prefer **8–10** steps from THAT hinge. Open at the
+   internal mechanism (physics/process/incentives), not external press/reviewers.
+   One spine only — no multi-independent causes.
+5. For EACH cascade step: observable early-warning signal (not advice). Prefer
+   grounded magnitudes already in the idea/analysis; mark a point of no return
+   when clear.
 6. Risk domains: technical / business / security / legal / operations —
-   at least 3 of 5 populated; bullets must map to the cascade/SPOF (no orphans)
-7. Likelihood of THIS causal pathway + reason (only from mechanisms already argued —
-   not generic "startups fail" odds)
-8. Stress-test each archetype id (${ARCHETYPE_IDS_LIST}): Yes/Maybe/No + reason
-   (Yes = named mechanism; No = why not; Maybe only with resolve-evidence;
-   not all-Maybe / all-Yes)
-9. Failure velocity Fast/Medium/Slow + reason
-10. Resilience (per dimension) against surviving THIS failure path
+   ≥3 of 5 populated; map to cascade. Fill security/legal when data, consent,
+   keys, free-tier abuse, or multi-reader docs apply.
+7. Likelihood of THIS pathway + reason (mechanisms already argued only).
+8. Stress-test each archetype id (${ARCHETYPE_IDS_LIST}): Yes/Maybe/No + reason.
+9. Failure velocity Fast/Medium/Slow + reason.
+10. Resilience per dimension against surviving THIS failure path.
 
 When an archetype lens fits, still write mechanisms in product-specific
 language — not empty labeling.
 
 Final self-check before you stop:
-- Considered ≥2 alternative SPOFs before locking; winner passed dominance +
-  counterfactual (cascade would not still run if SPOF were removed).
-- SPOF label is a mechanism, not "trust collapse" / "competition" / "cash".
-- Cascade has 8–10 steps, starts near the SPOF, and at least 6 of the steps
-  name something specific to this idea (shuffle test would fail if reordered).
-- Failure-mode bullets restate cascade/SPOF consequences — not independent risks.
-- Likelihood reason names THIS pathway, not overall company-failure odds.
-- No brand-new numbers appear only in likelihood/velocity.
+- ≥2 alternative SPOFs considered; winner passed dominance, counterfactual,
+  and "founder already fears this #1?" depth search.
+- Did not invent absent tech/features then attack them.
+- One causal spine only (not three independent failures glued together).
+- SPOF is a mechanism, not vibe/competition/cash alone.
+- Cascade 8–10 steps, starts at internal hinge, middle steps idea-specific.
+- Assumptions do not contradict the cascade.
+- Failure-mode bullets = cascade consequences (no off-spine laundry list).
+- Likelihood = THIS pathway; no new numbers only in likelihood/velocity.
 - Stress test is not all-Maybe or all-Yes.`;
 }
 
@@ -466,12 +537,19 @@ ${SHARPNESS_DIRECTIVE}
 
 ${REASONING_REFINE_DIRECTIVE}
 
+${SUITE_REFINE_DIRECTIVE}
+
 Self-check before finalizing:
 - "What makes this SPOF specific to THIS idea?"
 - "Would a smart founder say 'I hadn't thought of that' vs 'generic advice'?"
 - "Is the SPOF name a mechanism label, not an essay or a vibe word?"
 - "If this SPOF were removed, would the cascade still run? (if yes, replace SPOF)"
 - "Is there a stronger idea-specific hinge the draft sidelined?"
+- "Did the draft invent RAG/fine-tune/grounding or other stack not in the idea?"
+- "For LLM/analysis tools: is false-specificity/camouflage considered?"
+- "Is the cascade one spine or multi-independent causes glued together?"
+- "Do any assumptions contradict the cascade?"
+- "API/free-tier: abuse or bill-vs-cost hinge missing?"
 - "Do failure-mode bullets map to the cascade/SPOF (drop orphans)?"
 - "Does likelihood describe THIS pathway — not generic company-failure odds?"
 - "Did I invent any new numbers only in velocity/likelihood?"`;
@@ -514,11 +592,12 @@ Your job:
 2. State clearly whether the primary SPOF converges (High/Medium/Low agreement)
    and list candidate SPOF labels from both drafts.
 3. Produce ONE sharpened final analysis (full prose) that prefers the hinge that
-   best survives dominance + counterfactual (not only "appears in both"), and
-   honestly notes residual disagreement.
+   best survives dominance + counterfactual + idea-as-stated (no invent-then-attack),
+   not only "appears in both"; honestly note residual disagreement.
 4. Keep early-warning signals observational (not advice).
 5. Include stress-test + velocity in the final prose.
 6. Failure-mode bullets must track the chosen cascade spine; likelihood = pathway.
+7. One spine only; drop multi-independent causes packed into one cascade.
 
 Output the complete REVISED analysis only (full prose replacement). ${langNote}`;
   }
@@ -541,12 +620,20 @@ Attack the draft:
 - Is the SPOF the actual fragile hinge for THIS idea — or just "trust/competition"?
 - Counterfactual: if this SPOF mechanism were removed, would the cascade still run?
   If yes, replace with a true hinge.
-- Dominance: is there a stronger idea-specific hinge the draft sidelined?
-- If SPOF is abstract, replace with the idea's structural hinge (pricing, overwrite
-  policy, waiver, single OEM, keyword filter, etc.).
+- Dominance / earliest hinge: stronger or earlier idea-specific hinge sidelined?
+- Founder-fear: if SPOF is the obvious #1 fear, is there a deeper structural hinge?
+- Invent-then-attack: RAG/fine-tune/grounding/features not in the idea text?
+- Idea-as-stated vs architecture wishlist?
+- LLM/analysis tools: false-specificity / camouflage missed?
+- Multi-cause cascade (independent failures glued) → force one spine?
+- Assumptions that contradict the cascade?
+- API/free-tier: only "pricing bad" without abuse/cache/key-share or bill-vs-cost?
+- Physical/tech: cascade starts at reviewers instead of internal mechanism?
+- If SPOF is abstract, replace with the idea's structural hinge.
 - Is the SPOF name a short mechanism label (rewrite if long or vibey)?
 - Are early-warning signals observational (not advice)?
-- Orphan failure-mode bullets that ignore the cascade (rewrite or drop)?
+- Orphan / off-spine failure-mode bullets (rewrite or drop)?
+- Security/legal empty despite data, consent, keys, or free-tier abuse?
 - Is stress-test honest (not all-Yes or all-No rubber stamp)?
 - Does likelihood read as THIS pathway vs generic company-failure odds?
 - Do likelihood/velocity only use claims already in the draft (strip invented numbers)?

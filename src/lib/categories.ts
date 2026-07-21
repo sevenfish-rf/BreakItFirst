@@ -21,18 +21,18 @@ export const CATEGORY_LENSES: Record<Category, string> = {
   Business:
     "Unit economics, market timing, trust, distribution/CAC, supply-demand balance, regulatory exposure.",
   "Software App":
-    "Onboarding friction, retention, platform dependency, technical debt, monetization fit, competitive moat.",
-  API: "Rate limits, breaking changes/versioning, auth & abuse, latency/uptime SLAs, docs & developer experience, usage-based pricing sustainability.",
-  SaaS: "Churn, onboarding friction, feature bloat, pricing-tier mismatch, integration/vendor lock-in, expansion revenue dependency.",
+    "Onboarding friction, retention, platform dependency, technical debt, monetization fit; if multi-step auto-pipelines exist, stacked sub-failure of each step.",
+  API: "Rate limits, versioning, auth & free-tier abuse (key sharing, cache bust, locality collapse), bill-unit vs cost-unit mismatch (request vs bytes/CPU/egress), latency/SLAs, docs & DX, usage pricing sustainability.",
+  SaaS: "Churn, onboarding, pricing-tier mismatch, integration lock-in, pipeline differentiators that fail as stacked steps (write/review gates), expansion revenue dependency.",
   "Mobile App":
     "Platform policy risk (App Store/Play Store), retention curve (D1/D7/D30), notification fatigue, OS update breakage, monetization model fit (ads vs IAP vs subscription).",
   "AI Product":
-    "Quality ceiling/hallucination exposure, inference cost at scale, model-provider dependency, data/privacy handling, trust erosion after visible failures.",
+    "False specificity / generic-analysis camouflage, quality ceiling/hallucination, inference cost, provider dependency, privacy; attack idea as stated — do not invent RAG/fine-tune/grounding unless claimed.",
   Game: "Retention loops, matchmaking/balance, monetization backlash, cheating/toxicity moderation, live-ops burnout.",
   Marketplace:
-    "Chicken-and-egg supply/demand bootstrapping, trust & safety, take-rate resistance, disintermediation risk.",
+    "Chicken-and-egg, trust & safety, take-rate resistance; prefer earliest structural hinge (density/demand/incentives) before textbook disintermediation alone.",
   Hardware:
-    "Supply chain fragility, unit economics/margins, defect/return rates, certification & regulatory lead time, manufacturing scale-up.",
+    "Physical sensor/BOM ceiling vs marketing claims, internal mechanism before external reviews, dual hardware+subscription collapse, supply chain, returns/logistics, certification lead time.",
   Other:
     "No fixed lens — infer the 3–4 most relevant failure dimensions for this idea before analyzing.",
 };

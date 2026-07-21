@@ -22,7 +22,11 @@ Setup / API / schema → [02-develop.md](./02-develop.md)
 **Success reaction:** *“I never considered that failure path.”*  
 **Failure reaction:** *“Generic startup advice with nice formatting.”*
 
-**Working product risk (dogfood):** multi-pass is not a moat if the quality gap vs a good free ChatGPT prompt is too thin to justify cost. USP must be **felt sharpness**, not “we run 3 LLM passes.”
+**USP (honest after quality-gap suite):** one-spine, idea-specific premortem — a structural hinge and cascade founders had not considered. **Not** “always sharper than strong chat,” **not** multi-pass marketing.
+
+**Competitive bar:** strong free-form chat (e.g. Claude-class / GLM-class). Weak free-form chat is not the bar. Win when hinge is earlier/more structural than the risk founders already fear.
+
+**Known product risk (dogfood + suite):** **false specificity** — analysis that looks idea-specific but is structurally generic. Engine rules now hunt camouflage and ban invent-then-attack (e.g. inventing RAG then attacking it).
 
 **BYOK today:** owner/dev testing. Production direction: fixed mainstream provider(s) chosen by the product — not end-user key as the long-term model.
 

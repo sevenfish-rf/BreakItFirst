@@ -38,8 +38,9 @@ For **each idea** (B–E; A already archived):
 | Do | Don’t |
 |----|--------|
 | Same idea text all candidates | Use GPT as a **candidate** again (judge OK) |
-| Score **content** first (SPOF/cascade/insight) | Cherry-pick only flattering BIF runs |
-| Pin model ids on every scoring file | Compare Deep BIF vs single-shot chat without noting it |
+| Score **content** first (SPOF/cascade/insight); schema extras (stress/PONR/velocity) **secondary** (S4) | Cherry-pick only flattering BIF runs |
+| Pin **platform + model ids** on every `scoring/N.md` (Q1) | Compare Deep BIF vs single-shot chat without noting it |
+| Prefer ≥1 judge outside platform family; footnote self-scores (Q2) | Sole-trust one scorer on dogfood/meta — use **≥3 judges** (Q6) |
 
 **Pass bar (working rule)**
 
