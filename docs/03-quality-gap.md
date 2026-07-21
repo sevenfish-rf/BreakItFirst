@@ -3,7 +3,7 @@
 **Purpose:** Validate (or refute) the dogfood SPOF —  
 *Is BreakItFirst’s failure argument clearly sharper than strong free-form chat premortems on the same idea?*
 
-**Status:** In progress — A + B done; next Idea C  
+**Status:** In progress — A + B + C done; next Idea D  
 **Date started:** 2026-07-21  
 **Locale used:** id (Idea A); pin per scoring file for B+  
 **BreakItFirst mode:** Standard (Deep off for fair cost) · model pin: Mimo 2.5 Pro (A; re-pin each file)
@@ -174,11 +174,11 @@ Free tier 10k/mo. Risk abuse, key sharing, competitor Cloudflare Images.
 |------|------|------------|--------|------------------|--------|
 | A Marketplace | [scoring/1.md](./scoring/1.md) | Claude + **GPT** + BIF | **BIF** (provisional) | Demand sporadis vs retensi sitter | GPT last as candidate; then dropped |
 | B SaaS | [scoring/2.md](./scoring/2.md) | Claude + GPT* + BIF + **GLM** | **BIF + GLM tie** | Auto-overwrite wiki / no review + noise | *GPT last candidate run (~16 mean); then dropped |
-| C AI premortem | | Claude + GLM + BIF | | | |
+| C AI premortem (dogfood) | [scoring/3.md](./scoring/3.md) | Claude + GLM + BIF | **Claude** (BIF mid) | Camouflage vs no-grounding | First BIF underperformance |
 | D Hardware | | Claude + GLM + BIF | | | |
 | E API | | Claude + GLM + BIF | | | |
 
-**Tally (suite):** BIF sole wins **1** / 5 (A) · BIF-GLM co-wins **1** (B) · GPT wins 0 · Claude sole 0 · Suite incomplete (2/5)
+**Tally (suite):** BIF sole **1** (A) · BIF-GLM co **1** (B) · **Claude sole 1** (C) · Suite incomplete (3/5)
 
 ### 5.2 Experiment verdict
 
@@ -191,7 +191,7 @@ Free tier 10k/mo. Risk abuse, key sharing, competitor Cloudflare Images.
 
 **Verdict paragraph (suite — update after ≥3 ideas):**
 
-> Idea A: BIF sole win (structural demand/density vs expected disintermediation). Idea B: **BIF + GLM tie at top**; GPT weak again; Claude strong but often more expected. Suite incomplete (2/5).
+> A: BIF sole win. B: BIF+GLM tie. **C (dogfood): Claude wins; BIF mid/low** - invent-stack + weaker hinge vs camouflage. Suite incomplete (3/5).
 
 ### 5.3 Implications (fill after suite)
 
@@ -228,6 +228,7 @@ Do **not** keep five separate full todo lists in five scoring files.
 | A | Earliest hinge + founder-fear; positioning | E1, E2, P1, P2 |
 | B | Stacked SPOF; fill security/legal; bar = Claude+GLM | E6, E8, P5 |
 | B | SaaS litmus pass; stress/PONR | E5 done, E7, S1 |
+| C | No invent-then-attack; idea-as-stated; false specificity | **E9, E10, E11** |
 
 ---
 

@@ -35,7 +35,11 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | E6 | Engine | When differentiator is a pipeline, force **stacked sub-problem** SPOF (routing / what-to-change / safe write) | P0 | todo | **B** | `prompts.ts` Pass 1 / 1.5 | From GLM win mode on Idea B |
 | E7 | Engine | Prefer **quantified cascade thresholds** + explicit PONR in prose | P1 | todo | **B** | Pass 1 cover + Pass 2 | BIF C strength - keep/amplify |
 | E8 | Engine | Do not empty **security/legal** when path has transcripts, multi-reader docs, consent | P0 | todo | **B** | Pass 1 domains + soft-check coverage | BIF weakness vs GLM on Idea B |
-| S1 | Surface | Name stress test + velocity + PONR as product value (not “multi-pass AI”) | P1 | todo | A, **B** | `dictionaries.ts` / landing | Reinforced by Idea B judges |
+| E9 | Engine | **Do not invent** stack (RAG / fine-tune / grounding / …) absent from idea text, then attack the invention | P0 | todo | **C** | `prompts.ts` Pass 1 / 1.5 / claim guard | Idea C: BIF low - invented no-RAG SPOF |
+| E10 | Engine | SPOF = failure of **idea as stated**, not architecture wishlist / implementation review | P0 | todo | **C** | Pass 1 rules + 1.5 attack | Judges: C felt like arch critique |
+| E11 | Engine | For LLM-wrapper / analysis tools: hunt **false specificity / generic camouflage** as candidate SPOF | P0 | todo | **C** | Pass 1 multi-hyp + refine | Claude win hinge on dogfood |
+| E12 | Engine | Modes/cascade must not bleed privacy/provider/security unless SPOF requires it | P1 | todo | **C** | Pass 1.5 + soft-check | ChatGPT judge: C spine bleed |
+| S1 | Surface | Name stress test + velocity + PONR as product value (not “multi-pass AI”) | P1 | todo | A, B | `dictionaries.ts` / landing | Still true; format alone lost Idea C |
 | S2 | Surface | Prefer always emitting `critical_assumption_indices` | P1 | todo | A | Pass 2 + soft-check | Already partial; keep pressure |
 | S3 | Surface | Optional SPOF kicker: “Why this hinge, not the obvious risk” | P2 | todo | A | report UI / future field | Only if grounded in prose |
 | S4 | Process | Judges score SPOF+cascade+insight first; schema extras secondary | P1 | todo | A | `03-quality-gap` protocol | Reduces format confound |
@@ -43,14 +47,16 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | P2 | Position | Frame Claude-class output as **expected-risk bar**, BIF as overlooked structural | P0 | todo | A | marketing + docs | |
 | P3 | Position | Keep weak free-form chat (hist. GPT) as shallow counter-example only — not main rival | P2 | todo | A, B | case study notes | GPT dropped as candidate |
 | P4 | Position | Test tagline: *Claude found what you already feared; BIF found the earlier link* | P1 | todo | A | copy test | Owner wording |
-| P5 | Position | Competitive bar = **Claude + GLM**; do not claim “always #1 vs every model” | P0 | todo | **B** | landing / case studies | Idea B: BIF-GLM tie at 25 |
-| Q1 | Process | Always pin platform + model ids on each `scoring/N.md` | P0 | todo | A, B | scoring template | BIF = Mimo 2.5 Pro on A/B |
+| P5 | Position | Competitive bar = **Claude + GLM**; do not claim “always #1 vs every model” | P0 | todo | B, **C** | landing / case studies | Idea C: Claude beat BIF |
+| P6 | Position | Own **false specificity / quality-gap** as known product risk (dogfood confirmed) | P0 | todo | A dogfood + **C** | landing / 01-product | Claude camouflage hinge |
+| Q1 | Process | Always pin platform + model ids on each `scoring/N.md` | P0 | todo | A, B, C | scoring template | BIF = Mimo 2.5 Pro |
+| Q6 | Process | High-variance fixtures (dogfood/meta): require **≥3 judges**; do not sole-trust one scorer | P1 | todo | **C** | scoring protocol | C ranged 17-25 |
 | Q2 | Process | Prefer ≥1 judge outside platform family; footnote self-scores | P1 | todo | A | protocol | GPT-as-judge inflated B on Idea A |
-| Q3 | Process | Complete Ideas C–E before “gap confirmed” | P0 | doing | A, B | suite | A+B done; need ≥1 more for Q4 |
-| Q4 | Process | Suite verdict only after ≥3 ideas | P0 | todo | A, B | `03-quality-gap` §5 | 2/5 complete |
-| Q5 | Process | **Candidates = Claude + GLM + BIF only**; GPT/ChatGPT = judge optional, not premortem rival | P0 | done | B | `03-quality-gap` | GPT ~13-18 on B; dropped |
+| Q3 | Process | Complete Ideas D–E before “gap confirmed” | P0 | doing | A–C | suite | 3/5 done; D-E remain |
+| Q4 | Process | Suite verdict only after ≥3 ideas | P0 | todo | A–C | `03-quality-gap` §5 | Now have 3; still finish D-E before hard claim |
+| Q5 | Process | **Candidates = Claude + GLM + BIF only**; GPT/ChatGPT = judge optional, not premortem rival | P0 | done | B, C | `03-quality-gap` | C used A=Claude B=GLM C=BIF |
 
-**Counts:** todo **14** · doing **1** · done **2** (E5, Q5) · validate-next **1** (E3)
+**Counts:** todo **18** · doing **1** · done **2** (E5, Q5) · validate-next **1** (E3)
 
 ---
 
@@ -69,11 +75,15 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | E5 | SaaS litmus — **done (pass)** |
 | E6 | Stacked sub-problem SPOF (from GLM) |
 | E8 | Fill security/legal when data path exists |
+| **E9** | **No invent-then-attack (RAG etc.)** - from Idea C loss |
+| **E10** | **Idea-as-stated failure, not arch wishlist** |
+| **E11** | **Hunt false specificity / camouflage** for LLM tools |
 | P1 | Positioning: not “more detail” |
 | P2 | Expected-risk bar vs structural |
 | P5 | Bar = Claude + GLM; no “always #1” claim |
+| P6 | Own quality-gap as product risk |
 
-**Recommend:** run **Idea C** before large prompt batch; then implement E6+E8 if they recur.
+**Recommend:** implement **E9-E11** soon (prompt), even before D/E finish - Idea C is a clear fail mode.
 
 ### P1
 
@@ -139,12 +149,18 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | **Pattern** | Structured/top-tier chat >> generic GPT; BIF no longer sole #1 |
 | **Items added/updated** | E5 done; **E6, E7, E8, P5** new; S1/P1/P2 reinforced; Q3/Q5 |
 
-### 4.3 Idea C — AI premortem (pending)
+### 4.3 Idea C — AI premortem (BreakItFirst dogfood)
 
 | | |
 |--|--|
-| **File** | `scoring/3.md` (TBD) |
-| **Items added** | |
+| **File** | [scoring/3.md](./scoring/3.md) |
+| **Date** | 2026-07-21 |
+| **Candidates** | Claude + GLM + BIF |
+| **Winner** | **Claude** (majority); BIF mid (~22 mean); GLM often 3rd |
+| **BIF SPOF** | Prompt-template specificity without retrieval grounding |
+| **Claude SPOF** | Generic-analysis camouflage |
+| **Pattern** | First BIF underperformance; invent-stack + obvious cascade; format != hinge |
+| **Items added** | **E9, E10, E11, E12, P6, Q6**; P5/E1/E2 reinforced |
 
 ### 4.4 Idea D — Hardware (pending)
 
@@ -181,3 +197,4 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | 2026-07-21 | File created; seeded from Idea A refine backlog |
 | 2026-07-21 | Q5 done: GPT out as candidate |
 | 2026-07-21 | Idea B complete: BIF-GLM tie; E5 pass; E6-E8 + P5 added |
+| 2026-07-21 | Idea C complete: BIF low / Claude win; E9-E12 + P6 + Q6 |
