@@ -1,44 +1,55 @@
 # 03 — Quality gap experiment
 
 **Purpose:** Validate (or refute) the dogfood SPOF —  
-*Is BreakItFirst’s failure argument clearly sharper than one good free-form ChatGPT prompt on the same idea?*
+*Is BreakItFirst’s failure argument clearly sharper than strong free-form chat premortems on the same idea?*
 
-**Status:** Ready to run  
-**Date started:** _______________  
-**Locale used:** en / id  
-**BreakItFirst mode:** Standard (Deep off for fair cost)  
-**ChatGPT model:** _______________  
+**Status:** In progress — A + B done; next Idea C  
+**Date started:** 2026-07-21  
+**Locale used:** id (Idea A); pin per scoring file for B+  
+**BreakItFirst mode:** Standard (Deep off for fair cost) · model pin: Mimo 2.5 Pro (A; re-pin each file)
 
-Related: [01-product.md](./01-product.md) · [00-index.md](./00-index.md)
+### Platform roles (from Idea B onward)
+
+| Role | System | Notes |
+|------|--------|--------|
+| **Candidate C** | **BreakItFirst** | Product under test |
+| **Candidate A** | Claude | Strong chat bar (expected-risk quality) |
+| **Candidate G** | **GLM 5.2** | New competitor chat (added Idea B) |
+| **Not a candidate** | GPT / ChatGPT | **Dropped as premortem rival** after weak scores (Idea A low teens–21; Idea B early signal **18/25**). May still help as **judge/scorer only**. |
+
+Idea A historical note: compared Claude + ChatGPT + BIF. Keep that in [scoring/1.md](./scoring/1.md); do not re-run A for protocol change.
+
+Related: [01-product.md](./01-product.md) · [00-index.md](./00-index.md) · [scoring/](./scoring/) · **[04-refine-backlog.md](./04-refine-backlog.md)** (all todos)
 
 ---
 
 ## 1. Protocol
 
-For **each idea** (A–E):
+For **each idea** (B–E; A already archived):
 
-1. Paste the idea into **BreakItFirst** (matching category; same language).
-2. Paste **§2 baseline prompt** + the same idea into **ChatGPT**.
-3. Score both outputs 1–5 using **§4 criteria** (prefer blind / second reader).
-4. Mark winner + one-sentence reason in **§5 results**.
-5. Save BIF report (export MD or history). Optionally paste ChatGPT SPOF label into notes.
+1. Same idea text into **BIF** + **Claude** + **GLM** (matching category/language on BIF).
+2. Paste **§2 baseline prompt** + idea into Claude and GLM (same prompt both).
+3. Score outputs 1–5 with **§4 criteria** (prefer multi-judge; GPT may score but not compete).
+4. Write `scoring/N.md` summary + register todos in [04-refine-backlog.md](./04-refine-backlog.md).
+5. Save BIF export/history id; note SPOF labels for A/G/C.
 
 **Rules**
 
 | Do | Don’t |
 |----|--------|
-| Same idea text both sides | Cherry-pick only the run that flatters BIF |
-| Score **content**, not UI / cascade graph | Change ChatGPT prompt mid-experiment without noting it |
-| One pass per tool first | Deep BIF vs weak ChatGPT without recording that |
+| Same idea text all candidates | Use GPT as a **candidate** again (judge OK) |
+| Score **content** first (SPOF/cascade/insight) | Cherry-pick only flattering BIF runs |
+| Pin model ids on every scoring file | Compare Deep BIF vs single-shot chat without noting it |
 
 **Pass bar (working rule)**
 
-- **BIF wins** the experiment if it wins **≥ 3 / 5** ideas on overall winner, **or** clearly wins the “I never considered that” column on ≥ 3 ideas.
-- **Gap thin / fails** if ChatGPT wins ≥ 3 or most rows are ties.
+- **BIF wins** the suite if it wins **≥ 3 / 5** ideas overall, **or** clearly wins insight on ≥ 3 ideas.
+- **Gap thin / fails** if Claude or GLM wins ≥ 3, or most rows are ties.
+- GPT candidate results are **historical only** (Idea A); not part of suite tally from B onward.
 
 ---
 
-## 2. x baseline prompt (copy-paste)
+## 2. Baseline premortem prompt (Claude / GLM — copy-paste)
 
 ```text
 You are doing a structured premortem for an UNBUILT product/business idea.
@@ -136,19 +147,22 @@ Free tier 10k/mo. Risk abuse, key sharing, competitor Cloudflare Images.
 
 ### Scores — Idea ___
 
-| Criterion (1–5) | BreakItFirst | x | Notes |
-|-----------------|:------------:|:-------:|-------|
-| SPOF mechanism | | | |
-| Idea-specific | | | |
-| Cascade causal | | | |
-| Insight (“belum kepikiran”) | | | |
-| Spine consistency | | | |
-| **Sum (max 25)** | | | |
+| Criterion (1–5) | Claude (A) | GLM (G) | BIF (C) | Notes |
+|-----------------|:----------:|:-------:|:-------:|-------|
+| SPOF mechanism | | | | |
+| Idea-specific | | | | |
+| Cascade causal | | | | |
+| Insight (“belum kepikiran”) | | | | |
+| Spine consistency | | | | |
+| **Sum (max 25)** | | | | |
 
-- **Winner this idea:** BIF / ChatGPT / Tie  
-- **BIF SPOF label:**  
-- **ChatGPT SPOF label:**  
+- **Winner this idea:** BIF / Claude / GLM / Tie  
+- **SPOF labels (A / G / C):**  
+- **Judges used:** (e.g. GLM / Claude / GPT-as-judge only / …)  
 - **One-sentence why:**  
+
+**Per-trial write-up:** `docs/scoring/N.md` = summary + verdict + pointer to new backlog rows.  
+**All todos:** [04-refine-backlog.md](./04-refine-backlog.md) only (required update after each idea).
 
 ---
 
@@ -156,51 +170,72 @@ Free tier 10k/mo. Risk abuse, key sharing, competitor Cloudflare Images.
 
 ### 5.1 Per-idea winners
 
-| Idea | BIF sum | x sum | Winner | BIF SPOF (short) | GPT SPOF (short) |
-|------|--------:|--------:|--------|------------------|------------------|
-| A Marketplace | | | | | |
-| B SaaS | | | | | |
-| C AI premortem | | | | | |
-| D Hardware | | | | | |
-| E API | | | | | |
+| Idea | File | Candidates | Winner | BIF SPOF (short) | Notes |
+|------|------|------------|--------|------------------|--------|
+| A Marketplace | [scoring/1.md](./scoring/1.md) | Claude + **GPT** + BIF | **BIF** (provisional) | Demand sporadis vs retensi sitter | GPT last as candidate; then dropped |
+| B SaaS | [scoring/2.md](./scoring/2.md) | Claude + GPT* + BIF + **GLM** | **BIF + GLM tie** | Auto-overwrite wiki / no review + noise | *GPT last candidate run (~16 mean); then dropped |
+| C AI premortem | | Claude + GLM + BIF | | | |
+| D Hardware | | Claude + GLM + BIF | | | |
+| E API | | Claude + GLM + BIF | | | |
 
-**Tally:** BIF wins ___ / 5 · x wins ___ / 5 · Ties ___
+**Tally (suite):** BIF sole wins **1** / 5 (A) · BIF-GLM co-wins **1** (B) · GPT wins 0 · Claude sole 0 · Suite incomplete (2/5)
 
 ### 5.2 Experiment verdict
 
 | Outcome | Tick |
 |---------|------|
-| **Gap real — BIF clearer** (≥3 BIF wins or insight column) | [ ] |
+| **Provisional gap-real (partial suite)** | [x] Idea A only |
+| **Gap real — full suite** (≥3 BIF wins) | [ ] |
 | **Gap thin — mixed / ties** | [ ] |
-| **Gap fails — x wins ≥3** | [ ] |
+| **Gap fails — chat wins ≥3** | [ ] |
 
-**Verdict paragraph (3–5 sentences):**
+**Verdict paragraph (suite — update after ≥3 ideas):**
 
-> …
+> Idea A: BIF sole win (structural demand/density vs expected disintermediation). Idea B: **BIF + GLM tie at top**; GPT weak again; Claude strong but often more expected. Suite incomplete (2/5).
 
-### 5.3 Implications (fill after verdict)
+### 5.3 Implications (fill after suite)
 
 | If gap real | If gap thin / fails |
 |-------------|---------------------|
-| Lean into one-spine premortem positioning | Tighten Pass 1.5 / niche before scale |
+| Lean into structural / earlier-hinge positioning | Tighten Pass 1.5 / niche before scale |
 | Pricing / fixed provider path more defensible | Don’t sell “multi-pass AI” as USP |
-| Optional: re-run with Deep later | Optional: change fixture set / domain |
+| Case studies from scoring/* | Change fixtures / domain |
 
-**Next product actions (owner):**
-
-1. …  
-2. …  
-3. …  
+**Rolled-up todos:** only in [04-refine-backlog.md](./04-refine-backlog.md) — implement from Master board / By priority.
 
 ---
 
-## 6. Optional detail logs
+## 6. Central refine backlog (required)
 
-Paste or link exports if useful (paths only is fine).
+**One file for all ideas:** [04-refine-backlog.md](./04-refine-backlog.md)
 
-| Idea | BIF export / history id | x notes / link |
-|------|-------------------------|----------------------|
-| A | | |
+| After each idea | Do this |
+|-----------------|---------|
+| 1 | Write `scoring/N.md` (setup, scores, verdict, SPOF labels) |
+| 2 | Open `04-refine-backlog.md` → add/update **Master board** rows (reuse ID if same issue) |
+| 3 | Fill **§4 Log by trial** for that idea |
+| 4 | In `scoring/N.md`, list only **IDs contributed** + link to `04` |
+
+Do **not** keep five separate full todo lists in five scoring files.
+
+**ID prefixes:** `E` engine · `S` surface · `P` positioning · `Q` process.  
+**Status:** `todo` · `doing` · `done` · `wont` · `blocked` · `validate-next`.
+
+### Snapshots (full board in 04)
+
+| Trial | Top actions | ID |
+|-------|-------------|-----|
+| A | Earliest hinge + founder-fear; positioning | E1, E2, P1, P2 |
+| B | Stacked SPOF; fill security/legal; bar = Claude+GLM | E6, E8, P5 |
+| B | SaaS litmus pass; stress/PONR | E5 done, E7, S1 |
+
+---
+
+## 7. Optional detail logs
+
+| Idea | BIF export / history id | Comparator notes |
+|------|-------------------------|------------------|
+| A | | Claude + ChatGPT + multi-judge → scoring/1.md |
 | B | | |
 | C | | |
 | D | | |
@@ -208,8 +243,10 @@ Paste or link exports if useful (paths only is fine).
 
 ---
 
-## 7. Change log
+## 8. Change log
 
 | Date | Note |
 |------|------|
 | 2026-07-21 | Draft protocol + 5 ideas + score/result tables created |
+| 2026-07-21 | Idea A complete; todos in **04-refine-backlog.md** |
+| 2026-07-21 | **Protocol v2:** candidates = Claude + GLM + BIF; **GPT out as candidate** (judge OK); Idea B WIP |
