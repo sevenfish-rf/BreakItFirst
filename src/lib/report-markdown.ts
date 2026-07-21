@@ -10,7 +10,28 @@ function esc(s: string): string {
 }
 
 /**
+ * Same grounding as report UI "Why this hinge":
+ * linked critical assumptions, else first useful sentence of SPOF explanation.
+ */
+export function spofWhyHingeText(analysis: FailureAnalysis): string | null {
+  const spof = analysis.single_point_of_failure;
+  const idxs = spof.critical_assumption_indices ?? [];
+  const linked = idxs
+    .map((i) => analysis.assumptions[i])
+    .filter((s): s is string => Boolean(s?.trim()));
+  if (linked.length > 0) {
+    return linked.slice(0, 2).join(" · ");
+  }
+  const sentence = spof.explanation
+    ?.split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .find((s) => s.length > 24 && s.length < 220);
+  return sentence?.trim() || null;
+}
+
+/**
  * Serialize a full FailureAnalysis into one Markdown document for download/share.
+ * Keeps parity with major report UI sections (SPOF why-hinge, pathway likelihood, etc.).
  */
 export function analysisToMarkdown(
   analysis: FailureAnalysis,
@@ -68,6 +89,27 @@ export function analysisToMarkdown(
     `- **${id ? "Alasan keyakinan" : "Confidence reason"}:** ${esc(spof.confidence_reason)}`,
   );
   lines.push("");
+
+  const whyHinge = spofWhyHingeText(a);
+  if (whyHinge) {
+    lines.push(
+      h(3, id ? "Kenapa hinge ini" : "Why this hinge"),
+    );
+    lines.push("");
+    lines.push(
+      id
+        ? "_Asumsi struktural yang SPOF ini andalkan — bukan risiko generik yang sudah semua sebut._"
+        : "_Structural assumptions this SPOF depends on — not the generic risk everyone already names._",
+    );
+    lines.push("");
+    lines.push(esc(whyHinge));
+    lines.push("");
+  }
+
+  lines.push(
+    h(3, id ? "Penjelasan mekanisme" : "Mechanism explanation"),
+  );
+  lines.push("");
   lines.push(esc(spof.explanation));
   lines.push("");
 
@@ -103,13 +145,27 @@ export function analysisToMarkdown(
     lines.push("");
   }
 
-  lines.push(h(2, id ? "Kemungkinan gagal" : "Failure likelihood"));
+  lines.push(
+    h(2, id ? "Kemungkinan jalur gagal" : "Pathway likelihood"),
+  );
+  lines.push("");
+  lines.push(
+    id
+      ? "_Peluang jalur kegagalan ini terjadi — bukan peluang keseluruhan perusahaan gagal._"
+      : "_Chance this failure path materializes — not overall odds the company fails._",
+  );
   lines.push("");
   lines.push(`- **Band:** ${a.likelihood.band}`);
   lines.push(`- **${id ? "Alasan" : "Reason"}:** ${esc(a.likelihood.reason)}`);
   lines.push("");
 
   lines.push(h(2, id ? "Kecepatan kegagalan" : "Failure velocity"));
+  lines.push("");
+  lines.push(
+    id
+      ? "_Seberapa cepat jalur gagal ini cenderung terjadi._"
+      : "_How quickly this failure path tends to unfold._",
+  );
   lines.push("");
   lines.push(`- **Band:** ${a.failure_velocity.band}`);
   lines.push(
@@ -129,6 +185,12 @@ export function analysisToMarkdown(
 
   lines.push(h(2, id ? "Skor ketahanan" : "Resilience score"));
   lines.push("");
+  lines.push(
+    id
+      ? "_0–100 kemampuan menahan jalur gagal ini — semakin rendah semakin rapuh._"
+      : "_0–100 ability to absorb this failure path — lower is more fragile._",
+  );
+  lines.push("");
   lines.push("| Dimension | Score |");
   lines.push("|-----------|------:|");
   for (const [k, v] of Object.entries(a.resilience_score)) {
@@ -138,6 +200,21 @@ export function analysisToMarkdown(
 
   lines.push(h(2, id ? "Rantai kegagalan" : "Failure cascade"));
   lines.push("");
+  lines.push(
+    id
+      ? "_Rantai kausal dari titik rapuh sampai end state — tiap langkah ada sinyal yang bisa diamati._"
+      : "_Causal chain from fragile point to end state — each step includes an observable signal._",
+  );
+  lines.push("");
+  if (
+    a.cascade.point_of_no_return_index !== undefined &&
+    a.cascade.point_of_no_return_index >= 0
+  ) {
+    lines.push(
+      `- **${id ? "Titik tanpa kembali (indeks langkah)" : "Point of no return (step index)"}:** ${a.cascade.point_of_no_return_index + 1}`,
+    );
+    lines.push("");
+  }
   a.cascade.nodes.forEach((node, i) => {
     const ponr =
       a.cascade.point_of_no_return_index === i
@@ -155,12 +232,19 @@ export function analysisToMarkdown(
 
   lines.push(h(2, id ? "Stress test arketipe" : "Archetype stress test"));
   lines.push("");
+  lines.push(
+    id
+      ? "_Paparan pola untuk ide ini — bukan satu skor bahaya keseluruhan._"
+      : "_Pattern exposure for this idea — not one overall danger score._",
+  );
+  lines.push("");
   for (const item of a.stress_test.items) {
     const name =
       ARCHETYPE_NAME[item.archetype_id] ??
       item.archetype_id.replace(/_/g, " ");
     lines.push(`### ${name}`);
     lines.push("");
+    lines.push(`- **${id ? "ID arketipe" : "Archetype id"}:** \`${item.archetype_id}\``);
     lines.push(`- **Verdict:** ${item.verdict}`);
     lines.push(`- **${id ? "Alasan" : "Reason"}:** ${esc(item.reason)}`);
     lines.push("");

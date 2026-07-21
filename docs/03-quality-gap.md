@@ -3,7 +3,7 @@
 **Purpose:** Validate (or refute) the dogfood SPOF —  
 *Is BreakItFirst’s failure argument clearly sharper than strong free-form chat premortems on the same idea?*
 
-**Status:** **Suite complete** (A–E) — see §5 + [04-refine-backlog.md](./04-refine-backlog.md) §5  
+**Status:** **Suite complete** (A–E) · **Post-refine spot-check** → [scoring/6.md](./scoring/6.md) (BreakPath API)  
 **Date started:** 2026-07-21  
 **Locale used:** id (Idea A); pin per scoring file for B+  
 **BreakItFirst mode:** Standard (Deep off for fair cost) · model pin: Mimo 2.5 Pro (A; re-pin each file)
@@ -256,3 +256,4 @@ Do **not** keep five separate full todo lists in five scoring files.
 | 2026-07-21 | Idea A complete; todos in **04-refine-backlog.md** |
 | 2026-07-21 | **Protocol v2:** candidates = Claude + GLM + BIF; GPT judge-only |
 | 2026-07-21 | **Suite A–E complete**; mixed outcome; implement Q7 prompt batch from 04 |
+| 2026-07-21 | **scoring/6.md** after-refine BreakPath (BIF top/co-win vs A/B) |

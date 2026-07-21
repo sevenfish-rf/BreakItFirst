@@ -22,7 +22,10 @@ import { FailureModeCards } from "@/components/visuals/failure-mode-cards";
 import { ResilienceRadar } from "@/components/visuals/resilience-radar";
 import { StressTestPanel } from "@/components/visuals/stress-test-panel";
 import { useLanguage } from "@/lib/i18n/context";
-import { downloadAnalysisMarkdown } from "@/lib/report-markdown";
+import {
+  downloadAnalysisMarkdown,
+  spofWhyHingeText,
+} from "@/lib/report-markdown";
 import { toUserFacingWarnings } from "@/lib/user-warnings";
 import type { FailureAnalysis, VelocityBand } from "@/types/analysis";
 import { cn } from "@/lib/utils";
@@ -247,17 +250,7 @@ export function AnalysisReport({
           </div>
           <p className="mt-2 text-xs text-text-muted">{spof.confidence_reason}</p>
           {(() => {
-            const idxs = spof.critical_assumption_indices ?? [];
-            const linked = idxs
-              .map((i) => analysis.assumptions[i])
-              .filter((s): s is string => Boolean(s?.trim()));
-            const why =
-              linked.length > 0
-                ? linked.slice(0, 2).join(" · ")
-                : spof.explanation
-                    ?.split(/(?<=[.!?])\s+/)
-                    .map((s) => s.trim())
-                    .find((s) => s.length > 24 && s.length < 220);
+            const why = spofWhyHingeText(analysis);
             if (!why) return null;
             return (
               <div className="mt-3 rounded-lg border border-accent/25 bg-accent/5 px-3 py-2">

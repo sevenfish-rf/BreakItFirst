@@ -228,4 +228,5 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | 2026-07-21 | Idea E complete: BIF low / GLM win; suite 5/5; E16-E18 + Q7; rollup Â§5 |
 
 | 2026-07-21 | **Implement batch:** SUITE_REFINE + lenses + soft-check + S3 UI + mark backlog done |
+| 2026-07-21 | Post-refine spot-check formalized: [scoring/6.md](./scoring/6.md) (BreakPath; BIF 25 co-lead) |
 
