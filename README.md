@@ -48,7 +48,7 @@ A bad run: *“Generic startup advice with nice formatting.”*
 5. Failure modes · 6. Pathway likelihood · 7. Resilience (5 dimensions)  
 8. Stress test · 9. Failure velocity · 10. SPOF calibration (Deep)
 
-Details: [`docs/product.md`](./docs/product.md)
+Details: [`docs/01-product.md`](./docs/01-product.md)
 
 ---
 
@@ -110,7 +110,7 @@ src/app/           API routes + pages
 src/components/    UI, report, visuals
 src/lib/           pipeline, jobs, prompts, schema, rate limit
 eval/              golden fixtures, rubric, baseline runner
-docs/              product · guide · reference · archive/
+docs/              00-index · 01-product · 02-develop · 90/91 archive
 ```
 
 ---
@@ -119,10 +119,11 @@ docs/              product · guide · reference · archive/
 
 | Document | Contents |
 |----------|----------|
-| [docs/product.md](./docs/product.md) | Product identity + every report section |
-| [docs/guide.md](./docs/guide.md) | Setup, architecture, session UX |
-| [docs/reference.md](./docs/reference.md) | API, schema, modules |
-| [docs/archive/](./docs/archive/) | Masterplan, directives, status snapshots |
+| [docs/00-index.md](./docs/00-index.md) | Index |
+| [docs/01-product.md](./docs/01-product.md) | Product identity + report sections |
+| [docs/02-develop.md](./docs/02-develop.md) | Setup, architecture, API, schema |
+| [docs/90-history.md](./docs/90-history.md) | Archive: masterplan / status / early notes |
+| [docs/91-directives.md](./docs/91-directives.md) | Archive: reviewer handoff + directives |
 | [eval/README.md](./eval/README.md) | Eval harness |
 
 ---
@@ -158,7 +159,7 @@ docs/              product · guide · reference · archive/
 1. Fork and branch  
 2. Match existing TypeScript / UI patterns  
 3. `npm run lint` && `npm run build` (and `smoke:session` / `eval:assert-sample` if you touch jobs or schema)  
-4. Read [docs/product.md](./docs/product.md) for product semantics  
+4. Read [docs/01-product.md](./docs/01-product.md) for product semantics  
 
 ---
 
