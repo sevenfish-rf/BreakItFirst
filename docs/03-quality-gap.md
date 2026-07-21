@@ -3,7 +3,7 @@
 **Purpose:** Validate (or refute) the dogfood SPOF —  
 *Is BreakItFirst’s failure argument clearly sharper than strong free-form chat premortems on the same idea?*
 
-**Status:** In progress — A + B + C done; next Idea D  
+**Status:** **Suite complete** (A–E) — see §5 + [04-refine-backlog.md](./04-refine-backlog.md) §5  
 **Date started:** 2026-07-21  
 **Locale used:** id (Idea A); pin per scoring file for B+  
 **BreakItFirst mode:** Standard (Deep off for fair cost) · model pin: Mimo 2.5 Pro (A; re-pin each file)
@@ -175,33 +175,34 @@ Free tier 10k/mo. Risk abuse, key sharing, competitor Cloudflare Images.
 | A Marketplace | [scoring/1.md](./scoring/1.md) | Claude + **GPT** + BIF | **BIF** (provisional) | Demand sporadis vs retensi sitter | GPT last as candidate; then dropped |
 | B SaaS | [scoring/2.md](./scoring/2.md) | Claude + GPT* + BIF + **GLM** | **BIF + GLM tie** | Auto-overwrite wiki / no review + noise | *GPT last candidate run (~16 mean); then dropped |
 | C AI premortem (dogfood) | [scoring/3.md](./scoring/3.md) | Claude + GLM + BIF | **Claude** (BIF mid) | Camouflage vs no-grounding | First BIF underperformance |
-| D Hardware | | Claude + GLM + BIF | | | |
-| E API | | Claude + GLM + BIF | | | |
+| D Hardware ring | [scoring/4.md](./scoring/4.md) | Claude + GLM + BIF | **Thin: GLM edge, BIF ~#2** | Sensor claim vs OEM | Same hinge family; BIF recovered |
+| E API image CDN | [scoring/5.md](./scoring/5.md) | Claude + GLM + BIF | **GLM** (BIF 3rd/low) | Key-share cache flood vs flat pricing | Second clear BIF loss |
 
-**Tally (suite):** BIF sole **1** (A) · BIF-GLM co **1** (B) · **Claude sole 1** (C) · Suite incomplete (3/5)
+**Tally (suite complete):** BIF sole **1** (A) · BIF-GLM co **1** (B) · Claude sole **1** (C) · GLM edge **1** (D) · GLM sole **1** (E) · **BIF top-tier 2/5 · clear losses 2/5**
 
 ### 5.2 Experiment verdict
 
 | Outcome | Tick |
 |---------|------|
-| **Provisional gap-real (partial suite)** | [x] Idea A only |
-| **Gap real — full suite** (≥3 BIF wins) | [ ] |
-| **Gap thin — mixed / ties** | [ ] |
-| **Gap fails — chat wins ≥3** | [ ] |
+| **Gap real — BIF always clearer** (≥3 sole BIF wins) | [ ] **FAILS** (only 1 sole win) |
+| **Mixed — BIF competitive on some domains** | **[x]** |
+| **Gap fails — BIF never competitive** | [ ] (A/B wins disprove) |
+| **Weak free-form GPT as rival** | Dropped early; not suite bar |
 
-**Verdict paragraph (suite — update after ≥3 ideas):**
+**Verdict paragraph (full suite):**
 
-> A: BIF sole win. B: BIF+GLM tie. **C (dogfood): Claude wins; BIF mid/low** - invent-stack + weaker hinge vs camouflage. Suite incomplete (3/5).
+> Across five fixtures, BreakItFirst is **not** systematically sharper than strong chat (Claude/GLM). It **won or co-won** marketplace and SaaS product hinges (A, B), **tied peer quality** on hardware claim-mismatch (D), and **lost** on dogfood meta (C) and deep API/CDN abuse (E). GPT as candidate was correctly dropped as too weak. Honest product claim: **structured one-spine premortem that can beat shallow chat and sometimes match strong chat** — not “always sharper than Claude/GLM.” Implement prompt backlog P0 (E9–E11, E14, E16–E18) before the next eval wave.
 
-### 5.3 Implications (fill after suite)
+### 5.3 Implications (suite)
 
-| If gap real | If gap thin / fails |
-|-------------|---------------------|
-| Lean into structural / earlier-hinge positioning | Tighten Pass 1.5 / niche before scale |
-| Pricing / fixed provider path more defensible | Don’t sell “multi-pass AI” as USP |
-| Case studies from scoring/* | Change fixtures / domain |
+| Supported | Not supported |
+|-----------|----------------|
+| One-spine + idea-specific hinge positioning | “Always beats frontier chat” |
+| Stress/PONR as product surface value | Multi-pass count as USP |
+| Claude+GLM as real quality bar | GPT as serious premortem rival |
+| Targeted prompt fixes (abuse, metering, no invent) | Infra rewrite as quality fix |
 
-**Rolled-up todos:** only in [04-refine-backlog.md](./04-refine-backlog.md) — implement from Master board / By priority.
+**Rolled-up todos:** [04-refine-backlog.md](./04-refine-backlog.md) §1 + §5 — **Q7 implement batch** next.
 
 ---
 
@@ -229,6 +230,8 @@ Do **not** keep five separate full todo lists in five scoring files.
 | B | Stacked SPOF; fill security/legal; bar = Claude+GLM | E6, E8, P5 |
 | B | SaaS litmus pass; stress/PONR | E5 done, E7, S1 |
 | C | No invent-then-attack; idea-as-stated; false specificity | **E9, E10, E11** |
+| D | Internal-first cascade; assumption-cascade consistency | **E13, E14** |
+| E | API abuse path; bill vs cost unit; one spine | **E16, E17, E18** |
 
 ---
 
@@ -250,4 +253,5 @@ Do **not** keep five separate full todo lists in five scoring files.
 |------|------|
 | 2026-07-21 | Draft protocol + 5 ideas + score/result tables created |
 | 2026-07-21 | Idea A complete; todos in **04-refine-backlog.md** |
-| 2026-07-21 | **Protocol v2:** candidates = Claude + GLM + BIF; **GPT out as candidate** (judge OK); Idea B WIP |
+| 2026-07-21 | **Protocol v2:** candidates = Claude + GLM + BIF; GPT judge-only |
+| 2026-07-21 | **Suite A–E complete**; mixed outcome; implement Q7 prompt batch from 04 |

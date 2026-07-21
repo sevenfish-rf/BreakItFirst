@@ -39,7 +39,13 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | E10 | Engine | SPOF = failure of **idea as stated**, not architecture wishlist / implementation review | P0 | todo | **C** | Pass 1 rules + 1.5 attack | Judges: C felt like arch critique |
 | E11 | Engine | For LLM-wrapper / analysis tools: hunt **false specificity / generic camouflage** as candidate SPOF | P0 | todo | **C** | Pass 1 multi-hyp + refine | Claude win hinge on dogfood |
 | E12 | Engine | Modes/cascade must not bleed privacy/provider/security unless SPOF requires it | P1 | todo | **C** | Pass 1.5 + soft-check | ChatGPT judge: C spine bleed |
-| S1 | Surface | Name stress test + velocity + PONR as product value (not “multi-pass AI”) | P1 | todo | A, B | `dictionaries.ts` / landing | Still true; format alone lost Idea C |
+| E13 | Engine | Physical/tech domains: cascade **internal-first** (mechanism), not external detection first | P1 | todo | **D** | Pass 1 cascade rules | Idea D: BIF started at reviewers |
+| E14 | Engine | No assumption that contradicts later cascade (e.g. firmware fix vs hardware ceiling) | P0 | todo | **D** | Pass 1.5 consistency | Idea D spine tension |
+| E15 | Engine | Multi-revenue ideas: surface **simultaneous multi-pillar collapse** when one hinge kills both | P2 | todo | **D** | Pass 1 insight | Claude insight dual hardware+sub |
+| E16 | Engine | API/infra: force **abuse-path** SPOF candidates (key share, cache bust, locality), not only "pricing bad" | P0 | todo | **E** | Pass 1 multi-hyp + category lens | Idea E: GLM key-share beat BIF |
+| E17 | Engine | Metered products: always consider **bill unit vs cost unit** mismatch when pricing is per-request | P0 | todo | **E** | Pass 1 + API/SaaS lens | Claude win angle on E |
+| E18 | Engine | One dominant spine only - no multi-independent causes in one cascade | P0 | todo | **E** | Pass 1 / 1.5 | BIF packed compute+cache+key rot |
+| S1 | Surface | Name stress test + velocity + PONR as product value (not “multi-pass AI”) | P1 | todo | A, B, D | `dictionaries.ts` / landing | Format alone lost C+E |
 | S2 | Surface | Prefer always emitting `critical_assumption_indices` | P1 | todo | A | Pass 2 + soft-check | Already partial; keep pressure |
 | S3 | Surface | Optional SPOF kicker: “Why this hinge, not the obvious risk” | P2 | todo | A | report UI / future field | Only if grounded in prose |
 | S4 | Process | Judges score SPOF+cascade+insight first; schema extras secondary | P1 | todo | A | `03-quality-gap` protocol | Reduces format confound |
@@ -52,11 +58,12 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | Q1 | Process | Always pin platform + model ids on each `scoring/N.md` | P0 | todo | A, B, C | scoring template | BIF = Mimo 2.5 Pro |
 | Q6 | Process | High-variance fixtures (dogfood/meta): require **≥3 judges**; do not sole-trust one scorer | P1 | todo | **C** | scoring protocol | C ranged 17-25 |
 | Q2 | Process | Prefer ≥1 judge outside platform family; footnote self-scores | P1 | todo | A | protocol | GPT-as-judge inflated B on Idea A |
-| Q3 | Process | Complete Ideas D–E before “gap confirmed” | P0 | doing | A–C | suite | 3/5 done; D-E remain |
-| Q4 | Process | Suite verdict only after ≥3 ideas | P0 | todo | A–C | `03-quality-gap` §5 | Now have 3; still finish D-E before hard claim |
-| Q5 | Process | **Candidates = Claude + GLM + BIF only**; GPT/ChatGPT = judge optional, not premortem rival | P0 | done | B, C | `03-quality-gap` | C used A=Claude B=GLM C=BIF |
+| Q3 | Process | Complete full A-E suite | P0 | **done** | A–E | suite | 5/5 scoring files complete |
+| Q4 | Process | Suite verdict after full set | P0 | **done** | A–E | `03-quality-gap` §5 | See rollup §5 below |
+| Q5 | Process | **Candidates = Claude + GLM + BIF only**; GPT/ChatGPT = judge optional, not premortem rival | P0 | done | B–E | `03-quality-gap` | |
+| Q7 | Process | Run **implement batch** from P0 board (prompt E9-E11, E14, E16-E18) | P0 | todo | suite | `prompts.ts` | Post-suite |
 
-**Counts:** todo **18** · doing **1** · done **2** (E5, Q5) · validate-next **1** (E3)
+**Counts:** todo **18** · doing **0** · done **4** (E5, Q3, Q4, Q5) · validate-next **1** (E3)
 
 ---
 
@@ -66,24 +73,28 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 
 | ID | Title |
 |----|--------|
-| Q3 | Finish B–E trials |
-| Q5 | Candidates Claude+GLM+BIF (GPT judge-only) — **done** |
+| Q3 / Q4 | Suite complete — **done** |
+| Q5 | Candidates Claude+GLM+BIF — **done** |
+| **Q7** | **Implement prompt batch now** |
 | Q1 | Pin models on scoring files |
-| Q4 | No full gap claim before ≥3 ideas |
 | E1 | Earliest load-bearing SPOF rule |
 | E2 | “Founder already fears this?” deeper search |
 | E5 | SaaS litmus — **done (pass)** |
 | E6 | Stacked sub-problem SPOF (from GLM) |
-| E8 | Fill security/legal when data path exists |
-| **E9** | **No invent-then-attack (RAG etc.)** - from Idea C loss |
-| **E10** | **Idea-as-stated failure, not arch wishlist** |
-| **E11** | **Hunt false specificity / camouflage** for LLM tools |
+| E8 | Fill security/abuse when relevant |
+| **E9** | **No invent-then-attack** |
+| **E10** | **Idea-as-stated failure** |
+| **E11** | **False specificity / camouflage** |
+| E14 | Assumption-cascade consistency |
+| **E16** | **API abuse-path SPOFs** |
+| **E17** | **Bill unit vs cost unit** |
+| **E18** | **One spine only (no multi-cause)** |
 | P1 | Positioning: not “more detail” |
 | P2 | Expected-risk bar vs structural |
-| P5 | Bar = Claude + GLM; no “always #1” claim |
+| P5 | Bar = Claude + GLM; no “always #1” |
 | P6 | Own quality-gap as product risk |
 
-**Recommend:** implement **E9-E11** soon (prompt), even before D/E finish - Idea C is a clear fail mode.
+**Recommend:** ship **E9-E11 + E14 + E16-E18** in one `prompts.ts` pass; then optional re-score C+E.
 
 ### P1
 
@@ -162,31 +173,46 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | **Pattern** | First BIF underperformance; invent-stack + obvious cascade; format != hinge |
 | **Items added** | **E9, E10, E11, E12, P6, Q6**; P5/E1/E2 reinforced |
 
-### 4.4 Idea D — Hardware (pending)
+### 4.4 Idea D — Hardware budget fitness ring
 
 | | |
 |--|--|
-| **File** | `scoring/4.md` (TBD) |
-| **Items added** | |
+| **File** | [scoring/4.md](./scoring/4.md) |
+| **Date** | 2026-07-21 |
+| **Candidates** | Claude + GLM + BIF |
+| **Winner** | **Thin top** - GLM slight edge; BIF close #2 (~23.5 mean) |
+| **Convergent SPOF** | OEM/budget sensor vs premium accuracy claim |
+| **Pattern** | BIF recovered vs Idea C; same hinge family; thin gaps |
+| **Items added** | **E13, E14, E15**; E7/S1 reinforced |
 
-### 4.5 Idea E — API (pending)
+### 4.5 Idea E — API image resize + CDN
 
 | | |
 |--|--|
-| **File** | `scoring/5.md` (TBD) |
-| **Items added** | |
+| **File** | [scoring/5.md](./scoring/5.md) |
+| **Date** | 2026-07-21 |
+| **Candidates** | Claude + GLM + BIF |
+| **Winner** | **GLM** (majority); Claude close 2nd; **BIF 3rd / low** (~19 mean) |
+| **BIF SPOF** | Flat pricing without cost guard |
+| **Best peer SPOFs** | Key-share cache flood (GLM); request vs bytes metering (Claude) |
+| **Pattern** | Second clear BIF loss; domain-specific abuse/metering depth missing |
+| **Items added** | **E16, E17, E18, Q7**; E8/E9/E12/E1 reinforced; Q3/Q4 done |
 
 ---
 
-## 5. Rollup after 5 ideas (fill at end)
+## 5. Rollup after 5 ideas (suite complete)
 
 | Question | Answer |
 |----------|--------|
-| How many ideas did BIF win? | _ / 5 |
-| Did “structural / earlier hinge” pattern repeat? | Y / N / mixed |
-| Top 5 IDs still open (P0/P1 only) | |
-| Implement batch 1 (this week) | |
-| Wont / drop list | |
+| How many ideas did BIF win (sole or co-top)? | **2 / 5** (A sole, B co-tie) |
+| Clear BIF losses? | **2 / 5** (C dogfood, E API) |
+| Thin peer (no sole win)? | **1 / 5** (D hardware) |
+| Did “structural / earlier hinge” pattern repeat? | **Mixed** - yes on A/B/D; failed on C (invent stack) and E (generic pricing) |
+| Top implement IDs (P0) | **E9, E10, E11, E14, E16, E17, E18, Q7, P5, P6** |
+| Implement batch 1 | Prompt rules: invent ban, idea-as-stated, camouflage hunt, one-spine, API abuse+metering, assumption consistency |
+| Wont / drop list | Extra LLM passes; Redis as quality fix; “always beats Claude” marketing |
+
+**Honest USP read after suite:** BIF can match or beat strong chat on **some** domains (marketplace, SaaS product hinge, hardware claim mismatch) via structured spine. It **does not** reliably beat Claude/GLM on **meta/self** or **deep infra abuse** fixtures. Positioning must stay: *one-spine idea-specific premortem*, not *always sharper than frontier chat*.
 
 ---
 
@@ -198,3 +224,5 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | 2026-07-21 | Q5 done: GPT out as candidate |
 | 2026-07-21 | Idea B complete: BIF-GLM tie; E5 pass; E6-E8 + P5 added |
 | 2026-07-21 | Idea C complete: BIF low / Claude win; E9-E12 + P6 + Q6 |
+| 2026-07-21 | Idea D complete: thin top GLM>BIF>Claude; E13-E15 |
+| 2026-07-21 | Idea E complete: BIF low / GLM win; suite 5/5; E16-E18 + Q7; rollup §5 |
