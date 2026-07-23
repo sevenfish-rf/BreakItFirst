@@ -257,3 +257,5 @@ Do **not** keep five separate full todo lists in five scoring files.
 | 2026-07-21 | **Protocol v2:** candidates = Claude + GLM + BIF; GPT judge-only |
 | 2026-07-21 | **Suite A–E complete**; mixed outcome; implement Q7 prompt batch from 04 |
 | 2026-07-21 | **scoring/6.md** after-refine BreakPath (BIF top/co-win vs A/B) |
+| 2026-07-23 | **scoring/7.md** H2H API image CDN only (BIF 25 vs Claude/Gemini/GLM); template remains 7-head-to-head.md |
+| 2026-07-23 | **scoring/8.md** PasarKerja Migran complex (BIF co-lead with Claude; GLM strong) |
