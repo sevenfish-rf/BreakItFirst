@@ -312,3 +312,37 @@ export function downloadAnalysisMarkdown(
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Copy full report Markdown to the clipboard (same body as download).
+ * Falls back to execCommand if clipboard API is unavailable.
+ */
+export async function copyAnalysisMarkdown(
+  analysis: FailureAnalysis,
+  opts?: { locale?: "en" | "id"; warnings?: string[] },
+): Promise<boolean> {
+  const md = analysisToMarkdown(analysis, opts);
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(md);
+      return true;
+    }
+  } catch {
+    // fall through to legacy path
+  }
+  try {
+    if (typeof document === "undefined") return false;
+    const ta = document.createElement("textarea");
+    ta.value = md;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    ta.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}

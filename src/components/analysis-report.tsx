@@ -1,9 +1,12 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
   AlertOctagon,
+  Check,
+  Copy,
   Download,
   FileText,
   Gauge,
@@ -23,6 +26,7 @@ import { ResilienceRadar } from "@/components/visuals/resilience-radar";
 import { StressTestPanel } from "@/components/visuals/stress-test-panel";
 import { useLanguage } from "@/lib/i18n/context";
 import {
+  copyAnalysisMarkdown,
   downloadAnalysisMarkdown,
   spofWhyHingeText,
 } from "@/lib/report-markdown";
@@ -120,6 +124,23 @@ export function AnalysisReport({
   const isDeep = Boolean(calibration);
   /** Never surface claim-guard / soft-check jargon to end users */
   const softWarnings = toUserFacingWarnings(warnings, locale);
+  const [copyState, setCopyState] = useState<"idle" | "ok" | "err">("idle");
+
+  const handleCopyMarkdown = useCallback(async () => {
+    const ok = await copyAnalysisMarkdown(analysis, {
+      locale,
+      warnings: softWarnings,
+    });
+    setCopyState(ok ? "ok" : "err");
+    window.setTimeout(() => setCopyState("idle"), 2000);
+  }, [analysis, locale, softWarnings]);
+
+  const copyLabel =
+    copyState === "ok"
+      ? t.report.copyMarkdownDone
+      : copyState === "err"
+        ? t.report.copyMarkdownFailed
+        : t.report.copyMarkdown;
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5 pb-10">
@@ -152,6 +173,20 @@ export function AnalysisReport({
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => void handleCopyMarkdown()}
+                aria-label={t.report.copyMarkdown}
+              >
+                {copyState === "ok" ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+                {copyLabel}
+              </Button>
               <Button
                 type="button"
                 variant="secondary"

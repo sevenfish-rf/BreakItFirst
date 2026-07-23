@@ -110,6 +110,9 @@ export type Dictionary = {
     linkedToSpof: string;
     emptyDomain: string;
     exportMarkdown: string;
+    copyMarkdown: string;
+    copyMarkdownDone: string;
+    copyMarkdownFailed: string;
     analysisBase: string;
     analysisBaseHint: string;
     systemReading: string;
@@ -264,6 +267,9 @@ const en: Dictionary = {
     linkedToSpof: "Linked to SPOF",
     emptyDomain: "No material risks flagged in this domain",
     exportMarkdown: "Export Markdown",
+    copyMarkdown: "Copy Markdown",
+    copyMarkdownDone: "Copied",
+    copyMarkdownFailed: "Copy failed",
     analysisBase: "Idea analyzed",
     analysisBaseHint:
       "Your input after validation — the exact text the analysis pipeline used as source",
@@ -468,6 +474,9 @@ const id: Dictionary = {
     linkedToSpof: "Terkait SPOF",
     emptyDomain: "Tidak ada risiko material di domain ini",
     exportMarkdown: "Ekspor Markdown",
+    copyMarkdown: "Salin Markdown",
+    copyMarkdownDone: "Tersalin",
+    copyMarkdownFailed: "Gagal salin",
     analysisBase: "Ide yang dianalisis",
     analysisBaseHint:
       "Input kamu setelah validasi — teks yang dipakai pipeline sebagai sumber analisis",
