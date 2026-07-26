@@ -7,10 +7,10 @@ import type { Locale } from "@/lib/i18n/types";
 import s from "./landing-footer.module.css";
 
 /**
- * Marketing footer for the landing route.
+ * Site footer, used on both "/" and "/app".
  *
- * The slim <SiteFooter /> stays in place for /app — a tool page does not want
- * a nav-heavy footer — so this one is scoped to "/" only.
+ * Section links are written as "/#anchor" rather than "#anchor" so they still
+ * resolve when the footer is rendered on /app, where those sections are absent.
  *
  * Every destination here resolves to something that actually exists: two real
  * routes, three anchors rendered on this page, and the project's own
@@ -39,9 +39,9 @@ const COPY: Record<Locale, FooterCopy> = {
       "A structured premortem engine: one idea-specific failure hinge, and the cascade that follows it.",
     nav: [
       { label: "Home", href: "/" },
-      { label: "How it works", href: "#method" },
-      { label: "Anatomy of a report", href: "#anatomy" },
-      { label: "What's enforced", href: "#constraints" },
+      { label: "How it works", href: "/#method" },
+      { label: "Anatomy of a report", href: "/#anatomy" },
+      { label: "What's enforced", href: "/#constraints" },
       { label: "Run a premortem", href: "/app" },
     ],
     finePrint:
@@ -54,9 +54,9 @@ const COPY: Record<Locale, FooterCopy> = {
       "Mesin premortem terstruktur: satu engsel kegagalan yang spesifik pada idemu, beserta rantai yang mengikutinya.",
     nav: [
       { label: "Beranda", href: "/" },
-      { label: "Cara kerja", href: "#method" },
-      { label: "Anatomi laporan", href: "#anatomy" },
-      { label: "Yang dijaga", href: "#constraints" },
+      { label: "Cara kerja", href: "/#method" },
+      { label: "Anatomi laporan", href: "/#anatomy" },
+      { label: "Yang dijaga", href: "/#constraints" },
       { label: "Jalankan premortem", href: "/app" },
     ],
     finePrint:

@@ -10,7 +10,7 @@ import { LandingForm } from "@/components/landing-form";
 import { AnalysisReport } from "@/components/analysis-report";
 import { ProviderSettingsModal } from "@/components/provider-settings";
 import { ScrollChoreography } from "@/components/scroll-choreography";
-import { SiteFooter } from "@/components/site-footer";
+import { LandingFooter } from "@/components/landing-footer";
 import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
 import { ThemeProvider } from "@/lib/theme-context";
 import { loadActiveJob } from "@/lib/draft";
@@ -201,7 +201,7 @@ function AppShellInner() {
         )}
       </main>
 
-      <SiteFooter />
+      <LandingFooter />
 
       <ProviderSettingsModal
         open={settingsOpen}

@@ -1,9 +1,12 @@
 "use client";
 
-import type { CSSProperties, ReactElement } from "react";
+import { useState, type CSSProperties, type ReactElement } from "react";
 import { FAILURE_ARCHETYPES } from "@/lib/archetypes";
 import { useLanguage } from "@/lib/i18n/context";
-import { downloadAnalysisMarkdown } from "@/lib/report-markdown";
+import {
+  analysisToMarkdown,
+  downloadAnalysisMarkdown,
+} from "@/lib/report-markdown";
 import { toUserFacingWarnings } from "@/lib/user-warnings";
 import type {
   ConfidenceBand,
@@ -128,6 +131,28 @@ function splitFirstSentence(text: string): [string, string] {
   const m = trimmed.match(/^[\s\S]*?[.!?](?=\s|$)/);
   if (!m) return [trimmed, ""];
   return [m[0], trimmed.slice(m[0].length)];
+}
+
+/**
+ * The masthead headline is followed immediately by the verbatim idea, so a full
+ * opening sentence reads as the same thing said twice. Keep only the leading
+ * clause: cut at the first clause boundary past a usable length, and fall back
+ * to a word boundary. Whatever is dropped still appears in full under 01.
+ */
+function condenseHeadline(sentence: string, max = 68): string {
+  const s = sentence.trim().replace(/[.!?]+$/, "");
+  if (s.length <= max) return s;
+
+  const boundary = /[,;:—–]|\s\(/g;
+  let cut = -1;
+  for (let m = boundary.exec(s); m; m = boundary.exec(s)) {
+    if (m.index > max) break;
+    if (m.index >= max * 0.45) cut = m.index;
+  }
+  if (cut > 0) return s.slice(0, cut);
+
+  const space = s.lastIndexOf(" ", max);
+  return `${s.slice(0, space > max * 0.5 ? space : max).trimEnd()}…`;
 }
 
 /** Wrap the trailing phrase of the SPOF statement for the .u highlight. */
@@ -265,6 +290,51 @@ const WARN_ICON = (
   </svg>
 );
 
+/**
+ * The async clipboard API needs a focused document and granted permission, and
+ * refuses in enough real situations (background tab, denied permission, older
+ * browser) that a silent "Copy failed" would be a common outcome. Falls back to
+ * the legacy selection copy, which has none of those preconditions.
+ */
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* fall through to the legacy path */
+  }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+const COPY_ICON = (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="1.5" width="7.5" height="7.5" rx="1.5" />
+    <path d="M9 11.2v.8a1.5 1.5 0 0 1-1.5 1.5H3A1.5 1.5 0 0 1 1.5 12V7.5A1.5 1.5 0 0 1 3 6h.8" />
+  </svg>
+);
+
+const CHECK_ICON = (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2.5 7.5l3 3 6-7" />
+  </svg>
+);
+
 const EXPORT_ICON = (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
     <path d="M7 1.5v7.5M4 6.5l3 3 3-3" />
@@ -313,6 +383,7 @@ export function AnalysisReport({
 }: AnalysisReportProps) {
   const { t, locale } = useLanguage();
   const S: Strings = locale === "id" ? STR.id : STR.en;
+  const [copyState, setCopyState] = useState<"idle" | "done" | "failed">("idle");
 
   const spof = analysis.single_point_of_failure;
   const velocity = analysis.failure_velocity;
@@ -325,6 +396,13 @@ export function AnalysisReport({
 
   const handleExport = () =>
     downloadAnalysisMarkdown(analysis, { locale, warnings: softWarnings });
+
+  /** Copy the same Markdown the export produces, so both stay in step. */
+  async function handleCopy() {
+    const md = analysisToMarkdown(analysis, { locale, warnings: softWarnings });
+    setCopyState((await copyToClipboard(md)) ? "done" : "failed");
+    window.setTimeout(() => setCopyState("idle"), 2200);
+  }
 
   /* --- derived masthead / summary values --- */
   const [firstSentence, restSummary] = splitFirstSentence(analysis.summary);
@@ -365,13 +443,41 @@ export function AnalysisReport({
       <div className="wrap">
         {/* masthead */}
         <div className="report-masthead reveal">
+          <div className="report-tools">
+            <button
+              type="button"
+              className={`btn-tool${copyState === "done" ? " ok" : ""}${copyState === "failed" ? " err" : ""}`}
+              onClick={handleCopy}
+            >
+              {copyState === "done" ? CHECK_ICON : COPY_ICON}
+              {copyState === "done"
+                ? t.report.copyMarkdownDone
+                : copyState === "failed"
+                  ? t.report.copyMarkdownFailed
+                  : t.report.copyMarkdown}
+            </button>
+            <button type="button" className="btn-tool" onClick={handleExport}>
+              {EXPORT_ICON}
+              {t.report.exportMarkdown}
+            </button>
+            <div className="report-tools-push" />
+            <button
+              type="button"
+              className="btn-tool btn-tool--primary"
+              onClick={onReset}
+            >
+              {RESET_ICON}
+              {t.report.newAnalysis}
+            </button>
+          </div>
+
           <div className="report-kicker">
             <span className="tick" aria-hidden="true" />
             <span className="label label--signal">
               {t.report.kicker} · BRK-{reportCode(analysis)}
             </span>
           </div>
-          <h2 className="report-title">{firstSentence}</h2>
+          <h2 className="report-title">{condenseHeadline(firstSentence)}</h2>
           <p className="report-idea">&ldquo;{analysis.meta.idea_input}&rdquo;</p>
           <div className="report-meta">
             <span className="chip">
@@ -386,16 +492,6 @@ export function AnalysisReport({
             <span className="chip chip--signal">
               {S.dominantPathway}&nbsp;<b>{truncate(spof.component, 48)}</b>
             </span>
-          </div>
-          <div className="report-tools">
-            <button type="button" className="btn-ghost" onClick={handleExport}>
-              {EXPORT_ICON}
-              {t.report.exportMarkdown}
-            </button>
-            <button type="button" className="btn-ghost" onClick={onReset}>
-              {RESET_ICON}
-              {t.report.newAnalysis}
-            </button>
           </div>
           {restoredFromStorage ? (
             <p className="axes-note">{t.report.restoredFromBrowser}</p>
