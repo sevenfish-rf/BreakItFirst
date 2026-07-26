@@ -175,7 +175,7 @@ export function LandingSpine() {
   const reduced = useReducedMotion() ?? false;
 
   return (
-    <section className={s.spine} aria-labelledby="spine-title">
+    <section className={s.spine} id="anatomy" aria-labelledby="spine-title">
       <div className="wrap">
         <div className={`${s.head} reveal`}>
           <span className={s.eyebrow}>

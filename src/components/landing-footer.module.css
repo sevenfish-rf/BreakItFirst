@@ -1,0 +1,170 @@
+/* ============================================================
+   Landing — marketing footer.
+   Self-contained: this file + landing-footer.tsx are the whole
+   section. Tokens come from the global Editorial Analyst set;
+   nothing here sets a global style.
+   ============================================================ */
+
+.foot {
+  border-top: 1px solid var(--hair);
+  padding: clamp(56px, 7vw, 92px) 0 36px;
+  transition: border-color .45s var(--ease);
+}
+
+/* ---------- upper block ---------- */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(32px, 5vw, 64px);
+  margin-bottom: clamp(38px, 5vw, 56px);
+}
+
+.brandCol {
+  width: 35%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  width: fit-content;
+}
+
+.mark { display: block; flex: none; }
+.markInk { stroke: var(--ink); transition: stroke .45s var(--ease); }
+.markSig { stroke: var(--signal); transition: stroke .45s var(--ease); }
+
+.wordmark {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.tagline {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-3);
+  max-width: 34ch;
+}
+
+.links { display: flex; align-items: center; gap: 10px; }
+
+/* circular outlined button — the source template's signature control */
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--hair);
+  background: var(--bg-raised);
+  color: var(--ink-2);
+  transition: color .25s var(--ease), border-color .25s var(--ease),
+    background .45s var(--ease);
+}
+
+.iconBtn:hover {
+  color: var(--signal);
+  border-color: var(--signal);
+}
+
+.iconBtn svg { display: block; }
+
+/* ---------- nav column ---------- */
+.navCol {
+  width: 65%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 22px;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px clamp(18px, 2.6vw, 32px);
+}
+
+/* underline grows from the left on hover — same signal-rule language as the
+   header's active link and the metrics tabs */
+.navLink {
+  position: relative;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-decoration: none;
+  padding-bottom: 3px;
+  transition: color .25s var(--ease);
+}
+
+.navLink::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 1.5px;
+  width: 100%;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .3s var(--ease);
+}
+
+.navLink:hover { color: var(--ink); }
+.navLink:hover::after { transform: scaleX(1); }
+
+.finePrint {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-3);
+  max-width: 62ch;
+  text-align: right;
+}
+
+/* ---------- divider + copyright ---------- */
+.divider {
+  width: 100%;
+  height: 1px;
+  background: var(--hair);
+  margin-bottom: 26px;
+  transition: background .45s var(--ease);
+}
+
+.copy { text-align: center; }
+
+.copy p {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .02em;
+  color: var(--ink-3);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 920px) {
+  .top { flex-direction: column; gap: 34px; }
+  .brandCol,
+  .navCol { width: 100%; }
+  .navCol { align-items: flex-start; }
+  .nav { justify-content: flex-start; }
+  .finePrint { text-align: left; }
+}
+
+@media (max-width: 640px) {
+  .nav { gap: 10px 18px; }
+  .navLink { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navLink::after { transition: none; }
+}

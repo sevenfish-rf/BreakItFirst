@@ -196,7 +196,7 @@ export function LandingMetrics() {
   const active = c.tabs.find((t) => t.id === activeId) ?? c.tabs[0];
 
   return (
-    <section className={s.band} aria-labelledby="metrics-title">
+    <section className={s.band} id="constraints" aria-labelledby="metrics-title">
       <div className="wrap">
         {/* .reveal is the page-level scroll choreography (see ScrollChoreography);
             harmless if this section is deleted, since nothing else references it */}

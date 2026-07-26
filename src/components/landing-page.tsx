@@ -5,7 +5,7 @@ import { type ReactNode } from "react";
 import { Header } from "@/components/header";
 import { LandingMetrics } from "@/components/landing-metrics";
 import { LandingSpine } from "@/components/landing-spine";
-import { SiteFooter } from "@/components/site-footer";
+import { LandingFooter } from "@/components/landing-footer";
 import { ScrollChoreography } from "@/components/scroll-choreography";
 import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
 import { ThemeProvider } from "@/lib/theme-context";
@@ -228,7 +228,7 @@ function LandingInner() {
         </section>
       </main>
 
-      <SiteFooter />
+      <LandingFooter />
       <ScrollChoreography viewKey="landing-marketing" />
     </>
   );
