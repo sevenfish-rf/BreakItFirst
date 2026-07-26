@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { type ReactNode } from "react";
 import { Header } from "@/components/header";
+import { LandingMetrics } from "@/components/landing-metrics";
 import { SiteFooter } from "@/components/site-footer";
 import { ScrollChoreography } from "@/components/scroll-choreography";
 import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
@@ -201,6 +202,9 @@ function LandingInner() {
             <p className="lp-anatomy-note reveal">{c.anatomy.note}</p>
           </div>
         </section>
+
+        {/* ── Metrics band (unnumbered — self-contained, safe to remove) ── */}
+        <LandingMetrics />
 
         {/* ── 04 · Audience ────────────────────────────────────── */}
         <section className="lp-sec">

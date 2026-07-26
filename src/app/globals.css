@@ -1159,6 +1159,9 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
 @media (max-width: 640px){
   .brand-tag{ display:none; }
   .status-pill span.txt{ display:none; }
+  /* Home/App links compete with the brand + toggles on small phones */
+  .nav-inner{ gap:9px; }
+  .nav-link{ padding:7px 7px; }
   .assump-list{ grid-template-columns:1fr; }
   .modes{ grid-template-columns:1fr; }
   .stress{ grid-template-columns:1fr; }
@@ -1169,4 +1172,9 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
   .analyze-btn .btn-label{ min-width:0; text-align:center; }
   .axis{ grid-template-columns:96px 1fr 44px; gap:12px; }
   .sec-aside{ display:none; }
+}
+@media (max-width: 470px){
+  /* below this the wordmark no longer fits beside the nav; the mark still
+     carries the brand and remains the link home */
+  .nav .brand-name{ display:none; }
 }
