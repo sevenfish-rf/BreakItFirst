@@ -1,18 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTheme } from "@/lib/theme-context";
 import { useLanguage } from "@/lib/i18n/context";
 import type { Locale } from "@/lib/i18n/types";
 
 type HeaderProps = {
-  onOpenSettings: () => void;
-  providerReady: boolean;
+  /** Omit both on marketing pages — hides provider status + settings. */
+  onOpenSettings?: () => void;
+  providerReady?: boolean;
 };
 
 export function Header({ onOpenSettings, providerReady }: HeaderProps) {
   const { locale, setLocale, t } = useLanguage();
   const { toggle } = useTheme();
+  const pathname = usePathname();
+
+  const links = [
+    { href: "/", label: t.nav.home },
+    { href: "/app", label: t.nav.app },
+  ];
 
   return (
     <header className="nav">
@@ -45,17 +53,32 @@ export function Header({ onOpenSettings, providerReady }: HeaderProps) {
           <span className="brand-tag">{t.tagline}</span>
         </Link>
 
+        <nav className="nav-links" aria-label="Primary">
+          {links.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className={`nav-link${pathname === l.href ? " on" : ""}`}
+              aria-current={pathname === l.href ? "page" : undefined}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+
         <div className="nav-spacer" />
 
-        <span
-          className={`status-pill${providerReady ? "" : " off"}`}
-          title="Analysis provider status"
-        >
-          <span className="status-dot" aria-hidden="true" />
-          <span className="txt">
-            {providerReady ? t.nav.providerReady : t.nav.providerNotSet}
+        {onOpenSettings ? (
+          <span
+            className={`status-pill${providerReady ? "" : " off"}`}
+            title="Analysis provider status"
+          >
+            <span className="status-dot" aria-hidden="true" />
+            <span className="txt">
+              {providerReady ? t.nav.providerReady : t.nav.providerNotSet}
+            </span>
           </span>
-        </span>
+        ) : null}
 
         <LanguageToggle locale={locale} onChange={setLocale} />
 
@@ -92,6 +115,7 @@ export function Header({ onOpenSettings, providerReady }: HeaderProps) {
           </svg>
         </button>
 
+        {onOpenSettings ? (
         <button
           className="icon-btn"
           onClick={onOpenSettings}
@@ -112,6 +136,7 @@ export function Header({ onOpenSettings, providerReady }: HeaderProps) {
             <path d="M13.3 10.1a1.2 1.2 0 0 0 .24 1.32l.04.05a1.45 1.45 0 1 1-2.05 2.05l-.04-.04a1.2 1.2 0 0 0-1.33-.24 1.2 1.2 0 0 0-.72 1.1v.12a1.45 1.45 0 0 1-2.9 0v-.06a1.2 1.2 0 0 0-.78-1.1 1.2 1.2 0 0 0-1.32.24l-.05.04A1.45 1.45 0 1 1 2.34 11.5l.04-.04a1.2 1.2 0 0 0 .24-1.33 1.2 1.2 0 0 0-1.1-.72h-.12a1.45 1.45 0 0 1 0-2.9h.06a1.2 1.2 0 0 0 1.1-.78 1.2 1.2 0 0 0-.24-1.32l-.04-.05A1.45 1.45 0 1 1 4.5 2.34l.04.04a1.2 1.2 0 0 0 1.33.24h.06a1.2 1.2 0 0 0 .72-1.1v-.12a1.45 1.45 0 0 1 2.9 0v.06a1.2 1.2 0 0 0 .72 1.1 1.2 1.2 0 0 0 1.32-.24l.05-.04a1.45 1.45 0 1 1 2.05 2.05l-.04.04a1.2 1.2 0 0 0-.24 1.33v.06a1.2 1.2 0 0 0 1.1.72h.12a1.45 1.45 0 0 1 0 2.9h-.06a1.2 1.2 0 0 0-1.1.72Z" />
           </svg>
         </button>
+        ) : null}
       </div>
     </header>
   );

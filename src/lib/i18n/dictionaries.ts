@@ -4,6 +4,8 @@ export type Dictionary = {
   brand: string;
   tagline: string;
   nav: {
+    home: string;
+    app: string;
     provider: string;
     providerReady: string;
     providerNotSet: string;
@@ -14,7 +16,6 @@ export type Dictionary = {
     headline: string;
     subhead: string;
     footerNote: string;
-    features: { title: string; body: string }[];
   };
   form: {
     ideaLabel: string;
@@ -137,6 +138,8 @@ const en: Dictionary = {
   brand: "BreakItFirst",
   tagline: "What Would Break This?",
   nav: {
+    home: "Home",
+    app: "App",
     provider: "Provider",
     providerReady: "Provider ready",
     providerNotSet: "Provider not set",
@@ -149,20 +152,6 @@ const en: Dictionary = {
       "Paste your idea. Get one idea-specific failure hinge and causal cascade — not multi-pass marketing, not a chat dump, not how-to-win coaching.",
     footerNote:
       "Structured premortem engine. Success = a path you had not considered — not generic startup advice.",
-    features: [
-      {
-        title: "One dominant hinge",
-        body: "A single structural SPOF with a causal spine — earlier and more specific than the risk you already feared.",
-      },
-      {
-        title: "Cascade · signals · stress · velocity",
-        body: "Ordered failure path with observables, archetype stress, path speed, and multi-dimension resilience on that path.",
-      },
-      {
-        title: "BYOK for testing",
-        body: "OpenAI-compatible providers while you develop. Your key stays in the browser.",
-      },
-    ],
   },
   form: {
     ideaLabel: "Your idea",
@@ -343,6 +332,8 @@ const id: Dictionary = {
   brand: "BreakItFirst",
   tagline: "What Would Break This?",
   nav: {
+    home: "Beranda",
+    app: "Aplikasi",
     provider: "Provider",
     providerReady: "Provider siap",
     providerNotSet: "Provider belum diset",
@@ -355,20 +346,6 @@ const id: Dictionary = {
       "Tempel ide. Dapat satu hinge kegagalan yang spesifik + rantai kausal — bukan marketing multi-pass, bukan chat dump, bukan coaching cara menang.",
     footerNote:
       "Mesin premortem terstruktur. Sukses = jalur yang belum terpikir — bukan nasihat startup generik.",
-    features: [
-      {
-        title: "Satu hinge dominan",
-        body: "SPOF struktural dengan spine kausal — lebih awal dan spesifik daripada risiko yang sudah ditakuti.",
-      },
-      {
-        title: "Cascade · sinyal · stress · velocity",
-        body: "Jalur gagal berurutan dengan observasi, stress arketipe, kecepatan jalur, dan ketahanan multi-dimensi pada jalur itu.",
-      },
-      {
-        title: "BYOK untuk testing",
-        body: "Provider kompatibel OpenAI saat develop. Kunci API tetap di browser.",
-      },
-    ],
   },
   form: {
     ideaLabel: "Ide kamu",
