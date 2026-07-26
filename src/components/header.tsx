@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Settings, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ThemeCircles } from "@/components/ui/theme-circles";
+import Link from "next/link";
+import { useTheme } from "@/lib/theme-context";
 import { useLanguage } from "@/lib/i18n/context";
 import type { Locale } from "@/lib/i18n/types";
-import { cn } from "@/lib/utils";
 
 type HeaderProps = {
   onOpenSettings: () => void;
@@ -16,99 +12,107 @@ type HeaderProps = {
 
 export function Header({ onOpenSettings, providerReady }: HeaderProps) {
   const { locale, setLocale, t } = useLanguage();
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const { toggle } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40">
-      <motion.div
-        initial={{ opacity: 0, y: -6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className={cn(
-          "nav-bar transition-[background,box-shadow] duration-300",
-          scrolled &&
-            "bg-[rgba(7,7,8,0.85)] shadow-[0_8px_32px_-16px_rgba(0,0,0,0.8)]",
-        )}
-      >
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:h-[3.75rem] sm:px-6">
-          {/* Brand */}
-          <a href="/" className="group flex min-w-0 items-center gap-3">
-            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent/30 to-accent/5 ring-1 ring-accent/30 transition-transform duration-300 group-hover:scale-105">
-              <Zap
-                className="h-4 w-4 text-accent"
-                strokeWidth={2.5}
-                fill="currentColor"
-                fillOpacity={0.15}
-              />
-              <span className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-t from-transparent to-white/10" />
-            </div>
-            <div className="min-w-0 leading-tight">
-              <div className="flex items-center gap-2">
-                <span className="truncate text-[15px] font-semibold tracking-tight text-text">
-                  {t.brand}
-                </span>
-                <span className="hidden rounded-md border border-white/[0.08] bg-white/[0.03] px-1.5 py-0.5 text-[10px] font-medium text-text-muted sm:inline">
-                  beta
-                </span>
-              </div>
-              <p className="hidden truncate text-[11px] text-text-muted sm:block">
-                {t.tagline}
-              </p>
-            </div>
-          </a>
+    <header className="nav">
+      <div className="wrap nav-inner">
+        <Link className="brand" href="/" aria-label="BreakItFirst home">
+          {/* logo mark: a circle fractured by a fault line */}
+          <svg
+            className="brand-mark"
+            width="30"
+            height="30"
+            viewBox="0 0 30 30"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              className="mk-ink"
+              d="M20.8 3.2 A13 13 0 1 0 26.8 15"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+            <path
+              className="mk-sig"
+              d="M22 4 L16.5 11.5 L20 13.5 L13 22"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="brand-name">{t.brand}</span>
+          <span className="brand-tag">{t.tagline}</span>
+        </Link>
 
-          {/* Actions */}
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <ThemeCircles />
-            <LanguageToggle locale={locale} onChange={setLocale} />
+        <div className="nav-spacer" />
 
-            <div
-              className={cn(
-                "hidden h-8 items-center gap-2 rounded-full border px-3 text-[11px] font-medium md:inline-flex",
-                providerReady
-                  ? "border-healthy/20 bg-healthy/10 text-healthy"
-                  : "border-white/[0.08] bg-white/[0.03] text-text-muted",
-              )}
-            >
-              <span className="relative flex h-1.5 w-1.5">
-                <span
-                  className={cn(
-                    "absolute inline-flex h-full w-full rounded-full opacity-75",
-                    providerReady
-                      ? "animate-ping bg-healthy"
-                      : "bg-text-muted/40",
-                  )}
-                />
-                <span
-                  className={cn(
-                    "relative inline-flex h-1.5 w-1.5 rounded-full",
-                    providerReady ? "bg-healthy" : "bg-text-muted",
-                  )}
-                />
-              </span>
-              {providerReady ? t.nav.providerReady : t.nav.providerNotSet}
-            </div>
+        <span
+          className={`status-pill${providerReady ? "" : " off"}`}
+          title="Analysis provider status"
+        >
+          <span className="status-dot" aria-hidden="true" />
+          <span className="txt">
+            {providerReady ? t.nav.providerReady : t.nav.providerNotSet}
+          </span>
+        </span>
 
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={onOpenSettings}
-              aria-label={t.nav.provider}
-            >
-              <Settings className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{t.nav.provider}</span>
-            </Button>
-          </div>
-        </div>
-      </motion.div>
+        <LanguageToggle locale={locale} onChange={setLocale} />
+
+        <button
+          className="icon-btn theme-toggle"
+          onClick={toggle}
+          aria-label="Toggle light and dark theme"
+        >
+          <svg
+            className="sun"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          >
+            <circle cx="8" cy="8" r="3.2" />
+            <path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M12.8 3.2l-1.1 1.1M4.3 11.7l-1.1 1.1" />
+          </svg>
+          <svg
+            className="moon"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M13.5 9.4A6 6 0 0 1 6.6 2.5a6 6 0 1 0 6.9 6.9Z" />
+          </svg>
+        </button>
+
+        <button
+          className="icon-btn"
+          onClick={onOpenSettings}
+          aria-label={t.nav.provider}
+          title={t.nav.provider}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="8" cy="8" r="2.2" />
+            <path d="M13.3 10.1a1.2 1.2 0 0 0 .24 1.32l.04.05a1.45 1.45 0 1 1-2.05 2.05l-.04-.04a1.2 1.2 0 0 0-1.33-.24 1.2 1.2 0 0 0-.72 1.1v.12a1.45 1.45 0 0 1-2.9 0v-.06a1.2 1.2 0 0 0-.78-1.1 1.2 1.2 0 0 0-1.32.24l-.05.04A1.45 1.45 0 1 1 2.34 11.5l.04-.04a1.2 1.2 0 0 0 .24-1.33 1.2 1.2 0 0 0-1.1-.72h-.12a1.45 1.45 0 0 1 0-2.9h.06a1.2 1.2 0 0 0 1.1-.78 1.2 1.2 0 0 0-.24-1.32l-.04-.05A1.45 1.45 0 1 1 4.5 2.34l.04.04a1.2 1.2 0 0 0 1.33.24h.06a1.2 1.2 0 0 0 .72-1.1v-.12a1.45 1.45 0 0 1 2.9 0v.06a1.2 1.2 0 0 0 .72 1.1 1.2 1.2 0 0 0 1.32-.24l.05-.04a1.45 1.45 0 1 1 2.05 2.05l-.04.04a1.2 1.2 0 0 0-.24 1.33v.06a1.2 1.2 0 0 0 1.1.72h.12a1.45 1.45 0 0 1 0 2.9h-.06a1.2 1.2 0 0 0-1.1.72Z" />
+          </svg>
+        </button>
+      </div>
     </header>
   );
 }
@@ -121,34 +125,17 @@ function LanguageToggle({
   onChange: (l: Locale) => void;
 }) {
   return (
-    <div
-      className="inline-flex rounded-full border border-white/[0.08] bg-white/[0.03] p-0.5"
-      role="group"
-      aria-label="Language"
-    >
-      {(["en", "id"] as const).map((code) => {
-        const active = locale === code;
-        return (
-          <button
-            key={code}
-            type="button"
-            onClick={() => onChange(code)}
-            className={cn(
-              "relative rounded-full px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-colors",
-              active ? "text-text" : "text-text-muted hover:text-text-secondary",
-            )}
-          >
-            {active && (
-              <motion.span
-                layoutId="lang-pill"
-                className="absolute inset-0 rounded-full bg-white/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset]"
-                transition={{ type: "spring", stiffness: 420, damping: 32 }}
-              />
-            )}
-            <span className="relative z-10">{code}</span>
-          </button>
-        );
-      })}
+    <div className="lang-toggle" role="group" aria-label="Language">
+      {(["en", "id"] as const).map((code) => (
+        <button
+          key={code}
+          type="button"
+          className={`lang-opt${locale === code ? " on" : ""}`}
+          onClick={() => onChange(code)}
+        >
+          {code}
+        </button>
+      ))}
     </div>
   );
 }

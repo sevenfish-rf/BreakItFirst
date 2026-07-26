@@ -1,15 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -17,6 +26,12 @@ export const metadata: Metadata = {
   description:
     "Paste your startup, app, API, or product idea. We'll tell you how it fails before reality does.",
 };
+
+/**
+ * Set the theme class before first paint to avoid a flash of the wrong mode.
+ * Defaults to light; respects a stored choice, else system preference.
+ */
+const themeScript = `(function(){try{var k='breakitfirst.theme';var s=localStorage.getItem(k);var d=(s==='dark')||((s!=='light')&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -26,16 +41,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${plexMono.variable}`}
       suppressHydrationWarning
     >
-      {/* suppressHydrationWarning: browser extensions often inject attrs on body (e.g. bis_register) */}
-      <body
-        className="flex min-h-full flex-col bg-background text-text"
-        suppressHydrationWarning
-      >
-        {children}
-      </body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      {/* suppressHydrationWarning: browser extensions often inject attrs on body */}
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }

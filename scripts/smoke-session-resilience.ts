@@ -112,7 +112,7 @@ function section(name: string) {
 }
 
 async function main() {
-  let failed = 0;
+  const failed = 0;
 
   // ── 1. Job stages ───────────────────────────────────────────────────
   section("1. Job stage transitions");

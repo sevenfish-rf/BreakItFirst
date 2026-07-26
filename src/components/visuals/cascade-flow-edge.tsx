@@ -39,20 +39,19 @@ function CascadeFlowEdgeComponent({
   );
   const stroke =
     (style?.stroke as string | undefined) ??
-    (accent ? "#F5A524" : "#FF6B6B");
-  const width = (style?.strokeWidth as number | undefined) ?? 2;
+    (accent ? "var(--accent)" : "var(--text-muted)");
+  const width = (style?.strokeWidth as number | undefined) ?? 1.5;
 
   return (
     <>
-      {/* Glow underlay */}
+      {/* Faint underlay — widens the fault-line without glow */}
       <BaseEdge
-        id={`${id}-glow`}
+        id={`${id}-under`}
         path={edgePath}
         style={{
           stroke,
-          strokeWidth: width + 4,
-          opacity: 0.15,
-          filter: "blur(3px)",
+          strokeWidth: width + 3,
+          opacity: 0.08,
         }}
       />
       {/* Static path */}
@@ -64,7 +63,7 @@ function CascadeFlowEdgeComponent({
           ...style,
           stroke,
           strokeWidth: width,
-          opacity: 0.85,
+          opacity: 0.75,
         }}
       />
       {/* Running dash animation */}
@@ -76,10 +75,10 @@ function CascadeFlowEdgeComponent({
         strokeLinecap="round"
         strokeDasharray="6 10"
         className="cascade-edge-dash"
-        style={{ opacity: 0.95 }}
+        style={{ opacity: 0.9 }}
       />
       {/* Moving pulse dot along path */}
-      <circle r="3.5" fill={stroke} className="cascade-edge-pulse">
+      <circle r="3" fill={stroke} className="cascade-edge-pulse">
         <animateMotion dur="1.6s" repeatCount="indefinite" path={edgePath} />
       </circle>
       <EdgeLabelRenderer>
@@ -91,7 +90,7 @@ function CascadeFlowEdgeComponent({
         >
           <span
             className="block h-1 w-1 rounded-full opacity-40"
-            style={{ background: stroke, boxShadow: `0 0 8px ${stroke}` }}
+            style={{ background: stroke }}
           />
         </div>
       </EdgeLabelRenderer>

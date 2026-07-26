@@ -1,5 +1,9 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect --
+   Intentional: draft + active-job are restored from localStorage after mount,
+   and the status-watch effect drives loading/stage UI state. */
+
 import {
   useCallback,
   useEffect,
@@ -8,18 +12,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { AnalyzingOverlay } from "@/components/analyzing-overlay";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { ReportHistory } from "@/components/report-history";
 import {
   CATEGORIES,
-  EXAMPLE_CHIPS,
   MIN_IDEA_LENGTH,
   type Category,
-  type ExampleChip,
 } from "@/lib/categories";
 import {
   cancelAnalysisJob,
@@ -41,8 +39,6 @@ import { useLanguage } from "@/lib/i18n/context";
 import type { PipelineLiveStage } from "@/lib/pipeline-stages";
 import type { FailureAnalysis } from "@/types/analysis";
 import type { SavedReport } from "@/lib/report-storage";
-import { ReportHistory } from "@/components/report-history";
-import { cn } from "@/lib/utils";
 
 type LandingFormProps = {
   providerReady: boolean;
@@ -52,13 +48,6 @@ type LandingFormProps = {
   onOpenHistoryReport?: (report: SavedReport) => void;
   historyRefreshKey?: number;
 };
-
-function ideaTextForLocale(chip: ExampleChip, locale: string): string {
-  if (locale === "id") {
-    return (chip.ideaId || chip.ideaEn || "").trim();
-  }
-  return (chip.ideaEn || chip.ideaId || "").trim();
-}
 
 function shouldShowProviderTip(message: string): boolean {
   return /provider|model id|base url|api key|connection|network|backend|timeout|fetch models|pass 1|pass 2|mimo|openai/i.test(
@@ -94,14 +83,17 @@ export function LandingForm({
   /** Prevent double POST (Strict Mode / double-click). */
   const startingRef = useRef(false);
   const onSuccessRef = useRef(onSuccess);
-  onSuccessRef.current = onSuccess;
   const localeRef = useRef(locale);
-  localeRef.current = locale;
   const tRef = useRef(t);
-  tRef.current = t;
+  // Keep "latest" refs fresh without touching them during render.
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    localeRef.current = locale;
+    tRef.current = t;
+  });
 
   const finishFromResult = useCallback(
-    (result: AnalyzeResult, _jobId: string) => {
+    (result: AnalyzeResult) => {
       if (userCancelledRef.current) {
         clearActiveJob();
         activeJobIdRef.current = null;
@@ -117,11 +109,7 @@ export function LandingForm({
           result.code === "cancelled" ||
           result.code === "stream_disconnected"
         ) {
-          // stream_disconnected = tab refresh; keep job for resume on next mount
           if (result.code === "stream_disconnected") {
-            // Keep loading true only if still mounted with active job —
-            // usually component is unmounting. If still here, stay in loading
-            // and let effect reconnect.
             return;
           }
           clearActiveJob();
@@ -177,12 +165,10 @@ export function LandingForm({
     async (jobId: string) => {
       activeJobIdRef.current = jobId;
 
-      // Cancel previous poll loop only
       watchAbortRef.current?.abort();
       const controller = new AbortController();
       watchAbortRef.current = controller;
 
-      // Overlay ON immediately
       setLoading(true);
       setError(null);
       setLiveStage((s) => s ?? "ingest");
@@ -192,24 +178,21 @@ export function LandingForm({
         locale: localeRef.current,
         signal: controller.signal,
         onStage: (p) => {
-          // Always apply if this is still the active controller
           if (watchAbortRef.current !== controller) return;
           setLiveStage(p.stage);
           setLiveDetail(p.detail ?? null);
         },
       });
 
-      // Superseded by a newer watch
       if (watchAbortRef.current !== controller) {
         return;
       }
 
       if (!result.ok && result.code === "stream_disconnected") {
-        // Refresh/unmount — do not clear active job; next mount resumes
         return;
       }
 
-      finishFromResult(result, jobId);
+      finishFromResult(result);
     },
     [finishFromResult],
   );
@@ -226,7 +209,6 @@ export function LandingForm({
 
     const active = loadActiveJob();
     if (active?.jobId) {
-      // Paint analyzer overlay before first paint if possible
       setLoading(true);
       setLiveStage("ingest");
       setLoadedHint(
@@ -238,12 +220,6 @@ export function LandingForm({
         setIdea(active.idea);
         setCategory(active.category);
         setDeepAnalysis(active.deepAnalysis);
-      } else if (draft?.idea.trim()) {
-        setLoadedHint(
-          localeRef.current === "id"
-            ? "Menyambung ulang ke analisis yang sedang berjalan…"
-            : "Reconnecting to your running analysis…",
-        );
       }
       activeJobIdRef.current = active.jobId;
     } else if (draft?.idea.trim()) {
@@ -253,7 +229,6 @@ export function LandingForm({
     setDraftHydrated(true);
   }, []);
 
-  // Start/resume status watch for active job (re-runs cleanly after Strict Mode)
   useEffect(() => {
     if (!draftHydrated) return;
 
@@ -262,7 +237,6 @@ export function LandingForm({
 
     let cancelled = false;
 
-    // Ensure overlay is showing
     setLoading(true);
     setLiveStage((s) => s ?? "ingest");
     activeJobIdRef.current = active.jobId;
@@ -274,12 +248,10 @@ export function LandingForm({
 
     return () => {
       cancelled = true;
-      // Only abort status stream — server job keeps running
       watchAbortRef.current?.abort();
     };
   }, [draftHydrated, attachWatch]);
 
-  // Persist draft
   useEffect(() => {
     if (!draftHydrated) return;
     const id = window.setTimeout(() => {
@@ -288,7 +260,6 @@ export function LandingForm({
     return () => window.clearTimeout(id);
   }, [idea, category, deepAnalysis, activeChip, draftHydrated]);
 
-  // Soft browser warning while analyzing
   useEffect(() => {
     if (!loading) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -308,34 +279,6 @@ export function LandingForm({
     }
     return t.form.helper;
   }, [charCount, tooShort, t]);
-
-  function applyChip(chip: ExampleChip) {
-    const text = ideaTextForLocale(chip, locale);
-    if (!text) {
-      setError(
-        locale === "id"
-          ? "Template ini kosong — coba template lain."
-          : "This template has no text — try another.",
-      );
-      return;
-    }
-    setIdea(text);
-    setCategory(chip.category);
-    setActiveChip(chip.label);
-    setError(null);
-    setLoadedHint(
-      locale === "id"
-        ? `Template “${chip.label}” dimuat · ${text.length} karakter · ${chip.category}`
-        : `Loaded “${chip.label}” · ${text.length} chars · ${chip.category}`,
-    );
-    requestAnimationFrame(() => {
-      const el = ideaRef.current;
-      if (!el) return;
-      el.focus();
-      el.setSelectionRange(0, 0);
-      el.scrollTop = 0;
-    });
-  }
 
   function handleClearDraft() {
     setIdea("");
@@ -368,10 +311,7 @@ export function LandingForm({
     setError(null);
     userCancelledRef.current = false;
 
-    const input = validateAnalyzeInput(
-      { idea, category },
-      { verbose: true },
-    );
+    const input = validateAnalyzeInput({ idea, category }, { verbose: true });
     if (!input.ok) {
       setError(input.message);
       return;
@@ -383,7 +323,6 @@ export function LandingForm({
       return;
     }
 
-    // Already running → reconnect only (no second API job)
     const existing = loadActiveJob();
     if (existing?.jobId) {
       setLoadedHint(
@@ -413,7 +352,6 @@ export function LandingForm({
     setLoadedHint(null);
 
     try {
-      // 1) Start job (rate limit + provider work begins here)
       const started = await startAnalysisJob({
         idea: input.idea,
         category: input.category,
@@ -433,7 +371,6 @@ export function LandingForm({
         return;
       }
 
-      // 2) Persist jobId BEFORE watching — critical for refresh resume
       activeJobIdRef.current = started.jobId;
       saveActiveJob({
         jobId: started.jobId,
@@ -443,226 +380,151 @@ export function LandingForm({
         deepAnalysis,
       });
 
-      // 3) Poll status snapshot every ~1.2s (reliable stage % / labels)
       await attachWatch(started.jobId);
     } finally {
       startingRef.current = false;
     }
   }
 
+  const showClear = charCount > 0 || category !== "Startup" || deepAnalysis;
+
   return (
-    <div className="relative -m-6 min-h-[28rem] sm:-m-8">
-      <form
-        onSubmit={handleSubmit}
-        className={cn(
-          "w-full space-y-6 p-6 sm:p-8",
-          loading && "pointer-events-none select-none opacity-0",
-        )}
-      >
-        <div>
-          <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="idea">{t.form.ideaLabel}</Label>
-            {charCount > 0 || category !== "Startup" || deepAnalysis ? (
-              <button
-                type="button"
-                disabled={loading}
-                onClick={handleClearDraft}
-                className="text-[11px] text-text-muted underline-offset-2 hover:text-text-secondary hover:underline"
-              >
-                {t.form.clearDraft}
-              </button>
-            ) : null}
+    <form onSubmit={handleSubmit} style={{ position: "relative" }}>
+      <div className="console">
+        <div className="console-head">
+          <span className="label">{t.form.ideaLabel}</span>
+          {loadedHint ? (
+            <span className="sample-note">{loadedHint}</span>
+          ) : null}
+        </div>
+
+        <label htmlFor="idea" className="visually-hidden">
+          {t.form.ideaLabel}
+        </label>
+        <textarea
+          id="idea"
+          ref={ideaRef}
+          spellCheck={false}
+          value={idea}
+          onChange={(e) => {
+            setIdea(e.target.value);
+            setActiveChip(null);
+            setLoadedHint(null);
+            setError(null);
+          }}
+          placeholder={t.form.ideaPlaceholder}
+          disabled={loading}
+        />
+
+        {error ? (
+          <div className="console-note">
+            <span className="msg err">
+              {error}
+              {shouldShowProviderTip(error) ? ` — ${t.form.tipProvider}` : ""}
+            </span>
           </div>
-          <Textarea
-            id="idea"
-            ref={ideaRef}
-            value={idea}
-            onChange={(e) => {
-              setIdea(e.target.value);
-              setActiveChip(null);
-              setLoadedHint(null);
-              setError(null);
-            }}
-            placeholder={t.form.ideaPlaceholder}
-            className="mt-1.5 min-h-[180px]"
-            disabled={loading}
-          />
-          <div className="mt-2 flex items-center justify-between gap-3 text-[11px]">
-            <p
-              className={cn(
-                tooShort
-                  ? "text-warning"
-                  : loadedHint
-                    ? "text-healthy"
-                    : "text-text-muted",
-              )}
+        ) : (
+          <div className="console-note">
+            <span
+              className={
+                "msg" +
+                (tooShort ? " warn" : loadedHint ? " ok" : "")
+              }
             >
               {loadedHint ?? helper}
-            </p>
-            <p
-              className={cn(
-                "shrink-0 tabular-nums",
-                charCount >= MIN_IDEA_LENGTH
-                  ? "text-text-secondary"
-                  : "text-text-muted",
-              )}
-            >
-              {charCount} {t.form.chars}
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <Label>{t.form.categoryLabel}</Label>
-          <div className="mt-1.5 flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => {
-              const selected = category === cat;
-              return (
-                <motion.button
-                  key={cat}
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
+              {showClear ? (
+                <button
                   type="button"
+                  className="link-btn"
                   disabled={loading}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setCategory(cat)}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-xs transition-colors",
-                    selected
-                      ? "border-accent/50 bg-accent/15 text-accent"
-                      : "border-border bg-background/50 text-text-secondary hover:border-border-strong hover:text-text",
-                  )}
+                  onClick={handleClearDraft}
                 >
-                  {cat}
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div>
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-xs text-text-muted">{t.form.examplesLabel}</p>
-            <p className="text-[10px] tabular-nums text-text-muted/80">
-              {EXAMPLE_CHIPS.length} templates
-            </p>
-          </div>
-          <div className="max-h-[7.5rem] overflow-y-auto rounded-xl border border-border/50 bg-background/20 p-2 no-scrollbar">
-            <div className="flex flex-wrap gap-1.5">
-              {EXAMPLE_CHIPS.map((chip) => {
-                const selected = activeChip === chip.label;
-                return (
-                  <motion.button
-                    key={chip.label}
-                    type="button"
-                    disabled={loading}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    title={`${chip.category} · click to fill idea`}
-                    onClick={(ev) => {
-                      ev.preventDefault();
-                      ev.stopPropagation();
-                      applyChip(chip);
-                    }}
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] transition-colors",
-                      selected
-                        ? "border-accent/50 bg-accent/15 text-accent"
-                        : "border-dashed border-border bg-background/40 text-text-secondary hover:border-accent/40 hover:text-text",
-                    )}
-                  >
-                    {selected ? (
-                      <Check className="h-3 w-3 shrink-0" strokeWidth={3} />
-                    ) : null}
-                    {chip.label}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {onOpenHistoryReport ? (
-          <ReportHistory
-            refreshKey={historyRefreshKey}
-            onOpen={onOpenHistoryReport}
-          />
-        ) : null}
-
-        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border/80 bg-background/40 px-3.5 py-3 transition-colors hover:border-accent/30">
-          <input
-            type="checkbox"
-            className="mt-1 h-4 w-4 rounded border-border accent-[var(--accent,#FF6B6B)]"
-            checked={deepAnalysis}
-            disabled={loading}
-            onChange={(e) => setDeepAnalysis(e.target.checked)}
-          />
-          <span className="min-w-0">
-            <span className="block text-sm font-medium text-text">
-              {t.form.deepLabel}
-            </span>
-            <span className="mt-0.5 block text-[11px] leading-relaxed text-text-muted">
-              {t.form.deepHint}
-            </span>
-          </span>
-        </label>
-
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-start gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3.5 py-3 text-sm text-accent"
-          >
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <div className="min-w-0 space-y-1">
-              <p className="break-words leading-relaxed">{error}</p>
-              {shouldShowProviderTip(error) ? (
-                <p className="text-[11px] text-accent/80">{t.form.tipProvider}</p>
-              ) : charCount === 0 ? (
-                <p className="text-[11px] text-accent/80">
-                  {locale === "id"
-                    ? "Tip: klik salah satu template di atas — teks ide harus muncul di kotak."
-                    : "Tip: click a template above — the idea box should fill with text."}
-                </p>
+                  {t.form.clearDraft}
+                </button>
               ) : null}
-            </div>
-          </motion.div>
-        )}
-
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full sm:w-auto sm:min-w-[220px]"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {t.form.analyzing}
-            </>
-          ) : (
-            <>
-              <AlertTriangle className="h-4 w-4" />
-              {t.form.cta}
-            </>
-          )}
-        </Button>
-      </form>
-
-      <AnimatePresence>
-        {loading && (
-          <div
-            className="absolute inset-0 z-20 overflow-hidden"
-            style={{ borderRadius: 28 }}
-          >
-            <AnalyzingOverlay
-              open={loading}
-              liveStage={liveStage}
-              liveDetail={liveDetail}
-              onCancel={handleCancel}
-            />
+              <span className="count">
+                {charCount} {t.form.chars}
+              </span>
+            </span>
           </div>
         )}
-      </AnimatePresence>
-    </div>
+
+        <div className="console-foot">
+          <div className="field">
+            <span className="label" id="catLabel">
+              {t.form.categoryLabel}
+            </span>
+            <div className="select-wrap">
+              <select
+                aria-labelledby="catLabel"
+                value={category}
+                disabled={loading}
+                onChange={(e) => setCategory(e.target.value as Category)}
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3.5 5 6.5 8 3.5" />
+              </svg>
+            </div>
+          </div>
+
+          <div className="field deep-field">
+            <button
+              type="button"
+              className="switch"
+              role="switch"
+              aria-checked={deepAnalysis}
+              aria-labelledby="deepLabel"
+              disabled={loading}
+              onClick={() => setDeepAnalysis((v) => !v)}
+            />
+            <span
+              className="deep-label"
+              id="deepLabel"
+              onClick={() => !loading && setDeepAnalysis((v) => !v)}
+            >
+              {t.form.deepLabel}
+              <small>{t.form.deepHint}</small>
+            </span>
+          </div>
+
+          <div className="push" />
+
+          <button
+            type="submit"
+            className={"analyze-btn" + (loading ? " running" : "")}
+            disabled={loading}
+          >
+            <span className="spinner" aria-hidden="true" />
+            <span className="btn-label">
+              {loading ? t.form.analyzing : t.form.cta}
+            </span>
+            <svg className="arr" width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M2.5 7.5h10M8.5 3.5l4 4-4 4" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {onOpenHistoryReport ? (
+        <ReportHistory refreshKey={historyRefreshKey} onOpen={onOpenHistoryReport} />
+      ) : null}
+
+      {loading ? (
+        <AnalyzingOverlay
+          open={loading}
+          liveStage={liveStage}
+          liveDetail={liveDetail}
+          onCancel={handleCancel}
+        />
+      ) : null}
+    </form>
   );
 }

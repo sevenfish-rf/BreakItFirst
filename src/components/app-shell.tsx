@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Crosshair, KeyRound, Network } from "lucide-react";
+/* eslint-disable react-hooks/set-state-in-effect --
+   Intentional: provider settings + saved report are read from localStorage
+   after mount (hydration gate) so SSR and first client render agree. */
+
+import { useEffect, useState, type ReactNode } from "react";
 import { Header } from "@/components/header";
 import { LandingForm } from "@/components/landing-form";
 import { AnalysisReport } from "@/components/analysis-report";
 import { ProviderSettingsModal } from "@/components/provider-settings";
-import { PixelBlastBackground } from "@/components/effects/pixel-blast-background";
-import { GlowCard } from "@/components/ui/glow-card";
+import { ScrollChoreography } from "@/components/scroll-choreography";
 import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
 import { ThemeProvider } from "@/lib/theme-context";
 import { loadActiveJob } from "@/lib/draft";
@@ -24,9 +25,8 @@ import {
   loadProviderSettings,
   type ProviderSettings,
 } from "@/lib/provider-settings";
+import type { Locale } from "@/lib/i18n/types";
 import type { FailureAnalysis } from "@/types/analysis";
-
-const FEATURE_ICONS = [Crosshair, Network, KeyRound] as const;
 
 export function AppShell() {
   return (
@@ -38,8 +38,42 @@ export function AppShell() {
   );
 }
 
+/** Wrap the first word matching the "failure" family in an <em> (signal accent). */
+function emphasizeHeadline(headline: string): ReactNode {
+  const parts = headline.split(/(\bbreak\w*\b|\bgagal\w*\b|\brusak\w*\b|\bhancur\w*\b)/i);
+  return parts.map((part, i) =>
+    /^(break\w*|gagal\w*|rusak\w*|hancur\w*)$/i.test(part) ? (
+      <em key={i}>{part}</em>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
+
+const PIPELINE: Record<
+  Locale,
+  { label: string; passes: { n: string; title: string; body: string }[] }
+> = {
+  en: {
+    label: "How it works",
+    passes: [
+      { n: "Pass 1", title: "Open reasoning", body: "Free-form failure exploration across every domain." },
+      { n: "Pass 1.5", title: "Adversarial critique", body: "The engine attacks its own weakest argument." },
+      { n: "Pass 2", title: "Structured report", body: "One dominant thesis, typed and evidenced." },
+    ],
+  },
+  id: {
+    label: "Cara kerja",
+    passes: [
+      { n: "Pass 1", title: "Penalaran terbuka", body: "Eksplorasi kegagalan bebas lintas domain." },
+      { n: "Pass 1.5", title: "Kritik adversarial", body: "Mesin menyerang argumen terlemahnya sendiri." },
+      { n: "Pass 2", title: "Laporan terstruktur", body: "Satu tesis dominan, terstruktur & berdasar." },
+    ],
+  },
+};
+
 function AppShellInner() {
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
   const [settings, setSettings] = useState<ProviderSettings>(
     DEFAULT_PROVIDER_SETTINGS,
   );
@@ -53,8 +87,6 @@ function AppShellInner() {
   useEffect(() => {
     setSettings(loadProviderSettings());
 
-    // Priority: active job (analyzing) > saved report > empty form
-    // LandingForm handles active-job resume when analysis is null.
     const activeJob = loadActiveJob();
     if (!activeJob?.jobId) {
       const saved = loadSavedReport();
@@ -70,26 +102,24 @@ function AppShellInner() {
 
   const providerReady = hydrated && isProviderConfigured(settings);
 
-  function handleAnalysisSuccess(
-    next: FailureAnalysis,
-    warnings?: string[],
-  ) {
+  function handleAnalysisSuccess(next: FailureAnalysis, warnings?: string[]) {
     const w = warnings ?? [];
     setAnalysis(next);
     setReportWarnings(w);
     setRestoredFromStorage(false);
     saveReport(next, w);
     setHistoryRefreshKey((k) => k + 1);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
   }
 
   function handleOpenHistoryReport(report: SavedReport) {
     setAnalysis(report.analysis);
     setReportWarnings(report.warnings);
     setRestoredFromStorage(true);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
   }
 
   function handleResetReport() {
-    // Back to form — keep history list; only clear "current" pointer
     setAnalysis(null);
     setReportWarnings([]);
     setRestoredFromStorage(false);
@@ -97,173 +127,91 @@ function AppShellInner() {
     setHistoryRefreshKey((k) => k + 1);
   }
 
+  const pipe = PIPELINE[locale] ?? PIPELINE.en;
+
   return (
-    <div className="relative flex min-h-full flex-1 flex-col overflow-x-hidden">
-      <PixelBlastBackground opacity={analysis ? 0.16 : 0.32} />
-      <div className="page-mesh" aria-hidden />
+    <>
+      <Header
+        providerReady={providerReady}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
 
-      <div className="relative z-10 flex min-h-full flex-1 flex-col">
-        <Header
-          providerReady={providerReady}
-          onOpenSettings={() => setSettingsOpen(true)}
-        />
+      <main>
+        {!analysis ? (
+          <>
+            <section className="hero">
+              <div className="wrap">
+                <div className="hero-eyebrow reveal">
+                  <span className="tick" aria-hidden="true" />
+                  <span className="label">{t.landing.kicker}</span>
+                </div>
+                <h1 className="reveal" data-delay="1">
+                  {emphasizeHeadline(t.landing.headline)}
+                </h1>
+                <p className="hero-sub reveal" data-delay="2">
+                  {t.landing.subhead}
+                </p>
 
-        <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
-          <AnimatePresence mode="wait">
-            {!analysis ? (
-              <motion.div
-                key="landing"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.28 }}
-                className="grid flex-1 items-start gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14"
-              >
-                <div className="space-y-8 lg:sticky lg:top-24 lg:self-start">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    <motion.p
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.05 }}
-                      className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-accent shadow-[0_0_24px_-8px_rgba(255,107,107,0.5)]"
-                    >
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
-                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-                      </span>
-                      {t.landing.kicker}
-                    </motion.p>
-
-                    <h1 className="text-balance text-4xl font-semibold tracking-[-0.03em] text-text sm:text-5xl lg:text-[3.4rem] lg:leading-[1.05]">
-                      {t.landing.headline}
-                    </h1>
-
-                    <p className="mt-6 max-w-lg text-pretty text-base leading-relaxed text-text-secondary sm:text-lg">
-                      {t.landing.subhead}
-                    </p>
-
-                    <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-text-muted">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-1">
-                        <ArrowRight className="h-3 w-3 text-accent" />
-                        Pre-mortem
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-1">
-                        Cascade
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-1">
-                        BYOK
-                      </span>
-                    </div>
-                  </motion.div>
-
-                  <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-                    {t.landing.features.map((f, i) => {
-                      const Icon = FEATURE_ICONS[i] ?? Crosshair;
-                      return (
-                        <motion.div
-                          key={f.title}
-                          initial={{ opacity: 0, y: 14 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.14 + i * 0.07, duration: 0.4 }}
-                        >
-                          <GlowCard
-                            padding="sm"
-                            borderRadius={20}
-                            glowIntensity={1.4}
-                          >
-                            <div className="flex gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent ring-1 ring-accent/25">
-                                <Icon className="h-4 w-4" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-text">
-                                  {f.title}
-                                </p>
-                                <p className="mt-1 text-xs leading-relaxed text-text-secondary">
-                                  {f.body}
-                                </p>
-                              </div>
-                            </div>
-                          </GlowCard>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
+                <div className="reveal" data-delay="3">
+                  <LandingForm
+                    providerReady={providerReady}
+                    provider={settings}
+                    onNeedProvider={() => setSettingsOpen(true)}
+                    onSuccess={handleAnalysisSuccess}
+                    onOpenHistoryReport={handleOpenHistoryReport}
+                    historyRefreshKey={historyRefreshKey}
+                  />
                 </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 24, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{
-                    duration: 0.5,
-                    delay: 0.1,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className="lg:mt-2"
-                >
-                  <GlowCard padding="lg" borderRadius={28} glowIntensity={2.0}>
-                    <div className="mb-5 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-[0.14em] text-text-muted">
-                          {t.form.ideaLabel}
-                        </p>
-                        <p className="mt-0.5 text-sm text-text-secondary">
-                          {t.landing.kicker}
-                        </p>
-                      </div>
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-accent/50 to-fuchsia-500/20 ring-1 ring-accent/30" />
-                    </div>
-                    <LandingForm
-                      providerReady={providerReady}
-                      provider={settings}
-                      onNeedProvider={() => setSettingsOpen(true)}
-                      onSuccess={handleAnalysisSuccess}
-                      onOpenHistoryReport={handleOpenHistoryReport}
-                      historyRefreshKey={historyRefreshKey}
-                    />
-                  </GlowCard>
-                </motion.div>
-
-                <p className="text-center text-xs leading-relaxed text-text-muted lg:col-span-2">
+                <p className="hero-footnote reveal" data-delay="3">
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6.5 1.5 12 11.5H1L6.5 1.5Z" />
+                    <path d="M6.5 5.5v2.6M6.5 9.8v.01" />
+                  </svg>
                   {t.landing.footerNote}
                 </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="report"
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.32 }}
-              >
-                {restoredFromStorage ? (
-                  <p className="mb-3 text-center text-[11px] text-text-muted">
-                    {t.report.restoredFromBrowser}
-                  </p>
-                ) : null}
-                <AnalysisReport
-                  analysis={analysis}
-                  warnings={reportWarnings}
-                  onReset={handleResetReport}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </main>
+              </div>
+            </section>
 
-        <footer className="border-t border-white/[0.05] py-6 text-center text-[11px] text-text-muted">
-          <span className="inline-flex items-center gap-2">
-            <span className="h-1 w-1 rounded-full bg-accent/80" />
-            {t.brand}
-            <span className="text-white/15">·</span>
-            {t.tagline}
-          </span>
-        </footer>
-      </div>
+            <section className="pipeline">
+              <div className="wrap">
+                <div className="pipeline-inner reveal">
+                  <span className="label">{pipe.label}</span>
+                  {pipe.passes.map((p) => (
+                    <div className="pass" key={p.n}>
+                      <span className="pass-n">{p.n}</span>
+                      <div className="pass-body">
+                        <b>{p.title}</b>
+                        <span>{p.body}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </>
+        ) : (
+          <AnalysisReport
+            analysis={analysis}
+            warnings={reportWarnings}
+            restoredFromStorage={restoredFromStorage}
+            onReset={handleResetReport}
+          />
+        )}
+      </main>
+
+      <footer className="footer">
+        <div className="wrap footer-inner">
+          <svg className="brand-mark" width="22" height="22" viewBox="0 0 30 30" fill="none" aria-hidden="true">
+            <path className="mk-ink" d="M20.8 3.2 A13 13 0 1 0 26.8 15" strokeWidth="1.8" strokeLinecap="round" />
+            <path className="mk-sig" d="M22 4 L16.5 11.5 L20 13.5 L13 22" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="brand-name">{t.brand}</span>
+          <p>{t.tagline}</p>
+          <div className="nav-spacer" />
+          <span className="mono">{t.brand.toUpperCase()} · EDITORIAL ANALYST</span>
+        </div>
+      </footer>
 
       <ProviderSettingsModal
         open={settingsOpen}
@@ -271,6 +219,8 @@ function AppShellInner() {
         onClose={() => setSettingsOpen(false)}
         onSave={setSettings}
       />
-    </div>
+
+      <ScrollChoreography viewKey={analysis ? "report" : "landing"} />
+    </>
   );
 }

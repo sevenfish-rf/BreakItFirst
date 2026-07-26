@@ -55,25 +55,25 @@ function CascadeNodeComponent({ data, selected }: NodeProps) {
       >
         {d.isPonr ? (
           <span
-            className="pointer-events-none absolute inset-0 -z-10 rounded-xl bg-warning/20 cascade-ponr-pulse"
+            className="pointer-events-none absolute inset-0 -z-10 rounded-xl bg-accent/15 cascade-ponr-pulse"
             aria-hidden
           />
         ) : null}
 
         <div
           className={cn(
-            "w-[200px] cursor-pointer rounded-xl border px-2.5 py-2 shadow-md backdrop-blur-sm transition-all duration-200",
-            "hover:scale-[1.03] hover:shadow-[0_0_24px_-4px_rgba(255,107,107,0.35)]",
-            showPopup && "ring-1 ring-accent/40",
+            "w-[200px] cursor-pointer rounded-lg border bg-surface px-2.5 py-2 shadow-sm transition-all duration-200",
+            "hover:-translate-y-px hover:border-border-strong hover:shadow-md",
+            showPopup && "ring-1 ring-accent/30",
             d.isPonr &&
-              "border-warning/65 bg-gradient-to-br from-warning/20 to-surface ring-1 ring-warning/35 hover:shadow-[0_0_28px_-4px_rgba(245,165,36,0.45)]",
+              "border-accent/60 bg-accent-soft ring-1 ring-accent/25 hover:border-accent/70",
             !d.isPonr &&
               tone === "start" &&
-              "border-accent/50 bg-gradient-to-br from-accent/20 to-surface",
+              "border-border-strong",
             !d.isPonr &&
               tone === "end" &&
-              "border-accent/35 bg-gradient-to-br from-accent/10 to-surface",
-            !d.isPonr && tone === "mid" && "border-border/90 bg-surface/95",
+              "border-accent/45 bg-accent-soft",
+            !d.isPonr && tone === "mid" && "border-border",
           )}
         >
           {!d.isStart ? (
@@ -99,20 +99,20 @@ function CascadeNodeComponent({ data, selected }: NodeProps) {
                   : { duration: 0.2 }
               }
               className={cn(
-                "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-bold tabular-nums",
-                d.isPonr && "bg-warning/30 text-warning",
-                !d.isPonr && tone === "start" && "bg-accent/30 text-accent",
-                !d.isPonr && tone === "end" && "bg-accent/20 text-accent",
+                "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md font-mono text-[10px] font-bold tabular-nums",
+                d.isPonr && "bg-accent/15 text-accent",
+                !d.isPonr && tone === "start" && "bg-background-elevated text-text-secondary",
+                !d.isPonr && tone === "end" && "bg-accent/12 text-accent",
                 !d.isPonr &&
                   tone === "mid" &&
-                  "bg-background text-text-muted",
+                  "bg-background-elevated text-text-muted",
               )}
             >
               {d.index}
             </motion.span>
             <div className="min-w-0 space-y-1">
               {d.isPonr && d.ponrLabel ? (
-                <p className="text-left text-[9px] font-semibold uppercase tracking-wide text-warning">
+                <p className="text-left font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-accent">
                   {d.ponrLabel}
                 </p>
               ) : null}
@@ -121,7 +121,7 @@ function CascadeNodeComponent({ data, selected }: NodeProps) {
               </p>
               {d.signal ? (
                 <p className="line-clamp-2 text-left text-[10px] leading-snug text-text-muted">
-                  <span className="font-medium text-accent/85">
+                  <span className="font-mono font-medium uppercase tracking-wide text-text-secondary">
                     {d.signalLabel ?? "Signal"}:{" "}
                   </span>
                   {d.signal}
@@ -152,11 +152,10 @@ function CascadeNodeComponent({ data, selected }: NodeProps) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.16 }}
           className={cn(
-            "w-[min(300px,78vw)] rounded-xl border px-3 py-2.5 shadow-2xl backdrop-blur-md",
+            "paper-card w-[min(300px,78vw)] px-3 py-2.5",
             d.isPonr
-              ? "border-warning/40 bg-[rgba(20,16,10,0.97)]"
-              : "border-accent/30 bg-[rgba(12,12,16,0.97)]",
-            "shadow-[0_16px_48px_-10px_rgba(0,0,0,0.8)]",
+              ? "!border-accent/40"
+              : "!border-border-strong",
           )}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
@@ -164,20 +163,20 @@ function CascadeNodeComponent({ data, selected }: NodeProps) {
           <div className="mb-1.5 flex items-center gap-2">
             <span
               className={cn(
-                "flex h-5 w-5 items-center justify-center rounded-md text-[10px] font-bold",
+                "flex h-5 w-5 items-center justify-center rounded-md font-mono text-[10px] font-bold tabular-nums",
                 d.isPonr
-                  ? "bg-warning/25 text-warning"
-                  : "bg-accent/20 text-accent",
+                  ? "bg-accent/15 text-accent"
+                  : "bg-background-elevated text-text-secondary",
               )}
             >
               {d.index}
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-wide text-text-muted">
+            <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-text-muted">
               {d.detailHint ?? "Detail"}
             </span>
           </div>
           {d.isPonr && d.ponrLabel ? (
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-warning">
+            <p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
               {d.ponrLabel}
             </p>
           ) : null}
@@ -185,8 +184,8 @@ function CascadeNodeComponent({ data, selected }: NodeProps) {
             {d.label}
           </p>
           {d.signal ? (
-            <p className="mt-2 border-t border-white/10 pt-2 text-[11px] leading-relaxed text-text-secondary">
-              <span className="font-semibold text-accent">
+            <p className="mt-2 border-t border-border pt-2 text-[11px] leading-relaxed text-text-secondary">
+              <span className="font-mono font-medium uppercase tracking-wide text-text-muted">
                 {d.signalLabel ?? "Signal"}:{" "}
               </span>
               {d.signal}

@@ -31,32 +31,32 @@ const MODE_META: {
   {
     key: "technical",
     icon: Wrench,
-    badge: "border-sky-500/30 bg-sky-500/10 text-sky-300",
-    bar: "bg-sky-400/80",
+    badge: "border-border bg-background-elevated text-text-secondary",
+    bar: "bg-text-muted",
   },
   {
     key: "business",
     icon: Building2,
-    badge: "border-violet-500/30 bg-violet-500/10 text-violet-300",
-    bar: "bg-violet-400/80",
+    badge: "border-border bg-background-elevated text-text-secondary",
+    bar: "bg-text-muted",
   },
   {
     key: "security",
     icon: Lock,
-    badge: "border-accent/30 bg-accent/10 text-accent",
-    bar: "bg-accent/80",
+    badge: "border-accent/30 bg-accent-soft text-accent",
+    bar: "bg-accent/70",
   },
   {
     key: "legal",
     icon: Gavel,
-    badge: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-    bar: "bg-amber-400/80",
+    badge: "border-border bg-background-elevated text-text-secondary",
+    bar: "bg-text-muted",
   },
   {
     key: "operations",
     icon: Server,
-    badge: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    bar: "bg-emerald-400/80",
+    badge: "border-border bg-background-elevated text-text-secondary",
+    bar: "bg-text-muted",
   },
 ];
 
@@ -69,7 +69,7 @@ export function FailureModeCards({ modes }: FailureModeCardsProps) {
   return (
     <div className="space-y-3">
       {compounding ? (
-        <p className="rounded-xl border border-accent/25 bg-accent/10 px-3 py-2.5 text-xs leading-relaxed text-text-secondary">
+        <p className="rounded-lg border border-accent/25 bg-accent-soft px-3 py-2.5 text-xs leading-relaxed text-text-secondary">
           <span className="font-semibold text-accent">
             {t.report.compoundingNote}:{" "}
           </span>
@@ -95,14 +95,14 @@ export function FailureModeCards({ modes }: FailureModeCardsProps) {
             >
               <div
                 className={cn(
-                  "flex h-full min-h-[220px] flex-col overflow-hidden rounded-2xl border bg-surface/80",
+                  "flex h-full min-h-[220px] flex-col overflow-hidden rounded-xl border",
                   empty
-                    ? "border-dashed border-border/60 bg-background/30"
-                    : "border-border/70",
+                    ? "border-dashed border-border bg-background-elevated/50"
+                    : "paper-card paper-card-interactive",
                 )}
               >
                 {/* Header — fixed height for row alignment */}
-                <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/40 px-3 py-2.5">
+                <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5">
                   <div className="flex min-w-0 items-center gap-2">
                     <span
                       className={cn(
@@ -110,18 +110,18 @@ export function FailureModeCards({ modes }: FailureModeCardsProps) {
                         mode.badge,
                       )}
                     >
-                      <Icon className="h-3.5 w-3.5" />
+                      <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />
                     </span>
-                    <h3 className="truncate text-[12px] font-semibold text-text">
+                    <h3 className="truncate font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-text">
                       {label}
                     </h3>
                   </div>
                   <span
                     className={cn(
-                      "shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
+                      "shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold tabular-nums",
                       empty
-                        ? "bg-white/[0.03] text-text-muted"
-                        : "bg-white/[0.06] text-text-secondary",
+                        ? "bg-background-elevated text-text-muted"
+                        : "bg-background-elevated text-text-secondary",
                     )}
                   >
                     {items.length}
@@ -132,7 +132,7 @@ export function FailureModeCards({ modes }: FailureModeCardsProps) {
                 <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2.5 no-scrollbar">
                   {empty ? (
                     <div className="flex h-full min-h-[120px] flex-col items-center justify-center gap-1.5 text-center">
-                      <span className="text-[20px] leading-none text-text-muted/30">
+                      <span className="text-[20px] leading-none text-text-muted/40">
                         —
                       </span>
                       <p className="max-w-[12rem] text-[10px] leading-snug text-text-muted">

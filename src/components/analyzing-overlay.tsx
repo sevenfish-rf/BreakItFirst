@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, Loader2, Sparkles, X } from "lucide-react";
+/* eslint-disable react-hooks/set-state-in-effect --
+   Intentional: effects reset/advance the elapsed timer, progress crawl, and
+   tip rotation in response to `open`/stage changes — timer-driven UI state. */
+
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/i18n/context";
 import {
   liveStageToUiIndex,
   type PipelineLiveStage,
 } from "@/lib/pipeline-stages";
-import { useTheme } from "@/lib/theme-context";
-import { cn } from "@/lib/utils";
 
 type AnalyzingOverlayProps = {
   open: boolean;
@@ -38,7 +38,7 @@ const STAGE_PROGRESS_FLOOR = [4, 18, 38, 58, 82];
 const STAGE_PROGRESS_CAPS = [16, 36, 56, 80, 97];
 
 /**
- * Seamless full-card analyzing layer (no nested “boxes”).
+ * Concept-A analyzing layer: editorial stepper over the console.
  * Stage list is driven by real server events (poll snapshot), not wall-clock.
  */
 export function AnalyzingOverlay({
@@ -48,7 +48,6 @@ export function AnalyzingOverlay({
   onCancel,
 }: AnalyzingOverlayProps) {
   const { t } = useLanguage();
-  const { theme } = useTheme();
   const stages = t.analyzing.stages;
   const tips = t.analyzing.tips;
 
@@ -115,215 +114,75 @@ export function AnalyzingOverlay({
     return () => window.clearInterval(id);
   }, [open, tips.length]);
 
-  const orbitDots = useMemo(() => [0, 1, 2, 3, 4, 5], []);
-
   // Long wait tip: show after 90s on any stage that talks to the model
   const showStillWorking = elapsedMs > 90_000 && stageIndex >= 1;
 
   if (!open) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="absolute inset-0 z-30 flex flex-col overflow-hidden"
-      style={{
-        background: theme.backgroundColor,
-        borderRadius: "inherit",
-      }}
-    >
-      {/* Soft ambient — no hard boxes */}
+    <div className="analyzing" role="status" aria-live="polite">
+      <div className="analyzing-head">
+        <span className="label label--signal">{t.analyzing.title}</span>
+        <span className="analyzing-elapsed">
+          {t.analyzing.elapsed} {formatElapsed(elapsedMs)}
+        </span>
+      </div>
+
+      <ol className="ana-steps">
+        {stages.map((stage, i) => {
+          const done = i < stageIndex;
+          const active = i === stageIndex;
+          return (
+            <li
+              key={stage.id}
+              className={[
+                "ana-step",
+                active ? "active" : "",
+                done ? "done" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-current={active ? "step" : undefined}
+            >
+              <span className="ana-dot" aria-hidden="true">
+                {done ? "✓" : i + 1}
+              </span>
+              <span className="ana-label" title={stage.hint}>
+                {stage.label}
+                {active && liveDetail && stageIndex >= 1
+                  ? ` — ${liveDetail}`
+                  : null}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+
       <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: `
-            radial-gradient(ellipse 90% 55% at 50% -5%, ${theme.accent}28 0%, transparent 55%),
-            radial-gradient(ellipse 50% 40% at 100% 100%, ${theme.colors[2]}18 0%, transparent 45%)
-          `,
-        }}
-      />
+        className="ana-progress"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress)}
+      >
+        <span style={{ width: `${progress}%` }} />
+      </div>
 
-      <motion.div
-        className="pointer-events-none absolute inset-x-8 h-px opacity-50"
-        style={{
-          background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)`,
-          boxShadow: `0 0 16px ${theme.accent}`,
-        }}
-        animate={{ top: ["8%", "92%"] }}
-        transition={{ duration: 3.6, repeat: Infinity, ease: "linear" }}
-      />
-
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-5 px-6 py-10 sm:px-10">
-        {/* Loader */}
-        <div className="relative h-24 w-24">
-          <motion.div
-            className="absolute inset-0 rounded-full border border-white/[0.08]"
-            style={{ boxShadow: `inset 0 0 28px ${theme.accent}18` }}
-          />
-          <motion.div
-            className="absolute inset-0 rounded-full border-2 border-transparent"
-            style={{
-              borderTopColor: theme.accent,
-              borderRightColor: `${theme.accent}44`,
-            }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.35, repeat: Infinity, ease: "linear" }}
-          />
-          {orbitDots.map((d) => (
-            <motion.span
-              key={d}
-              className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{ background: theme.colors[d % 3] }}
-              animate={{
-                x: [
-                  Math.cos((d / 6) * Math.PI * 2) * 40,
-                  Math.cos((d / 6) * Math.PI * 2 + Math.PI * 2) * 40,
-                ],
-                y: [
-                  Math.sin((d / 6) * Math.PI * 2) * 40,
-                  Math.sin((d / 6) * Math.PI * 2 + Math.PI * 2) * 40,
-                ],
-                opacity: [0.35, 1, 0.35],
-              }}
-              transition={{
-                duration: 3.2,
-                repeat: Infinity,
-                ease: "linear",
-                delay: d * 0.08,
-              }}
-            />
-          ))}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Sparkles className="h-5 w-5" style={{ color: theme.accent }} />
-          </div>
-        </div>
-
-        <div className="w-full max-w-[20rem] text-center">
-          <h3 className="text-[15px] font-semibold tracking-tight text-text">
-            {t.analyzing.title}
-          </h3>
-          <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
-            {t.analyzing.subtitle}
-          </p>
-          {showStillWorking ? (
-            <p className="mt-2 text-[11px] leading-relaxed text-warning/90">
-              {t.analyzing.stillWorking}
-            </p>
-          ) : null}
-          {liveDetail && stageIndex >= 1 ? (
-            <p className="mt-1.5 text-[10px] text-text-muted/90">{liveDetail}</p>
-          ) : null}
-          <p className="mt-2.5 font-mono text-[11px] tabular-nums text-text-muted">
-            {t.analyzing.elapsed} {formatElapsed(elapsedMs)}
-          </p>
-        </div>
-
-        {/* Progress — line only, no box */}
-        <div className="w-full max-w-[20rem]">
-          <div className="mb-1.5 flex justify-between text-[10px] uppercase tracking-wider text-text-muted">
-            <span>{stages[stageIndex]?.label}</span>
-            <span className="tabular-nums">{Math.round(progress)}%</span>
-          </div>
-          <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
-            <motion.div
-              className="h-full rounded-full"
-              style={{
-                background: `linear-gradient(90deg, ${theme.colors[0]}, ${theme.colors[1]}, ${theme.colors[2]})`,
-                boxShadow: `0 0 10px ${theme.accent}77`,
-              }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-            />
-          </div>
-        </div>
-
-        {/* Stages — driven by server, not clock */}
-        <ul className="w-full max-w-[20rem] space-y-0">
-          {stages.map((stage, i) => {
-            const done = i < stageIndex;
-            const active = i === stageIndex;
-            return (
-              <li
-                key={stage.id}
-                className={cn(
-                  "flex items-center gap-3 py-2.5",
-                  i < stages.length - 1 && "border-b border-white/[0.05]",
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold",
-                    done && "bg-healthy/15 text-healthy",
-                    active && "bg-accent/15 text-accent",
-                    !done && !active && "bg-white/[0.04] text-text-muted",
-                  )}
-                >
-                  {done ? (
-                    <Check className="h-3 w-3" strokeWidth={3} />
-                  ) : active ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    i + 1
-                  )}
-                </span>
-                <div className="min-w-0 flex-1 text-left">
-                  <p
-                    className={cn(
-                      "text-xs font-medium",
-                      active
-                        ? "text-text"
-                        : done
-                          ? "text-text-secondary"
-                          : "text-text-muted",
-                    )}
-                  >
-                    {stage.label}
-                  </p>
-                  {(active || done) && (
-                    <p className="text-[11px] text-text-muted">{stage.hint}</p>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-
-        {/* Tip — no card chrome, just divider + text */}
-        <div className="w-full max-w-[20rem] pt-1 text-left">
-          <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-muted">
-            Tip
-          </p>
-          <AnimatePresence mode="wait">
-            <motion.p
-              key={tipIndex}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.22 }}
-              className="min-h-[2.5rem] text-xs leading-relaxed text-text-secondary"
-            >
-              {tips[tipIndex]}
-            </motion.p>
-          </AnimatePresence>
-        </div>
-
+      <div className="ana-foot">
+        <span className="ana-tip">
+          {showStillWorking ? t.analyzing.stillWorking : tips[tipIndex]}
+        </span>
         {onCancel ? (
-          <div className="w-full max-w-[20rem] space-y-2 pt-2">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:border-accent/40 hover:bg-accent/10 hover:text-text"
-            >
-              <X className="h-4 w-4 shrink-0" />
-              {t.analyzing.cancel}
-            </button>
-            <p className="text-center text-[10px] leading-relaxed text-text-muted">
-              {t.analyzing.cancelHint}
-            </p>
-          </div>
+          <button
+            type="button"
+            className="link-btn"
+            onClick={onCancel}
+            title={t.analyzing.cancelHint}
+          >
+            {t.analyzing.cancel}
+          </button>
         ) : null}
       </div>
-    </motion.div>
+    </div>
   );
 }

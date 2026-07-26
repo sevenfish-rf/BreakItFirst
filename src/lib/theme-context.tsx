@@ -10,65 +10,71 @@ import {
   type ReactNode,
 } from "react";
 import {
-  THEME_LIST,
   THEME_STORAGE_KEY,
-  THEMES,
   applyThemeToDocument,
-  isThemeId,
-  type AppTheme,
-  type ThemeId,
+  isThemeMode,
+  systemPrefersDark,
+  type ThemeMode,
 } from "@/lib/themes";
 
 type ThemeContextValue = {
-  themeId: ThemeId;
-  theme: AppTheme;
-  themes: AppTheme[];
-  setThemeId: (id: ThemeId) => void;
+  mode: ThemeMode;
+  setMode: (mode: ThemeMode) => void;
+  toggle: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function readStoredTheme(): ThemeId {
-  if (typeof window === "undefined") return "ember";
+function readStoredMode(): ThemeMode {
+  if (typeof window === "undefined") return "light";
   try {
     const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (raw && isThemeId(raw)) return raw;
+    if (raw && isThemeMode(raw)) return raw;
   } catch {
     /* ignore */
   }
-  return "ember";
+  return systemPrefersDark() ? "dark" : "light";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [themeId, setThemeIdState] = useState<ThemeId>("ember");
-  const [hydrated, setHydrated] = useState(false);
+  // Lazy init from storage (client) / "light" (server, matches pre-paint script).
+  const [mode, setModeState] = useState<ThemeMode>(() =>
+    typeof window === "undefined" ? "light" : readStoredMode(),
+  );
 
+  // Keep <html> class in sync with state (writes to DOM, not React state).
   useEffect(() => {
-    const id = readStoredTheme();
-    setThemeIdState(id);
-    applyThemeToDocument(THEMES[id]);
-    setHydrated(true);
-  }, []);
+    applyThemeToDocument(mode);
+  }, [mode]);
 
-  const setThemeId = useCallback((id: ThemeId) => {
-    setThemeIdState(id);
-    applyThemeToDocument(THEMES[id]);
+  const persist = useCallback((next: ThemeMode) => {
     try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, id);
+      window.localStorage.setItem(THEME_STORAGE_KEY, next);
     } catch {
       /* ignore */
     }
   }, []);
 
-  const value = useMemo<ThemeContextValue>(() => {
-    const id = hydrated ? themeId : "ember";
-    return {
-      themeId: id,
-      theme: THEMES[id],
-      themes: THEME_LIST,
-      setThemeId,
-    };
-  }, [themeId, setThemeId, hydrated]);
+  const setMode = useCallback(
+    (next: ThemeMode) => {
+      setModeState(next);
+      persist(next);
+    },
+    [persist],
+  );
+
+  const toggle = useCallback(() => {
+    setModeState((prev) => {
+      const next: ThemeMode = prev === "dark" ? "light" : "dark";
+      persist(next);
+      return next;
+    });
+  }, [persist]);
+
+  const value = useMemo<ThemeContextValue>(
+    () => ({ mode, setMode, toggle }),
+    [mode, setMode, toggle],
+  );
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

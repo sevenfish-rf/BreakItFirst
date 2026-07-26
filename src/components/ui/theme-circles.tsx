@@ -1,51 +1,48 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
-/** Compact circle swatches to switch themes */
+/**
+ * Light / dark mode toggle. (Named ThemeCircles for backward-compat with
+ * existing imports — the old multi-swatch picker is retired.)
+ */
 export function ThemeCircles({ className }: { className?: string }) {
-  const { themeId, themes, setThemeId } = useTheme();
+  const { mode, toggle } = useTheme();
+  const isDark = mode === "dark";
 
   return (
-    <div
-      className={cn("flex items-center gap-1.5", className)}
-      role="group"
-      aria-label="Theme"
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      title={isDark ? "Light mode" : "Dark mode"}
+      className={cn(
+        "relative inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-text-secondary transition-colors hover:border-border-strong hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
+        className,
+      )}
     >
-      {themes.map((theme) => {
-        const active = themeId === theme.id;
-        return (
-          <button
-            key={theme.id}
-            type="button"
-            title={theme.label}
-            aria-label={theme.label}
-            aria-pressed={active}
-            onClick={() => setThemeId(theme.id)}
-            className={cn(
-              "relative h-5 w-5 rounded-full transition-transform duration-200",
-              "hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30",
-              active && "scale-110",
-            )}
-            style={{
-              background: `radial-gradient(circle at 30% 30%, #fff8, transparent 45%), ${theme.swatch}`,
-              boxShadow: active
-                ? `0 0 0 2px #070708, 0 0 0 3.5px ${theme.swatch}, 0 0 12px ${theme.swatch}99`
-                : `0 0 0 1px rgba(255,255,255,0.12) inset`,
-            }}
-          >
-            {active && (
-              <motion.span
-                layoutId="theme-ring"
-                className="pointer-events-none absolute -inset-0.5 rounded-full"
-                transition={{ type: "spring", stiffness: 420, damping: 30 }}
-              />
-            )}
-          </button>
-        );
-      })}
-    </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={isDark ? "moon" : "sun"}
+          initial={{ opacity: 0, rotate: -35, scale: 0.7 }}
+          animate={{ opacity: 1, rotate: 0, scale: 1 }}
+          exit={{ opacity: 0, rotate: 35, scale: 0.7 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inline-flex"
+        >
+          {isDark ? (
+            <Moon className="h-4 w-4" strokeWidth={1.75} />
+          ) : (
+            <Sun className="h-4 w-4" strokeWidth={1.75} />
+          )}
+        </motion.span>
+      </AnimatePresence>
+    </button>
   );
 }
+
+/** Preferred name going forward. */
+export const ModeToggle = ThemeCircles;

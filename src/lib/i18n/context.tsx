@@ -1,5 +1,10 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect --
+   Intentional: locale is read from localStorage AFTER mount so the first
+   client render matches the server ("en") and avoids a hydration mismatch,
+   then upgrades to the stored locale. This is the correct SSR pattern. */
+
 import {
   createContext,
   useCallback,
@@ -10,10 +15,7 @@ import {
   type ReactNode,
 } from "react";
 import { getDictionary, type Dictionary } from "@/lib/i18n/dictionaries";
-import {
-  LOCALE_STORAGE_KEY,
-  type Locale,
-} from "@/lib/i18n/types";
+import { LOCALE_STORAGE_KEY, type Locale } from "@/lib/i18n/types";
 
 type LanguageContextValue = {
   locale: Locale;
@@ -62,7 +64,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
   );
 }
 

@@ -1,10 +1,10 @@
 "use client";
 
+/* eslint-disable react-hooks/set-state-in-effect --
+   Intentional: the draft form state resets to `initial` when the modal opens. */
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Eye, EyeOff, Loader2, RefreshCw, X, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   DEFAULT_PROVIDER_SETTINGS,
   PROVIDER_PRESETS,
@@ -14,7 +14,6 @@ import {
   clearProviderSettings,
 } from "@/lib/provider-settings";
 import { getOrCreateSessionId } from "@/lib/session";
-import { cn } from "@/lib/utils";
 
 type ProviderSettingsModalProps = {
   open: boolean;
@@ -198,58 +197,48 @@ export function ProviderSettingsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
-      <button
-        type="button"
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        aria-label="Close settings"
-        onClick={onClose}
-      />
+    <div
+      className="modal-backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="provider-settings-title"
-        className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-border bg-surface shadow-2xl sm:rounded-2xl"
+        className="modal-card"
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+        <div className="modal-head">
           <div>
-            <h2
-              id="provider-settings-title"
-              className="text-base font-semibold text-text"
-            >
+            <h2 id="provider-settings-title" className="modal-title">
               AI Provider
             </h2>
-            <p className="mt-0.5 text-xs text-text-secondary">
+            <p className="label" style={{ marginTop: 6 }}>
               BYOK · models auto-load from{" "}
-              <code className="text-text-muted">/v1/models</code>
+              <code className="mono">/v1/models</code>
             </p>
           </div>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="icon"
+            className="icon-btn"
             onClick={onClose}
             aria-label="Close"
           >
-            <X className="h-4 w-4" />
-          </Button>
+            <X size={15} strokeWidth={1.75} />
+          </button>
         </div>
 
-        <div className="space-y-5 overflow-y-auto px-5 py-5">
-          <div>
-            <Label>Preset</Label>
-            <div className="mt-1.5 flex flex-wrap gap-2">
+        <div className="modal-body">
+          <div className="ed-field">
+            <span className="label">Preset</span>
+            <div className="preset-row">
               {PROVIDER_PRESETS.map((preset) => (
                 <button
                   key={preset.id}
                   type="button"
                   onClick={() => applyPreset(preset.id)}
-                  className={cn(
-                    "rounded-full border px-3 py-1.5 text-xs transition-colors",
-                    activePreset === preset.id
-                      ? "border-accent/50 bg-accent/15 text-accent"
-                      : "border-border bg-background text-text-secondary hover:text-text",
-                  )}
+                  className={activePreset === preset.id ? "preset on" : "preset"}
                 >
                   {preset.label}
                 </button>
@@ -257,10 +246,13 @@ export function ProviderSettingsModal({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="baseUrl">Base URL</Label>
-            <Input
+          <div className="ed-field">
+            <label className="label" htmlFor="baseUrl">
+              Base URL
+            </label>
+            <input
               id="baseUrl"
+              className="ed-input"
               value={draft.baseUrl}
               onChange={(e) =>
                 setDraft((prev) => ({ ...prev, baseUrl: e.target.value }))
@@ -268,17 +260,20 @@ export function ProviderSettingsModal({
               placeholder="https://api.openai.com/v1"
               autoComplete="off"
             />
-            <p className="mt-1.5 text-[11px] text-text-muted">
+            <p style={{ fontSize: 11.5, color: "var(--ink-3)" }}>
               Root URL only (…/v1). Works with OpenAI, OpenRouter, Ollama, vLLM,
               LiteLLM, etc.
             </p>
           </div>
 
-          <div>
-            <Label htmlFor="apiKey">API key (optional for local)</Label>
-            <div className="relative">
-              <Input
+          <div className="ed-field">
+            <label className="label" htmlFor="apiKey">
+              API key (optional for local)
+            </label>
+            <div style={{ position: "relative" }}>
+              <input
                 id="apiKey"
+                className="ed-input"
                 type={showKey ? "text" : "password"}
                 value={draft.apiKey}
                 onChange={(e) =>
@@ -286,104 +281,196 @@ export function ProviderSettingsModal({
                 }
                 placeholder="sk-… or leave empty for Ollama"
                 autoComplete="off"
-                className="pr-11"
+                style={{ paddingRight: 44 }}
               />
               <button
                 type="button"
                 onClick={() => setShowKey((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-text-secondary hover:text-text"
                 aria-label={showKey ? "Hide API key" : "Show API key"}
+                style={{
+                  position: "absolute",
+                  right: 6,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 30,
+                  height: 30,
+                  border: "none",
+                  borderRadius: 7,
+                  background: "transparent",
+                  color: "var(--ink-3)",
+                  cursor: "pointer",
+                }}
               >
                 {showKey ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff size={15} strokeWidth={1.75} />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye size={15} strokeWidth={1.75} />
                 )}
               </button>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            <button
               type="button"
-              variant="secondary"
-              size="sm"
+              className="btn-ghost"
               onClick={() => void fetchModels({ test: false })}
               disabled={fetchState.status === "loading" || !draft.baseUrl.trim()}
+              style={
+                fetchState.status === "loading" || !draft.baseUrl.trim()
+                  ? { opacity: 0.5, cursor: "not-allowed" }
+                  : undefined
+              }
             >
               {fetchState.status === "loading" ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2
+                  size={13}
+                  strokeWidth={1.75}
+                  style={{ animation: "spin .7s linear infinite" }}
+                />
               ) : (
-                <RefreshCw className="h-3.5 w-3.5" />
+                <RefreshCw size={13} strokeWidth={1.75} />
               )}
               Fetch models
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="secondary"
-              size="sm"
+              className="btn-ghost"
               onClick={() => void fetchModels({ test: true })}
               disabled={fetchState.status === "loading" || !draft.baseUrl.trim()}
+              style={
+                fetchState.status === "loading" || !draft.baseUrl.trim()
+                  ? { opacity: 0.5, cursor: "not-allowed" }
+                  : undefined
+              }
             >
-              <Zap className="h-3.5 w-3.5" />
+              <Zap size={13} strokeWidth={1.75} />
               Test connection
-            </Button>
+            </button>
           </div>
 
           {fetchState.status === "ok" && (
-            <p className="text-xs text-healthy">{fetchState.message}</p>
+            <p style={{ fontSize: 12.5, color: "var(--calm)" }}>
+              {fetchState.message}
+            </p>
           )}
           {fetchState.status === "error" && (
-            <p className="text-xs leading-relaxed text-accent">
+            <p
+              style={{ fontSize: 12.5, lineHeight: 1.6, color: "var(--signal)" }}
+            >
               {fetchState.message}
             </p>
           )}
           {fetchState.status === "loading" && (
-            <p className="text-xs text-text-muted">Talking to provider…</p>
+            <p style={{ fontSize: 12.5, color: "var(--ink-3)" }}>
+              Talking to provider…
+            </p>
           )}
 
           {models.length > 0 && (
-            <div>
-              <Label htmlFor="modelFilter">Available models</Label>
-              <Input
+            <div className="ed-field">
+              <label className="label" htmlFor="modelFilter">
+                Available models
+              </label>
+              <input
                 id="modelFilter"
+                className="ed-input"
                 value={modelFilter}
                 onChange={(e) => setModelFilter(e.target.value)}
                 placeholder="Filter models…"
-                className="mt-1.5"
               />
-              <div className="mt-2 max-h-36 overflow-y-auto rounded-xl border border-border bg-background/60 p-1.5">
+              <div
+                style={{
+                  maxHeight: 148,
+                  overflowY: "auto",
+                  border: "1px solid var(--hair)",
+                  borderRadius: 10,
+                  background: "var(--bg-inset)",
+                }}
+              >
                 {filteredModels.length === 0 ? (
-                  <p className="px-2 py-3 text-xs text-text-muted">
+                  <p
+                    style={{
+                      padding: "12px 13px",
+                      fontSize: 12,
+                      fontStyle: "italic",
+                      color: "var(--ink-3)",
+                    }}
+                  >
                     No models match filter.
                   </p>
                 ) : (
-                  filteredModels.map((id) => (
+                  filteredModels.map((id, i) => (
                     <div
                       key={id}
-                      className="flex items-center gap-1 rounded-lg px-1 py-0.5 hover:bg-surface"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "2px 8px 2px 4px",
+                        borderTop:
+                          i === 0 ? "none" : "1px solid var(--hair-soft)",
+                      }}
                     >
                       <button
                         type="button"
-                        className="min-w-0 flex-1 truncate px-2 py-1.5 text-left text-xs text-text-secondary hover:text-text"
+                        className="mono"
                         title={id}
                         onClick={() => selectModel("pass1Model", id)}
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          textAlign: "left",
+                          padding: "8px 9px",
+                          border: "none",
+                          background: "transparent",
+                          color: "var(--ink-2)",
+                          cursor: "pointer",
+                        }}
                       >
                         {id}
                       </button>
                       <button
                         type="button"
-                        className="shrink-0 rounded-md border border-border px-1.5 py-1 text-[10px] text-text-muted hover:border-accent/40 hover:text-accent"
+                        className="mono"
                         onClick={() => selectModel("pass1Model", id)}
                         title="Use for Pass 1"
+                        style={{
+                          flex: "none",
+                          fontSize: 10,
+                          letterSpacing: ".08em",
+                          padding: "3px 7px",
+                          border: "1px solid var(--hair)",
+                          borderRadius: 6,
+                          background: "var(--bg-raised)",
+                          color: "var(--ink-3)",
+                          cursor: "pointer",
+                        }}
                       >
                         P1
                       </button>
                       <button
                         type="button"
-                        className="shrink-0 rounded-md border border-border px-1.5 py-1 text-[10px] text-text-muted hover:border-accent/40 hover:text-accent"
+                        className="mono"
                         onClick={() => selectModel("pass2Model", id)}
                         title="Use for Pass 2"
+                        style={{
+                          flex: "none",
+                          fontSize: 10,
+                          letterSpacing: ".08em",
+                          padding: "3px 7px",
+                          border: "1px solid var(--hair)",
+                          borderRadius: 6,
+                          background: "var(--bg-raised)",
+                          color: "var(--ink-3)",
+                          cursor: "pointer",
+                        }}
                       >
                         P2
                       </button>
@@ -391,17 +478,26 @@ export function ProviderSettingsModal({
                   ))
                 )}
               </div>
-              <p className="mt-1.5 text-[11px] text-text-muted">
+              <p style={{ fontSize: 11.5, color: "var(--ink-3)" }}>
                 Click a model or use P1 / P2 shortcuts.
               </p>
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="pass1Model">Pass 1 model (reasoning)</Label>
-              <Input
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: 14,
+            }}
+          >
+            <div className="ed-field">
+              <label className="label" htmlFor="pass1Model">
+                Pass 1 model (reasoning)
+              </label>
+              <input
                 id="pass1Model"
+                className="ed-input mono"
                 value={draft.pass1Model}
                 onChange={(e) =>
                   setDraft((prev) => ({ ...prev, pass1Model: e.target.value }))
@@ -411,10 +507,13 @@ export function ProviderSettingsModal({
                 autoComplete="off"
               />
             </div>
-            <div>
-              <Label htmlFor="pass2Model">Pass 2 model (structuring)</Label>
-              <Input
+            <div className="ed-field">
+              <label className="label" htmlFor="pass2Model">
+                Pass 2 model (structuring)
+              </label>
+              <input
                 id="pass2Model"
+                className="ed-input mono"
                 value={draft.pass2Model}
                 onChange={(e) =>
                   setDraft((prev) => ({ ...prev, pass2Model: e.target.value }))
@@ -431,25 +530,43 @@ export function ProviderSettingsModal({
             ))}
           </datalist>
 
-          <div className="rounded-xl border border-border bg-background/60 px-3.5 py-3 text-xs leading-relaxed text-text-secondary">
+          <p
+            style={{
+              fontSize: 12.5,
+              lineHeight: 1.65,
+              color: "var(--ink-2)",
+              fontStyle: "italic",
+              fontFamily: "var(--serif)",
+              borderTop: "1px solid var(--hair-soft)",
+              paddingTop: 14,
+            }}
+          >
             Key is stored only in this browser. On analyze, it is proxied once
             through BreakItFirst to your provider — never written to a database.
             API key can be empty for local Ollama.
-          </div>
+          </p>
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-border px-5 py-4">
-          <Button type="button" variant="ghost" size="sm" onClick={handleClear}>
+        <div className="modal-foot">
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={handleClear}
+            style={{ marginRight: "auto" }}
+          >
             Clear
-          </Button>
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleSave} disabled={!ready}>
-              Save
-            </Button>
-          </div>
+          </button>
+          <button type="button" className="btn-ghost" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn-solid"
+            onClick={handleSave}
+            disabled={!ready}
+          >
+            Save
+          </button>
         </div>
       </div>
     </div>

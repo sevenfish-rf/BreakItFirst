@@ -13,9 +13,9 @@ const ARCHETYPE_NAME = Object.fromEntries(
 function verdictStyle(v: StressVerdict): string {
   switch (v) {
     case "Yes":
-      return "border-accent/40 bg-accent/15 text-accent";
+      return "border-accent/40 bg-accent-soft text-accent";
     case "Maybe":
-      return "border-warning/40 bg-warning/12 text-warning";
+      return "border-warning/40 bg-warning/10 text-warning";
     case "No":
       return "border-healthy/35 bg-healthy/10 text-healthy";
     default:
@@ -65,13 +65,13 @@ export function StressTestPanel({ items }: StressTestPanelProps) {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.04 + i * 0.03 }}
-            className="flex h-full flex-col rounded-xl border border-border/70 bg-background/40 px-3.5 py-3"
+            className="paper-card paper-card-interactive flex h-full flex-col px-3.5 py-3"
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium text-text">{name}</span>
               <span
                 className={cn(
-                  "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                  "rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em]",
                   verdictStyle(item.verdict),
                 )}
               >
