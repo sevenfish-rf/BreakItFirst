@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 import { Header } from "@/components/header";
 import { LandingMetrics } from "@/components/landing-metrics";
+import { LandingSpine } from "@/components/landing-spine";
 import { SiteFooter } from "@/components/site-footer";
 import { ScrollChoreography } from "@/components/scroll-choreography";
 import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
@@ -171,37 +172,8 @@ function LandingInner() {
           </div>
         </section>
 
-        {/* ── 03 · Anatomy ─────────────────────────────────────── */}
-        <section className="lp-sec">
-          <div className="wrap">
-            <LpSecHead no={c.anatomy.no} title={c.anatomy.title} />
-            <p className="lp-intro reveal">{c.anatomy.intro}</p>
-
-            <div className="lp-anatomy">
-              <figure className="lp-fig reveal">
-                <ReportFacsimile />
-                <figcaption className="lp-figcap">
-                  {c.anatomy.figCaption}
-                </figcaption>
-              </figure>
-
-              <ol className="lp-blocks reveal">
-                {c.anatomy.blocks.map((b, i) => (
-                  <li key={b.name}>
-                    <span className="lp-block-n">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <b>{b.name}</b>
-                      <span>{b.detail}</span>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <p className="lp-anatomy-note reveal">{c.anatomy.note}</p>
-          </div>
-        </section>
+        {/* ── Causal spine (self-contained, safe to remove) ────── */}
+        <LandingSpine />
 
         {/* ── Metrics band (unnumbered — self-contained, safe to remove) ── */}
         <LandingMetrics />
@@ -399,106 +371,5 @@ function PassGlyph({ index }: { index: number }) {
       <path d="M24 3 H29 V19 H24" className="g-sig" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M13 8 H21 M13 14 H21" className="g-mut" strokeWidth="1.3" strokeLinecap="round" />
     </svg>
-  );
-}
-
-/* ================================================================
-   Fig. 03 — reduced facsimile of a report page, pure CSS shapes.
-   Numbered markers correspond to the block list beside it.
-   ================================================================ */
-function ReportFacsimile() {
-  return (
-    <div className="lp-mock" aria-hidden="true">
-      {/* 1 · summary masthead */}
-      <div className="lpm-row">
-        <span className="lpm-marker">1</span>
-        <div className="lpm-body lpm-mast">
-          <i className="lpm-kick" />
-          <i className="lpm-line w80" />
-          <i className="lpm-line w55" />
-        </div>
-      </div>
-      {/* 2 · assumptions */}
-      <div className="lpm-row">
-        <span className="lpm-marker">2</span>
-        <div className="lpm-body lpm-assump">
-          {[0, 1, 2, 3].map((i) => (
-            <i key={i} className="lpm-line thin" />
-          ))}
-        </div>
-      </div>
-      {/* 3 · SPOF card */}
-      <div className="lpm-row">
-        <span className="lpm-marker on">3</span>
-        <div className="lpm-body lpm-spof">
-          <i className="lpm-line serif w70" />
-          <i className="lpm-line thin w90" />
-        </div>
-      </div>
-      {/* 4 · cascade */}
-      <div className="lpm-row">
-        <span className="lpm-marker">4</span>
-        <div className="lpm-body lpm-cascade">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="lpm-cstep">
-              <i className="lpm-dot" />
-              <i className="lpm-line thin" style={{ width: `${72 - i * 9}%` }} />
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* 5 · modes grid */}
-      <div className="lpm-row">
-        <span className="lpm-marker">5</span>
-        <div className="lpm-body lpm-modes">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <i key={i} className="lpm-cell" />
-          ))}
-        </div>
-      </div>
-      {/* 6 · likelihood band */}
-      <div className="lpm-row">
-        <span className="lpm-marker">6</span>
-        <div className="lpm-body">
-          <div className="lpm-band">
-            <i className="lpm-band-dot" />
-          </div>
-        </div>
-      </div>
-      {/* 7 · resilience bars */}
-      <div className="lpm-row">
-        <span className="lpm-marker">7</span>
-        <div className="lpm-body lpm-bars">
-          {[62, 38, 78].map((w, i) => (
-            <div key={i} className="lpm-bar">
-              <i style={{ width: `${w}%` }} className={w < 50 ? "low" : ""} />
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* 8 · stress cards */}
-      <div className="lpm-row">
-        <span className="lpm-marker">8</span>
-        <div className="lpm-body lpm-stress">
-          <i className="lpm-cell" />
-          <i className="lpm-cell" />
-          <i className="lpm-cell" />
-          <i className="lpm-cell" />
-        </div>
-      </div>
-      {/* 9 · velocity dial */}
-      <div className="lpm-row">
-        <span className="lpm-marker">9</span>
-        <div className="lpm-body lpm-velo-row">
-          <span className="lpm-velo">
-            <svg viewBox="0 0 40 24" fill="none">
-              <path d="M4 21 A16 16 0 0 1 36 21" className="lpm-velo-track" strokeWidth="3" />
-              <path d="M4 21 A16 16 0 0 1 29 7.5" className="lpm-velo-arc" strokeWidth="3" strokeLinecap="round" />
-            </svg>
-          </span>
-          <i className="lpm-line thin w55" />
-        </div>
-      </div>
-    </div>
   );
 }

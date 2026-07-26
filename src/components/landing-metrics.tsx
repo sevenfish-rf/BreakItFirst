@@ -198,7 +198,9 @@ export function LandingMetrics() {
   return (
     <section className={s.band} aria-labelledby="metrics-title">
       <div className="wrap">
-        <div className={s.head}>
+        {/* .reveal is the page-level scroll choreography (see ScrollChoreography);
+            harmless if this section is deleted, since nothing else references it */}
+        <div className={`${s.head} reveal`}>
           <span className={s.eyebrow}>
             <i aria-hidden="true" />
             {c.eyebrow}
@@ -209,7 +211,12 @@ export function LandingMetrics() {
           <p className={s.sub}>{c.sub}</p>
         </div>
 
-        <div className={s.tabs} role="tablist" aria-label={c.eyebrow}>
+        <div
+          className={`${s.tabs} reveal`}
+          data-delay="1"
+          role="tablist"
+          aria-label={c.eyebrow}
+        >
           {c.tabs.map((tab, i) => {
             const on = tab.id === activeId;
             return (
@@ -239,7 +246,8 @@ export function LandingMetrics() {
         </div>
 
         <div
-          className={s.stats}
+          className={`${s.stats} reveal`}
+          data-delay="2"
           role="tabpanel"
           id={`metrics-panel-${active.id}`}
         >
@@ -259,7 +267,7 @@ export function LandingMetrics() {
           ))}
         </div>
 
-        <div className={s.foot}>
+        <div className={`${s.foot} reveal`} data-delay="3">
           <h3 className={s.footTitle}>{c.footTitle}</h3>
           <p className={s.footText}>{c.footText}</p>
         </div>

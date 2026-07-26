@@ -42,14 +42,6 @@ export type LandingCopy = {
     guard: string;
     deepNote: string;
   };
-  anatomy: {
-    no: string;
-    title: string;
-    intro: string;
-    figCaption: string;
-    blocks: { name: string; detail: string }[];
-    note: string;
-  };
   audience: {
     no: string;
     title: string;
@@ -137,52 +129,6 @@ const en: LandingCopy = {
       "Name-swappable risks — ones that fit a hundred startups — are treated as defects and rewritten. So is invent-then-attack: the engine may not fabricate an architecture just to break it.",
     deepNote:
       "Deep mode runs the reasoning pass twice, independently, and reports whether both runs converge on the same point of failure.",
-  },
-  anatomy: {
-    no: "03",
-    title: "One argument. Nine instruments.",
-    intro:
-      "Every block in the report examines the same failure path from a different angle — a spine with instruments, not a list of disconnected risks.",
-    figCaption: "Fig. 03 — Report anatomy, reduced facsimile.",
-    blocks: [
-      {
-        name: "Summary",
-        detail: "Proof the engine understood your idea before attacking it",
-      },
-      {
-        name: "Hidden assumptions",
-        detail: "5–10 silent conditions your idea needs to be true",
-      },
-      {
-        name: "Single point of failure",
-        detail: "The most fragile hinge — one, not five",
-      },
-      {
-        name: "Failure cascade",
-        detail: "7–12 causal steps, each with an observable real-world signal",
-      },
-      {
-        name: "Failure modes",
-        detail: "The same spine viewed across technical, business, security, legal, operations",
-      },
-      {
-        name: "Pathway likelihood",
-        detail: "Chance this path materializes — not overall odds of failure",
-      },
-      {
-        name: "Resilience score",
-        detail: "Five axes, 0–100 — never collapsed into one vanity number",
-      },
-      {
-        name: "Archetype stress test",
-        detail: "Known failure patterns, each answered Yes / Maybe / No",
-      },
-      {
-        name: "Failure velocity",
-        detail: "How fast this particular path tends to unfold",
-      },
-    ],
-    note: "Reports render in English or Indonesian, and export to Markdown.",
   },
   audience: {
     no: "04",
@@ -289,52 +235,6 @@ const id: LandingCopy = {
       "Risiko yang bisa ditukar-nama — yang cocok untuk seratus startup — dianggap cacat dan ditulis ulang. Begitu juga invent-then-attack: mesin dilarang mengarang arsitektur hanya untuk menyerangnya.",
     deepNote:
       "Mode Deep menjalankan tahap penalaran dua kali secara independen, lalu melaporkan apakah keduanya menunjuk titik gagal yang sama.",
-  },
-  anatomy: {
-    no: "03",
-    title: "Satu argumen. Sembilan instrumen.",
-    intro:
-      "Setiap blok laporan memeriksa jalur kegagalan yang sama dari sudut berbeda — satu spine dengan instrumen, bukan daftar risiko yang saling lepas.",
-    figCaption: "Gbr. 03 — Anatomi laporan, faksimile diperkecil.",
-    blocks: [
-      {
-        name: "Ringkasan",
-        detail: "Bukti mesin memahami idemu sebelum menyerangnya",
-      },
-      {
-        name: "Asumsi tersembunyi",
-        detail: "5–10 kondisi diam-diam yang harus benar untuk idemu",
-      },
-      {
-        name: "Single point of failure",
-        detail: "Engsel paling rapuh — satu, bukan lima",
-      },
-      {
-        name: "Rantai kegagalan",
-        detail: "7–12 langkah kausal, tiap langkah punya sinyal dunia nyata",
-      },
-      {
-        name: "Mode kegagalan",
-        detail: "Spine yang sama dilihat lintas teknis, bisnis, keamanan, hukum, operasional",
-      },
-      {
-        name: "Kemungkinan jalur",
-        detail: "Peluang jalur ini terjadi — bukan peluang total kegagalan",
-      },
-      {
-        name: "Skor ketahanan",
-        detail: "Lima sumbu, 0–100 — tidak pernah digabung jadi satu angka vanity",
-      },
-      {
-        name: "Stress test arketipe",
-        detail: "Pola kegagalan yang dikenal, dijawab Ya / Mungkin / Tidak",
-      },
-      {
-        name: "Kecepatan kegagalan",
-        detail: "Seberapa cepat jalur khusus ini cenderung terjadi",
-      },
-    ],
-    note: "Laporan tersedia dalam bahasa Inggris atau Indonesia, dan bisa diekspor ke Markdown.",
   },
   audience: {
     no: "04",

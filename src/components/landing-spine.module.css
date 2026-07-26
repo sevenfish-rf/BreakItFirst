@@ -1,0 +1,491 @@
+/* ============================================================
+   Landing — "Anatomy of one argument" causal spine.
+   Self-contained: this file + landing-spine.tsx are the whole
+   section. Colours and type come from the global Editorial
+   Analyst tokens; nothing here sets a global style.
+   ============================================================ */
+
+.spine {
+  padding-top: clamp(48px, 7vw, 92px);
+}
+
+/* ---------- heading ---------- */
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+  padding: 22px 0 clamp(34px, 4.5vw, 52px);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 14px;
+  border: 1px solid color-mix(in srgb, var(--signal) 24%, transparent);
+  background: var(--signal-wash);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--signal);
+}
+
+.eyebrow i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--signal);
+  flex: none;
+}
+
+.title {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.12;
+  letter-spacing: -.02em;
+  font-variation-settings: "opsz" 100;
+  color: var(--ink);
+  max-width: 22ch;
+}
+
+.accent {
+  display: block;
+  font-style: italic;
+  font-weight: 420;
+  background-image: linear-gradient(99deg, var(--signal) 0%, var(--signal-deep) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sub {
+  font-size: clamp(14px, 1.5vw, 15.5px);
+  line-height: 1.65;
+  color: var(--ink-2);
+  max-width: 66ch;
+}
+
+/* ---------- connector tree ---------- */
+.tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--signal);
+  box-shadow: 0 0 0 4px var(--signal-wash);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 12.5px;
+  color: var(--signal);
+  font-feature-settings: "tnum";
+  position: relative;
+  z-index: 2;
+}
+
+.line {
+  position: relative;
+  width: 1px;
+  height: 46px;
+  flex: none;
+}
+
+.lineShort { height: 34px; }
+
+.lineTrack,
+.lineLive {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.lineTrack { background: var(--hair); }
+
+.lineLive {
+  background: var(--signal);
+  transform-origin: top;
+}
+
+/* rail spans the centre of the first branch column to the centre of the last */
+.fork {
+  position: relative;
+  width: 100%;
+  height: 1px;
+}
+
+.forkTrack,
+.forkLive {
+  position: absolute;
+  top: 0;
+  left: 16.667%;
+  right: 16.667%;
+  height: 1px;
+  display: block;
+}
+
+.forkTrack { background: var(--hair); }
+.forkLive { background: var(--signal); }
+
+/* ---------- the hinge (flagship) ---------- */
+.hinge {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 0;
+  background: var(--bg-raised);
+  border: 1px solid var(--hair);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow .35s var(--ease), border-color .35s var(--ease),
+    background .45s var(--ease);
+}
+
+.hinge:hover {
+  border-color: color-mix(in srgb, var(--signal) 35%, var(--hair));
+  box-shadow: var(--shadow-pop);
+}
+
+.hingeCopy {
+  padding: clamp(26px, 3.4vw, 44px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(140deg, var(--signal-wash) 0%, transparent 62%);
+}
+
+.pill {
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--signal);
+  border: 1px solid color-mix(in srgb, var(--signal) 30%, transparent);
+  border-radius: 5px;
+  padding: 4px 9px;
+}
+
+.hingeTitle {
+  font-family: var(--serif);
+  font-weight: 550;
+  font-size: clamp(21px, 2.4vw, 28px);
+  letter-spacing: -.015em;
+  line-height: 1.18;
+  color: var(--ink);
+}
+
+.hingeBody {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+}
+
+/* ---------- specimen panel ---------- */
+.specimen {
+  padding: clamp(20px, 2.6vw, 30px);
+  background: var(--bg-inset);
+  border-left: 1px solid var(--hair);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+}
+
+.specimenCard {
+  position: relative;
+  background: var(--bg-raised);
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.specimenCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, var(--signal), var(--signal-deep));
+}
+
+.specimenHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--hair-soft);
+}
+
+.specimenLabel {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.specimenChip {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--bg-inset);
+  border: 1px solid var(--hair);
+  border-radius: 5px;
+  padding: 3px 8px;
+}
+
+.specimenBody { padding: 14px 16px 16px; }
+
+.specimenIdea {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  border-left: 2px solid var(--hair);
+  padding-left: 11px;
+  margin-bottom: 14px;
+}
+
+.specimenSpof {
+  font-family: var(--serif);
+  font-weight: 550;
+  font-size: clamp(16px, 1.9vw, 21px);
+  line-height: 1.25;
+  letter-spacing: -.012em;
+  color: var(--ink);
+  font-variation-settings: "opsz" 40;
+}
+
+/* the marker the report itself uses on a SPOF statement */
+.specimenSpof span {
+  background: linear-gradient(transparent 64%, var(--signal-wash-2) 64%);
+  padding: 0 .06em;
+}
+
+.specimenFoot {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-top: 14px;
+  padding-top: 11px;
+  border-top: 1px solid var(--hair-soft);
+}
+
+.specimenKey {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.specimenVal {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--signal);
+}
+
+.specimenCaption {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+/* ---------- branches ---------- */
+.branches {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: start;
+}
+
+.branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 clamp(6px, 1vw, 12px);
+}
+
+.card {
+  width: 100%;
+  margin-top: 20px;
+  background: var(--bg-raised);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease),
+    border-color .3s var(--ease), background .45s var(--ease);
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--signal) 30%, var(--hair));
+  box-shadow: var(--shadow-card);
+}
+
+.cardCopy {
+  padding: 22px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cardTitle {
+  font-family: var(--serif);
+  font-weight: 550;
+  font-size: 18px;
+  letter-spacing: -.012em;
+  color: var(--ink);
+}
+
+.cardBody {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* ---------- in-card figures ---------- */
+.fig {
+  margin: 0 18px 18px;
+  padding: 15px 15px 14px;
+  background: var(--bg-inset);
+  border: 1px solid var(--hair-soft);
+  border-radius: 11px;
+}
+
+/* cascade chain */
+.chain { list-style: none; }
+
+.chain li {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding-bottom: 11px;
+}
+
+.chain li:last-child { padding-bottom: 0; }
+
+.chainDot {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
+  border: 1px solid var(--signal);
+  background: var(--bg-inset);
+}
+
+.chain li:last-child .chainDot { background: var(--signal); }
+
+.chainRail {
+  position: absolute;
+  left: 3px;
+  top: 12px;
+  bottom: 0;
+  width: 1px;
+  background: var(--hair);
+}
+
+.chainText {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* failure-mode domains */
+.domains { list-style: none; display: flex; flex-direction: column; }
+
+.domains li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hair-soft);
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
+.domains li:last-child { border-bottom: none; }
+
+.domainTick {
+  flex: none;
+  width: 9px;
+  height: 1.5px;
+  background: var(--signal);
+}
+
+/* archetype patterns */
+.patterns { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+
+.patterns li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.patternRing {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--ink-3);
+}
+
+.patternName {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .01em;
+  color: var(--ink-2);
+}
+
+.patternNote {
+  margin-top: 11px;
+  padding-top: 9px;
+  border-top: 1px solid var(--hair);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 920px) {
+  .hinge { grid-template-columns: 1fr; }
+  .specimen {
+    border-left: none;
+    border-top: 1px solid var(--hair);
+  }
+  /* a fork needs three columns to fork into */
+  .fork { display: none; }
+  .branches { grid-template-columns: 1fr; }
+  .branch { padding: 0; }
+}
+
+@media (max-width: 640px) {
+  .title { max-width: 100%; }
+  .fig { margin: 0 14px 14px; }
+  .cardCopy { padding: 18px 18px 15px; }
+}

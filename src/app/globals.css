@@ -1006,88 +1006,6 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
 .lp-note:first-child{ border-left-color:var(--signal); }
 .lp-note p{ font-size:13.5px; line-height:1.6; color:var(--ink-2); }
 
-/* 03 — anatomy */
-.lp-anatomy{
-  display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
-  gap:clamp(28px,5vw,64px); align-items:start;
-}
-.lp-blocks{ list-style:none; counter-reset:none; display:flex; flex-direction:column; }
-.lp-blocks li{
-  display:flex; gap:16px; align-items:baseline;
-  padding:12px 0; border-bottom:1px solid var(--hair-soft);
-}
-.lp-blocks li:first-child{ padding-top:2px; }
-.lp-block-n{
-  font-family:var(--serif); font-style:italic; font-size:13px; color:var(--signal);
-  font-feature-settings:"tnum"; flex:none;
-}
-.lp-blocks b{ display:block; font-size:14px; font-weight:600; letter-spacing:-.003em; }
-.lp-blocks li span:not(.lp-block-n){ font-size:12.5px; color:var(--ink-3); line-height:1.5; }
-.lp-anatomy-note{
-  margin-top:18px; font-family:var(--serif); font-style:italic;
-  font-size:13px; color:var(--ink-3);
-}
-
-/* Fig. 03 — report facsimile */
-.lp-mock{
-  background:var(--bg-raised); border:1px solid var(--hair); border-radius:14px;
-  box-shadow:var(--shadow-card);
-  padding:22px 20px; display:flex; flex-direction:column; gap:13px;
-  transition:background .45s var(--ease), border-color .45s var(--ease);
-}
-.lpm-row{ display:flex; gap:12px; align-items:flex-start; }
-.lpm-marker{
-  flex:none; width:18px; height:18px; border-radius:50%;
-  border:1px solid var(--hair); color:var(--ink-3);
-  font-family:var(--serif); font-style:italic; font-size:10px;
-  display:flex; align-items:center; justify-content:center;
-  font-feature-settings:"tnum"; margin-top:1px;
-}
-.lpm-marker.on{ border-color:var(--signal); color:var(--signal); box-shadow:0 0 0 3px var(--signal-wash); }
-.lpm-body{ flex:1; min-width:0; }
-.lp-mock i{ display:block; }
-.lpm-kick{ width:34px; height:3px; background:var(--signal); border-radius:2px; margin-bottom:7px; }
-.lpm-line{ height:6px; border-radius:3px; background:var(--hair); margin-bottom:6px; }
-.lpm-line:last-child{ margin-bottom:0; }
-.lpm-line.thin{ height:4px; background:var(--hair-soft); }
-.lpm-line.serif{ height:9px; background:var(--ink-3); opacity:.5; }
-.lpm-line.w55{ width:55%; } .lpm-line.w70{ width:70%; } .lpm-line.w80{ width:80%; } .lpm-line.w90{ width:90%; }
-.lpm-assump{ display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; }
-.lpm-assump .lpm-line{ margin:0; }
-.lpm-spof{
-  border:1px solid var(--hair); border-top:2.5px solid var(--signal);
-  border-radius:8px; padding:11px 12px 12px;
-  background:var(--bg);
-}
-.lpm-cascade{ display:flex; flex-direction:column; gap:7px; }
-.lpm-cstep{ display:flex; align-items:center; gap:9px; }
-.lpm-cstep .lpm-line{ margin:0; }
-.lpm-dot{ width:8px; height:8px; border-radius:50%; border:1px solid var(--signal); flex:none; }
-.lpm-cstep:last-child .lpm-dot{ background:var(--signal); }
-.lpm-modes{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
-.lpm-cell{ height:26px; border:1px solid var(--hair-soft); border-radius:5px; background:var(--bg); }
-.lpm-band{
-  position:relative; height:5px; border-radius:99px; margin:8px 0 4px;
-  background:linear-gradient(90deg, var(--hair-soft), var(--signal-wash-2));
-}
-.lpm-band-dot{
-  position:absolute; top:50%; left:78%; transform:translate(-50%,-50%);
-  width:11px; height:11px; border-radius:50%;
-  background:var(--signal); border:2.5px solid var(--bg-raised);
-  box-shadow:0 0 0 1px var(--hair);
-}
-.lpm-bars{ display:flex; flex-direction:column; gap:6px; }
-.lpm-bar{ height:4px; border-radius:99px; background:var(--hair-soft); position:relative; }
-.lpm-bar i{ position:absolute; inset:0 auto 0 0; border-radius:99px; background:var(--ink-3); }
-.lpm-bar i.low{ background:var(--signal); }
-.lpm-stress{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
-.lpm-velo-row{ display:flex; align-items:center; gap:12px; }
-.lpm-velo-row .lpm-line{ margin:0; }
-.lpm-velo{ display:block; width:42px; flex:none; }
-.lpm-velo svg{ display:block; width:100%; height:auto; }
-.lpm-velo-track{ stroke:var(--hair); }
-.lpm-velo-arc{ stroke:var(--signal); }
-
 /* 04 — audience cards */
 .lp-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
 .lp-card{
@@ -1134,8 +1052,6 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
   .lp-passes{ grid-template-columns:1fr; }
   .lp-pass-arrow{ display:none; }
   .lp-method-notes{ grid-template-columns:1fr; }
-  .lp-anatomy{ grid-template-columns:1fr; }
-  .lp-mock{ max-width:440px; }
   .lp-cards{ grid-template-columns:1fr; }
   .lp-manifest-head,.lp-manifest-row{ grid-template-columns:1fr; gap:10px; }
   .lp-manifest-head .label:last-child{ display:none; }
