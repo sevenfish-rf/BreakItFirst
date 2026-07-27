@@ -1,0 +1,302 @@
+/* ================================================================
+   Header Dynamic Island — CSS Module (Zero-Jiggle & Pixel-Perfect)
+   ================================================================ */
+
+.islandWrapper {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+  width: auto;
+  max-width: calc(100vw - 32px);
+}
+
+.island {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: color-mix(in srgb, var(--bg-raised) 88%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid color-mix(in srgb, var(--hair) 75%, var(--ink-3) 25%);
+  border-radius: 9999px;
+  padding: 8px 20px 8px 16px;
+  box-shadow:
+    0 8px 32px -6px rgba(0, 0, 0, 0.16),
+    0 0 0 1px color-mix(in srgb, var(--bg-raised) 60%, transparent);
+  transition:
+    background 0.35s var(--ease),
+    border-color 0.35s var(--ease),
+    box-shadow 0.35s var(--ease);
+}
+
+.island[data-compact="true"] {
+  padding: 7px 16px 7px 14px;
+  gap: 12px;
+  background: color-mix(in srgb, var(--bg-raised) 94%, transparent);
+  box-shadow:
+    0 10px 30px -4px rgba(0, 0, 0, 0.22),
+    0 0 0 1px color-mix(in srgb, var(--hair) 70%, transparent);
+}
+
+/* Brand */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.brandMark {
+  display: block;
+  flex: none;
+  transition: transform 0.3s var(--ease);
+}
+.brandMark path:first-child {
+  stroke: var(--ink);
+  transition: stroke 0.35s var(--ease);
+}
+.brandMark path:last-child {
+  stroke: var(--signal);
+  transition: stroke 0.35s var(--ease);
+}
+
+.brand:hover .brandMark {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+.brandName {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1;
+  color: var(--ink);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Sub-caption: GPU-native CSS transition */
+.brandTag {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+  border-left: 1px solid var(--hair);
+  padding-left: 10px;
+  margin-left: 2px;
+  white-space: nowrap;
+  max-width: 180px;
+  opacity: 1;
+  overflow: hidden;
+  transition:
+    max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s var(--ease),
+    padding 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    margin 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.island[data-compact="true"] .brandTag {
+  max-width: 0;
+  opacity: 0;
+  padding-left: 0;
+  margin-left: 0;
+  border-left-color: transparent;
+}
+
+/* Nav Links - 100% Horizontal Sliding Pill Container */
+.navLinks {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-inset);
+  padding: 3px;
+  border-radius: 9999px;
+  border: 1px solid var(--hair-soft);
+  width: 156px; /* Exact container width for equal Home and App tabs */
+}
+
+.navLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--ink-3);
+  text-decoration: none;
+  width: 50%;
+  height: 28px;
+  border-radius: 9999px;
+  transition: color 0.2s var(--ease);
+  z-index: 1;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.navLink:hover {
+  color: var(--ink);
+}
+
+.navLink[data-active="true"] {
+  color: var(--ink);
+}
+
+/* Horizontal sliding pill background */
+.navActivePill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 4px);
+  background: var(--bg-raised);
+  border-radius: 9999px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--hair);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Divider */
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--hair);
+  flex-shrink: 0;
+}
+
+/* Status Pill */
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--ink-2);
+  border: 1px solid var(--hair);
+  border-radius: 9999px;
+  padding: 5px 12px 5px 10px;
+  background: var(--bg-inset);
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+  white-space: nowrap;
+}
+
+.statusPill:hover {
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--calm);
+  box-shadow: 0 0 0 3px var(--calm-wash);
+  animation: pulseDot 3s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.statusPill[data-off="true"] .statusDot {
+  background: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-wash);
+}
+
+.statusText {
+  display: inline-block;
+  white-space: nowrap;
+  max-width: 140px;
+  opacity: 1;
+  overflow: hidden;
+  transition:
+    max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s var(--ease);
+}
+
+.island[data-compact="true"] .statusText {
+  max-width: 0;
+  opacity: 0;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Right Controls */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 1px solid var(--hair);
+  background: var(--bg-inset);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  flex-shrink: 0;
+}
+
+.iconBtn:hover {
+  color: var(--ink);
+  border-color: var(--ink-3);
+  background: var(--bg-raised);
+  transform: translateY(-1px);
+}
+
+.iconBtn:active {
+  transform: translateY(0);
+}
+
+.langToggle {
+  display: inline-flex;
+  border: 1px solid var(--hair);
+  border-radius: 9999px;
+  background: var(--bg-inset);
+  padding: 3px;
+}
+
+.langOpt {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 550;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  transition: all 0.2s var(--ease);
+}
+
+.langOpt[data-active="true"] {
+  color: var(--ink);
+  background: var(--bg-raised);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .brandTag {
+    display: none !important;
+  }
+  .statusText {
+    display: none !important;
+  }
+}
