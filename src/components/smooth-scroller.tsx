@@ -6,21 +6,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { useGSAP } from "@gsap/react";
 
-/**
- * GSAP ScrollSmoother wrapper.
- *
- * Adds a smooth-scrolling effect to the entire page using GSAP's native-scroll
- * approach (no fake scrollbars, no touch/pointer hijacking).
- *
- * Usage: wrap page content inside this component. Fixed/sticky elements
- * (e.g. the navigation bar) should be placed **outside** this wrapper
- * since ScrollSmoother translates the content div.
- *
- * Note: ScrollSmoother is a GSAP Club plugin. The npm `gsap` package
- * includes a trial that works on localhost. For production, install
- * `@gsap/shockingly` with a Club GSAP license.
- */
-
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 }
@@ -31,23 +16,43 @@ export function SmoothScroller({ children }: { children: ReactNode }) {
 
   useGSAP(
     () => {
-      // Disable on touch devices for better native UX
+      // Disable on touch devices for better native mobile scrolling
       if (ScrollTrigger.isTouch === 1) return;
 
-      ScrollSmoother.create({
+      // Disable lagSmoothing so GSAP doesn't skip frames during scroll interpolation
+      gsap.ticker.lagSmoothing(0);
+
+      const smoother = ScrollSmoother.create({
         wrapper: wrapperRef.current!,
         content: contentRef.current!,
-        smooth: 1.2,
+        smooth: 1.2, // Returned to 1.2s while keeping 60fps GPU acceleration
         effects: true,
         smoothTouch: false,
+        normalizeScroll: true,
       });
+
+      return () => {
+        smoother.kill();
+      };
     },
     { scope: wrapperRef },
   );
 
   return (
-    <div id="smooth-wrapper" ref={wrapperRef}>
-      <div id="smooth-content" ref={contentRef}>
+    <div
+      id="smooth-wrapper"
+      ref={wrapperRef}
+      style={{ overflow: "hidden", position: "fixed", width: "100%", height: "100%" }}
+    >
+      <div
+        id="smooth-content"
+        ref={contentRef}
+        style={{
+          willChange: "transform",
+          transform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+        }}
+      >
         {children}
       </div>
     </div>
