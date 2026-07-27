@@ -14,10 +14,12 @@
     "smoke:session": "tsx --tsconfig tsconfig.json scripts/smoke-session-resilience.ts"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@xyflow/react": "^12.11.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
+    "gsap": "^3.15.0",
     "lucide-react": "^1.24.0",
     "next": "16.2.10",
     "postprocessing": "^6.39.2",

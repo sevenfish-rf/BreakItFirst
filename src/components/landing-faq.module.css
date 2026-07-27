@@ -1,0 +1,128 @@
+/* ================================================================
+   LandingFaq — self-contained CSS module.
+   Themed via the BreakItFirst design-system CSS variables.
+   ================================================================ */
+
+/* ── Section ────────────────────────────────────────────────────── */
+.section {
+  background: var(--bg-inset);
+  padding: clamp(64px, 9vw, 120px) 0;
+  margin-top: clamp(48px, 7vw, 92px);
+  transition: background 0.45s var(--ease);
+}
+
+/* ── Left column ────────────────────────────────────────────────── */
+.headline {
+  font-family: var(--serif);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: clamp(28px, 4.2vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin-bottom: 16px;
+  font-variation-settings: "opsz" 100;
+}
+.headDim {
+  color: var(--ink-3);
+}
+.sub {
+  font-family: var(--serif);
+  color: var(--ink-2);
+  font-size: clamp(14px, 1.4vw, 15.5px);
+  font-style: italic;
+  font-weight: 420;
+  line-height: 1.55;
+  margin-bottom: 28px;
+  max-width: 32ch;
+  font-variation-settings: "opsz" 18;
+}
+
+/* ── Accordion card ─────────────────────────────────────────────── */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+.card:hover {
+  border-color: color-mix(in srgb, var(--ink-3) 55%, var(--hair));
+  background: var(--bg-raised);
+}
+.card[data-open="true"] {
+  border-color: color-mix(in srgb, var(--ink-3) 55%, var(--hair));
+  background: var(--bg-raised);
+}
+
+/* ── Trigger button ─────────────────────────────────────────────── */
+.trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+.trigger:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: -2px;
+  border-radius: 14px;
+}
+.question {
+  font-family: var(--serif);
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 15.5px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  font-variation-settings: "opsz" 24;
+}
+
+/* ── Chevron ────────────────────────────────────────────────────── */
+.chevron {
+  flex-shrink: 0;
+  margin-left: 1rem;
+  color: var(--ink-3);
+  opacity: 0.7;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+.card[data-open="true"] .chevron {
+  color: var(--ink);
+  opacity: 1;
+}
+.card:hover .chevron {
+  opacity: 1;
+}
+
+/* ── Answer panel ───────────────────────────────────────────────── */
+.answer {
+  padding: 0 22px 18px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Grid ───────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: start;
+}
+@media (min-width: 920px) {
+  .grid {
+    grid-template-columns: 5fr 7fr;
+    gap: clamp(40px, 5vw, 72px);
+  }
+}
+
+/* ── Accordion stack ────────────────────────────────────────────── */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

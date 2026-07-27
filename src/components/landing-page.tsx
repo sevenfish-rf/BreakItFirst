@@ -6,6 +6,8 @@ import { Header } from "@/components/header";
 import { LandingMetrics } from "@/components/landing-metrics";
 import { LandingSpine } from "@/components/landing-spine";
 import { LandingFooter } from "@/components/landing-footer";
+import { LandingFaq } from "@/components/landing-faq";
+import { SmoothScroller } from "@/components/smooth-scroller";
 import { ScrollChoreography } from "@/components/scroll-choreography";
 import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
 import { ThemeProvider } from "@/lib/theme-context";
@@ -37,7 +39,8 @@ function LandingInner() {
     <>
       <Header />
 
-      <main>
+      <SmoothScroller>
+        <main>
         {/* ── Hero ─────────────────────────────────────────────── */}
         <section className="lp-hero">
           <div className="wrap lp-hero-grid">
@@ -201,6 +204,9 @@ function LandingInner() {
           </div>
         </section>
 
+        {/* ── FAQ (self-contained, safe to remove) ──────────────── */}
+        <LandingFaq />
+
         {/* ── Final CTA ────────────────────────────────────────── */}
         <section className="lp-final">
           <div className="wrap lp-final-inner reveal">
@@ -229,6 +235,7 @@ function LandingInner() {
       </main>
 
       <LandingFooter />
+      </SmoothScroller>
       <ScrollChoreography viewKey="landing-marketing" />
     </>
   );
