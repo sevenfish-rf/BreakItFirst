@@ -54,11 +54,11 @@ const COPY: Record<Locale, SpineCopy> = {
     eyebrow: "Anatomy of one argument",
     title: "Everything in the report hangs off",
     titleAccent: "one hinge.",
-    sub: "The engine does not hand back a risk list. It names the single most fragile mechanism, then traces what follows from it. Everything quoted below is output from a recorded run.",
+    sub: "Not a risk list. One fragile mechanism, then everything that follows from it — quoted from a recorded run.",
     hinge: {
       pill: "The hinge",
       title: "Single point of failure",
-      body: "One dominant mechanism, ranked from several candidates the engine drafts and discards internally. The test it has to pass: if this point could not fail, would the cascade still run? If it would, the hinge is wrong and gets rewritten.",
+      body: "One dominant mechanism, picked from candidates the engine drafts and discards. Its test: if this point could not fail, would the cascade still run? If yes, the hinge is wrong — rewrite.",
       specimenLabel: "Specimen",
       category: "Hardware",
       idea: "Budget fitness ring built on an OEM sensor, sold with a $5/mo recovery subscription and marketed on premium-grade heart-rate accuracy.",
@@ -71,7 +71,7 @@ const COPY: Record<Locale, SpineCopy> = {
       {
         n: "02",
         title: "Failure cascade",
-        body: "Seven to twelve causal steps from the hinge to the end state, each carrying a signal you could actually observe.",
+        body: "Seven to twelve steps from hinge to end state, each carrying a signal you could observe.",
         kind: "cascade",
         items: [
           "OEM optical sensor cannot meet the accuracy claim",
@@ -84,14 +84,14 @@ const COPY: Record<Locale, SpineCopy> = {
       {
         n: "03",
         title: "Failure modes",
-        body: "The same spine read across five domains. A domain with nothing material stays empty rather than padded with filler.",
+        body: "The same spine across five domains — left empty where nothing material exists, never padded.",
         kind: "modes",
         items: ["Technical", "Business", "Security", "Legal", "Operations"],
       },
       {
         n: "04",
         title: "Archetype stress test",
-        body: "Known collapse patterns, each answered Yes, Maybe or No against your specific idea — never a single danger score.",
+        body: "Known collapse patterns, each answered Yes, Maybe or No — never one danger score.",
         kind: "stress",
         items: [
           "Cold-start / chicken-egg",
@@ -107,11 +107,11 @@ const COPY: Record<Locale, SpineCopy> = {
     eyebrow: "Anatomi satu argumen",
     title: "Semua isi laporan bertumpu pada",
     titleAccent: "satu engsel.",
-    sub: "Mesin ini tidak mengembalikan daftar risiko. Ia menyebut satu mekanisme paling rapuh, lalu menelusuri apa yang mengikutinya. Semua yang dikutip di bawah adalah keluaran dari run yang terekam.",
+    sub: "Bukan daftar risiko. Satu mekanisme paling rapuh, lalu semua yang mengikutinya — dikutip dari run yang terekam.",
     hinge: {
       pill: "Engselnya",
       title: "Single point of failure",
-      body: "Satu mekanisme dominan, dipilih dari beberapa kandidat yang disusun dan dibuang mesin secara internal. Ujian yang harus dilewati: kalau titik ini tidak mungkin gagal, apakah cascade-nya tetap jalan? Kalau ya, engselnya salah dan ditulis ulang.",
+      body: "Satu mekanisme dominan, dipilih dari kandidat yang disusun dan dibuang mesin. Ujiannya: kalau titik ini tidak mungkin gagal, apakah cascade-nya tetap jalan? Kalau ya, engselnya salah — tulis ulang.",
       specimenLabel: "Spesimen",
       category: "Hardware",
       idea: "Cincin kebugaran murah berbasis sensor OEM, dijual dengan langganan recovery $5/bln dan dipasarkan dengan klaim akurasi detak jantung setara produk premium.",
@@ -124,7 +124,7 @@ const COPY: Record<Locale, SpineCopy> = {
       {
         n: "02",
         title: "Rantai kegagalan",
-        body: "Tujuh sampai dua belas langkah kausal dari engsel sampai kondisi akhir, tiap langkah membawa sinyal yang benar-benar bisa diamati.",
+        body: "Tujuh sampai dua belas langkah dari engsel ke kondisi akhir, tiap langkah membawa sinyal yang bisa diamati.",
         kind: "cascade",
         items: [
           "Sensor optik OEM tak sanggup memenuhi klaim akurasi",
@@ -137,14 +137,14 @@ const COPY: Record<Locale, SpineCopy> = {
       {
         n: "03",
         title: "Mode kegagalan",
-        body: "Spine yang sama dibaca lintas lima domain. Domain tanpa risiko material dibiarkan kosong, bukan diisi basa-basi.",
+        body: "Spine yang sama dibaca lintas lima domain — dibiarkan kosong kalau tak ada risiko material, bukan diisi basa-basi.",
         kind: "modes",
         items: ["Teknis", "Bisnis", "Keamanan", "Hukum", "Operasional"],
       },
       {
         n: "04",
         title: "Stress test arketipe",
-        body: "Pola keruntuhan yang dikenal, masing-masing dijawab Ya, Mungkin, atau Tidak untuk ide spesifikmu — bukan satu skor bahaya.",
+        body: "Pola keruntuhan yang dikenal, masing-masing dijawab Ya, Mungkin, atau Tidak — bukan satu skor bahaya.",
         kind: "stress",
         items: [
           "Cold-start / chicken-egg",

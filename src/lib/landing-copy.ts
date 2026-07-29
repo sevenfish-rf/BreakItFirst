@@ -63,7 +63,7 @@ const en: LandingCopy = {
   hero: {
     kicker: "Structured premortem · for unbuilt ideas",
     headline: "Every idea hides its own |fault line.|",
-    sub: "*BreakItFirst is a premortem engine for product and business ideas that don't exist yet.* Paste the idea — get one dominant failure argument: the single point of failure, and the causal cascade that follows it. Before reality runs the experiment for you.",
+    sub: "*BreakItFirst is a premortem engine for ideas that don't exist yet.* Paste the idea — get one dominant failure argument: the point that breaks, and the cascade that follows.",
     ctaPrimary: "Run a premortem",
     ctaSecondary: "See the method",
     figCaption: "Fig. 01 — Anatomy of a failure path, specimen view.",
@@ -79,7 +79,7 @@ const en: LandingCopy = {
     no: "01",
     title: "A premortem, not a pep talk.",
     intro:
-      "Most idea feedback is either encouragement or a checklist. This is neither. *The engine argues one specific way your idea collapses* — and is judged only on whether that argument is sharper than the risk you already feared.",
+      "Most feedback is encouragement or a checklist. *This argues one specific way your idea collapses* — and is judged only on whether that beats the risk you already feared.",
     isLabel: "What you get",
     isNotLabel: "What you don't",
     rows: [
@@ -105,30 +105,30 @@ const en: LandingCopy = {
     no: "02",
     title: "The engine attacks its own argument before you see it.",
     intro:
-      "A single model answer is a first draft. *The report you read is the survivor of a three-pass argument.*",
+      "A single model answer is a first draft. *The report you read survived three passes.*",
     figCaption: "Fig. 02 — Three-pass analysis pipeline.",
     passes: [
       {
         n: "Pass 1",
         title: "Open reasoning",
-        body: "Multiple failure hypotheses are drafted and ranked internally. Only the strongest hinge for this idea survives — the rest are discarded.",
+        body: "Several failure hypotheses are drafted and ranked internally. Only the strongest hinge for this idea survives.",
       },
       {
         n: "Pass 1.5",
         title: "Adversarial critique",
-        body: "A second call attacks the draft's weakest claims: would the cascade still run if this hinge held? If yes, the hinge is wrong — rewrite.",
+        body: "A second call attacks the draft's weakest claims: would the cascade still run if this hinge held? If yes — rewrite.",
       },
       {
         n: "Pass 2",
         title: "Structured report",
-        body: "The surviving argument is compressed — losslessly — into a typed, validated report. No new claims may be invented at this stage.",
+        body: "The survivor is compressed, losslessly, into a typed and validated report. No new claims at this stage.",
       },
     ],
     guardTitle: "Camouflage hunting",
     guard:
-      "Name-swappable risks — ones that fit a hundred startups — are treated as defects and rewritten. So is invent-then-attack: the engine may not fabricate an architecture just to break it.",
+      "Risks that would fit a hundred startups are treated as defects and rewritten. So is invent-then-attack: the engine may not fabricate an architecture just to break it.",
     deepNote:
-      "Deep mode runs the reasoning pass twice, independently, and reports whether both runs converge on the same point of failure.",
+      "Runs the reasoning pass twice, independently, then reports whether both land on the same point of failure.",
   },
   audience: {
     no: "04",
@@ -139,17 +139,17 @@ const en: LandingCopy = {
       {
         who: "Solo founders",
         when: "Before the first commit",
-        body: "Six months of building is an expensive way to discover a structural flaw. Run the collapse on paper first — then decide what to de-risk.",
+        body: "Six months of building is an expensive way to find a structural flaw. Run the collapse on paper first.",
       },
       {
         who: "Product teams",
         when: "Before the pitch",
-        body: "Walk into the room already holding the sharpest objection — with a structured, causal answer instead of an improvised one.",
+        body: "Walk in already holding the sharpest objection — with a causal answer, not an improvised one.",
       },
       {
         who: "Serial builders",
         when: "Between ideas",
-        body: "Compare candidates by their failure paths instead of their upside stories. The idea with survivable failure modes wins.",
+        body: "Compare candidates by failure path, not upside story. Survivable failure modes win.",
       },
     ],
     quoteLead: "The report has exactly one success condition —",
@@ -169,7 +169,7 @@ const id: LandingCopy = {
   hero: {
     kicker: "Premortem terstruktur · untuk ide yang belum dibangun",
     headline: "Setiap ide menyimpan |garis retaknya| sendiri.",
-    sub: "BreakItFirst adalah mesin premortem untuk ide produk dan bisnis yang belum dibangun. Tempel idenya — dapatkan satu argumen kegagalan dominan: single point of failure, beserta rantai kausal yang mengikutinya. *Sebelum realita menjalankan eksperimennya untukmu.*",
+    sub: "*BreakItFirst adalah mesin premortem untuk ide yang belum dibangun.* Tempel idenya — dapatkan satu argumen kegagalan dominan: titik yang patah, dan rantai kausal yang mengikutinya.",
     ctaPrimary: "Jalankan premortem",
     ctaSecondary: "Lihat metodenya",
     figCaption: "Gbr. 01 — Anatomi jalur kegagalan, tampilan spesimen.",
@@ -185,7 +185,7 @@ const id: LandingCopy = {
     no: "01",
     title: "Premortem, bukan pep talk.",
     intro:
-      "Kebanyakan feedback ide itu antara penyemangat atau checklist. Ini bukan keduanya. *Mesin ini berargumen tentang satu cara spesifik idemu runtuh* — dan hanya dinilai dari apakah argumen itu lebih tajam daripada risiko yang sudah kamu takuti.",
+      "Kebanyakan feedback itu penyemangat atau checklist. *Ini berargumen soal satu cara spesifik idemu runtuh* — dan hanya dinilai dari apakah itu mengalahkan risiko yang sudah kamu takuti.",
     isLabel: "Yang kamu dapat",
     isNotLabel: "Yang tidak",
     rows: [
@@ -211,30 +211,30 @@ const id: LandingCopy = {
     no: "02",
     title: "Mesin menyerang argumennya sendiri sebelum kamu membacanya.",
     intro:
-      "Satu jawaban model hanyalah draf pertama. *Laporan yang kamu baca adalah yang selamat dari argumen tiga tahap.*",
+      "Satu jawaban model hanyalah draf pertama. *Laporan yang kamu baca lolos dari tiga tahap.*",
     figCaption: "Gbr. 02 — Pipeline analisis tiga tahap.",
     passes: [
       {
         n: "Pass 1",
         title: "Penalaran terbuka",
-        body: "Beberapa hipotesis kegagalan disusun dan diranking secara internal. Hanya hinge terkuat untuk ide ini yang lolos — sisanya dibuang.",
+        body: "Beberapa hipotesis kegagalan disusun dan diranking internal. Hanya hinge terkuat untuk ide ini yang lolos.",
       },
       {
         n: "Pass 1.5",
         title: "Kritik adversarial",
-        body: "Panggilan kedua menyerang klaim terlemah draf: kalau hinge ini bertahan, apakah cascade tetap jalan? Jika ya, hinge-nya salah — tulis ulang.",
+        body: "Panggilan kedua menyerang klaim terlemah draf: kalau hinge ini bertahan, apakah cascade tetap jalan? Kalau ya — tulis ulang.",
       },
       {
         n: "Pass 2",
         title: "Laporan terstruktur",
-        body: "Argumen yang selamat dikompres — tanpa kehilangan makna — menjadi laporan bertipe dan tervalidasi. Tahap ini dilarang mengarang klaim baru.",
+        body: "Yang selamat dikompres, tanpa kehilangan makna, jadi laporan bertipe dan tervalidasi. Tidak ada klaim baru di tahap ini.",
       },
     ],
     guardTitle: "Perburuan kamuflase",
     guard:
-      "Risiko yang bisa ditukar-nama — yang cocok untuk seratus startup — dianggap cacat dan ditulis ulang. Begitu juga invent-then-attack: mesin dilarang mengarang arsitektur hanya untuk menyerangnya.",
+      "Risiko yang cocok untuk seratus startup dianggap cacat dan ditulis ulang. Begitu juga invent-then-attack: mesin dilarang mengarang arsitektur hanya untuk menyerangnya.",
     deepNote:
-      "Mode Deep menjalankan tahap penalaran dua kali secara independen, lalu melaporkan apakah keduanya menunjuk titik gagal yang sama.",
+      "Menjalankan tahap penalaran dua kali secara independen, lalu melaporkan apakah keduanya menunjuk titik gagal yang sama.",
   },
   audience: {
     no: "04",
@@ -245,17 +245,17 @@ const id: LandingCopy = {
       {
         who: "Solo founder",
         when: "Sebelum commit pertama",
-        body: "Enam bulan membangun adalah cara mahal menemukan cacat struktural. Jalankan keruntuhannya di atas kertas dulu — baru putuskan apa yang di-de-risk.",
+        body: "Enam bulan membangun adalah cara mahal menemukan cacat struktural. Jalankan keruntuhannya di atas kertas dulu.",
       },
       {
         who: "Tim produk",
         when: "Sebelum pitching",
-        body: "Masuk ruangan sudah memegang keberatan paling tajam — dengan jawaban kausal terstruktur, bukan improvisasi.",
+        body: "Masuk ruangan sudah memegang keberatan paling tajam — dengan jawaban kausal, bukan improvisasi.",
       },
       {
         who: "Serial builder",
         when: "Di antara ide-ide",
-        body: "Bandingkan kandidat dari jalur kegagalannya, bukan cerita upside-nya. Ide dengan mode gagal yang bisa diselamatkan yang menang.",
+        body: "Bandingkan kandidat dari jalur kegagalannya, bukan cerita upside-nya. Mode gagal yang bisa diselamatkan yang menang.",
       },
     ],
     quoteLead: "Laporan ini hanya punya satu syarat sukses —",

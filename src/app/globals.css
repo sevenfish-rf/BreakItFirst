@@ -2494,10 +2494,10 @@ html.dark .btn-solid {
   font-size: var(--lp-display);
   font-weight: 480;
   font-variation-settings: "opsz" 144, "SOFT" 0;
-  line-height: 1.05;
-  letter-spacing: -.022em;
+  line-height: 1.12;
+  letter-spacing: -.018em;
   max-width: 15ch;
-  margin-bottom: 20px;
+  margin-bottom: clamp(22px, 2.6vw, 30px);
 }
 
 .lp-h1 em {
@@ -2508,11 +2508,13 @@ html.dark .btn-solid {
 }
 
 /* The landing deck sits on the shared lead tier; .hero-sub keeps its larger
-   app-hero size because /app has no side figure competing with it. */
+   app-hero size because /app has no side figure competing with it.
+   Measure is capped near 46ch: a deck that runs to 60ch+ reads as a wall
+   even at a comfortable line-height. */
 .lp-hero .hero-sub {
   font-size: var(--lp-lead);
-  line-height: 1.62;
-  max-width: 52ch;
+  line-height: 1.72;
+  max-width: 46ch;
   margin-bottom: 0;
 }
 
@@ -2520,7 +2522,7 @@ html.dark .btn-solid {
   display: flex;
   align-items: center;
   gap: 22px;
-  margin-top: 30px;
+  margin-top: clamp(30px, 3.4vw, 40px);
   flex-wrap: wrap;
 }
 
@@ -2818,13 +2820,21 @@ html.dark .lps2-end svg {
   padding-bottom: 0;
 }
 
+/* Spacing rules for every landing headline block, applied consistently:
+   - headline line-height 1.2 (tight enough to group, loose enough to breathe)
+   - measures are capped generously and `text-wrap: balance` does the breaking.
+     A tight ch cap forces a short headline to wrap for no reason ("… hangs
+     off" / "off"), and balance splits a long one into even lines instead of
+     one full line plus an orphan.
+   - the gap from headline to deck is smaller than the gap from deck to the
+     content it introduces, so proximity does the grouping. */
 .lp-sec-head {
   display: flex;
   align-items: baseline;
-  gap: 18px;
+  gap: clamp(14px, 1.6vw, 20px);
   border-top: 1px solid var(--hair);
-  padding-top: 22px;
-  margin-bottom: 14px;
+  padding-top: clamp(24px, 3vw, 34px);
+  margin-bottom: clamp(16px, 1.8vw, 22px);
 }
 
 .lp-sec-no {
@@ -2840,18 +2850,24 @@ html.dark .lps2-end svg {
   font-family: var(--serif);
   font-weight: 500;
   font-size: var(--lp-title);
-  letter-spacing: -.018em;
-  line-height: 1.14;
-  max-width: 22ch;
+  letter-spacing: -.014em;
+  line-height: 1.2;
+  max-width: 44ch;
+  text-wrap: balance;
   font-variation-settings: "opsz" 60;
 }
 
+/* A deck is one or two lines, not a reading block — so it takes the full
+   column rather than a body measure. Capping it at 56ch made every deck stack
+   into a narrow tower, and broke the `<mark>` highlight across two lines,
+   which `box-decoration-break: clone` then drew as two separate pills. */
 .lp-intro {
   font-size: var(--lp-lead);
-  line-height: 1.66;
+  line-height: 1.72;
   color: var(--ink-2);
-  max-width: 66ch;
-  margin-bottom: clamp(26px, 4vw, 40px);
+  max-width: 100ch;
+  text-wrap: pretty;
+  margin-bottom: clamp(32px, 4.5vw, 52px);
 }
 
 /* 01 — manifest (is / is not) */
@@ -2870,7 +2886,7 @@ html.dark .lps2-end svg {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: clamp(20px, 4vw, 56px);
-  padding: 16px 0;
+  padding: 18px 0;
   border-top: 1px solid var(--hair-soft);
 }
 
@@ -2880,7 +2896,7 @@ html.dark .lps2-end svg {
   gap: 11px;
   align-items: flex-start;
   font-size: var(--lp-body);
-  line-height: 1.58;
+  line-height: 1.66;
 }
 
 .lp-manifest-is {
@@ -2909,7 +2925,7 @@ html.dark .lps2-end svg {
 .lp-passes {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 16px;
 }
 
 .lp-pass {
@@ -2917,7 +2933,7 @@ html.dark .lps2-end svg {
   background: var(--bg-raised);
   border: 1px solid var(--hair);
   border-radius: 14px;
-  padding: 20px 20px 22px;
+  padding: 24px 24px 26px;
   transition: transform .3s var(--ease), box-shadow .3s var(--ease), background .45s var(--ease);
 }
 
@@ -2957,12 +2973,13 @@ html.dark .lps2-end svg {
   font-size: var(--lp-heading);
   font-weight: 550;
   letter-spacing: -.01em;
-  margin-bottom: 8px;
+  line-height: 1.3;
+  margin-bottom: 10px;
 }
 
 .lp-pass p {
   font-size: var(--lp-body);
-  line-height: 1.6;
+  line-height: 1.68;
   color: var(--ink-2);
 }
 
@@ -2992,7 +3009,7 @@ html.dark .lps2-end svg {
   padding-left: 18px;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 9px;
 }
 
 .lp-note:first-child {
@@ -3001,7 +3018,7 @@ html.dark .lps2-end svg {
 
 .lp-note p {
   font-size: var(--lp-body-sm);
-  line-height: 1.62;
+  line-height: 1.7;
   color: var(--ink-2);
 }
 
@@ -3009,14 +3026,14 @@ html.dark .lps2-end svg {
 .lp-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 16px;
 }
 
 .lp-card {
   background: var(--bg-raised);
   border: 1px solid var(--hair);
   border-radius: 14px;
-  padding: 22px 22px 24px;
+  padding: 26px 26px 28px;
   transition: transform .3s var(--ease), box-shadow .3s var(--ease), background .45s var(--ease);
 }
 
@@ -3030,12 +3047,13 @@ html.dark .lps2-end svg {
   font-weight: 550;
   font-size: var(--lp-heading);
   letter-spacing: -.01em;
-  margin: 10px 0 8px;
+  line-height: 1.3;
+  margin: 12px 0 10px;
 }
 
 .lp-card p {
   font-size: var(--lp-body);
-  line-height: 1.62;
+  line-height: 1.68;
   color: var(--ink-2);
 }
 
@@ -3047,7 +3065,7 @@ html.dark .lps2-end svg {
 .lp-quote-lead {
   font-size: var(--lp-body-sm);
   color: var(--ink-3);
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .lp-quote blockquote {
@@ -3056,9 +3074,9 @@ html.dark .lps2-end svg {
   font-weight: 450;
   font-size: var(--lp-title-sm);
   letter-spacing: -.012em;
-  line-height: 1.32;
+  line-height: 1.42;
   color: var(--ink);
-  max-width: 26ch;
+  max-width: 28ch;
   margin: 0 auto;
   font-variation-settings: "opsz" 60;
 }
@@ -3073,7 +3091,7 @@ html.dark .lps2-end svg {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: clamp(18px, 2vw, 24px);
   border-top: 1px solid var(--hair);
   padding-top: clamp(44px, 6vw, 64px);
 }
@@ -3084,9 +3102,10 @@ html.dark .lps2-end svg {
   font-family: var(--serif);
   font-weight: 480;
   font-size: var(--lp-title);
-  letter-spacing: -.02em;
-  line-height: 1.14;
-  max-width: 22ch;
+  letter-spacing: -.016em;
+  line-height: 1.2;
+  max-width: 30ch;
+  text-wrap: balance;
   font-variation-settings: "opsz" 100;
 }
 
@@ -3098,19 +3117,19 @@ html.dark .lps2-end svg {
 
 .lp-final-sub {
   font-size: var(--lp-lead);
-  line-height: 1.6;
+  line-height: 1.72;
   color: var(--ink-2);
-  max-width: 52ch;
+  max-width: 46ch;
 }
 
 .lp-final .lp-cta {
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .lp-final-footnote {
   font-size: var(--lp-micro);
   color: var(--ink-3);
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 /* landing responsive */

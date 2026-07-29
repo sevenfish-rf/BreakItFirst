@@ -42,7 +42,7 @@ const COPY: Record<Locale, MetricsCopy> = {
     eyebrow: "Enforced by the engine",
     title: "Every figure here is",
     titleAccent: "enforced in code.",
-    sub: "These are schema ranges the validator rejects outside of, prompt rules the critique pass applies, and checks that run on every report the engine produces.",
+    sub: "Schema ranges the validator enforces, rules the critique pass applies, checks that run on every report.",
     tabs: [
       {
         id: "report",
@@ -110,13 +110,13 @@ const COPY: Record<Locale, MetricsCopy> = {
     ],
     footTitle: "The constraints are the product.",
     footText:
-      "A premortem is only worth reading while it stays specific to one idea. Every limit above exists to stop the engine drifting toward an argument that would fit any startup at all.",
+      "Every limit above exists to keep the engine from drifting into an argument that would fit any startup at all.",
   },
   id: {
     eyebrow: "Dijaga oleh mesin",
     title: "Setiap angka di sini",
     titleAccent: "dipaksakan oleh kode.",
-    sub: "Ini adalah rentang skema yang ditolak validator kalau dilanggar, aturan prompt yang diterapkan tahap kritik, dan pemeriksaan yang jalan di setiap laporan yang dihasilkan mesin.",
+    sub: "Rentang skema yang dipaksakan validator, aturan yang diterapkan tahap kritik, pemeriksaan yang jalan di setiap laporan.",
     tabs: [
       {
         id: "report",
@@ -184,7 +184,7 @@ const COPY: Record<Locale, MetricsCopy> = {
     ],
     footTitle: "Batasannya adalah produknya.",
     footText:
-      "Premortem hanya layak dibaca selama ia tetap spesifik pada satu ide. Semua batas di atas ada untuk mencegah mesin melantur ke argumen yang cocok untuk startup mana pun.",
+      "Semua batas di atas ada untuk mencegah mesin melantur ke argumen yang cocok untuk startup mana pun.",
   },
 };
 

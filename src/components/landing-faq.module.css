@@ -17,9 +17,9 @@
   color: var(--ink);
   font-weight: 600;
   font-size: var(--lp-title);
-  line-height: 1.14;
-  letter-spacing: -0.025em;
-  margin-bottom: 16px;
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  margin-bottom: 20px;
   font-variation-settings: "opsz" 100;
 }
 
@@ -33,9 +33,9 @@
   font-size: var(--lp-lead);
   font-style: italic;
   font-weight: 420;
-  line-height: 1.55;
-  margin-bottom: 28px;
-  max-width: 34ch;
+  line-height: 1.66;
+  margin-bottom: 32px;
+  max-width: 36ch;
   font-variation-settings: "opsz" 18;
 }
 
@@ -64,7 +64,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 22px;
+  padding: 20px 24px;
   text-align: left;
   background: none;
   border: none;
@@ -108,10 +108,11 @@
 
 /* ── Answer panel ───────────────────────────────────────────────── */
 .answer {
-  padding: 0 22px 18px;
+  padding: 0 24px 20px;
   color: var(--ink-2);
   font-size: var(--lp-body);
-  line-height: 1.62;
+  line-height: 1.72;
+  max-width: 62ch;
 }
 
 /* ── Grid ───────────────────────────────────────────────────────── */
@@ -133,5 +134,5 @@
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
