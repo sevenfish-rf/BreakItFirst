@@ -17,6 +17,16 @@ export type ProviderCallOptions = {
   /** Caller abort only (e.g. client navigated away). No artificial per-call timeout. */
   signal?: AbortSignal;
   stage?: "pass1" | "pass1_5" | "pass2" | "models" | "test";
+  /**
+   * Called when the provider stopped on the token ceiling but the text is still
+   * usable (prose passes). JSON-mode calls throw instead — a half-written object
+   * is not salvageable.
+   */
+  onTruncated?: (info: {
+    stage?: ProviderCallOptions["stage"];
+    maxTokens: number;
+    finishReason: string;
+  }) => void;
 };
 
 function isAbortError(err: unknown): boolean {
@@ -34,18 +44,36 @@ export class ProviderError extends Error {
   status: number;
   body: string;
   stage?: ProviderCallOptions["stage"];
+  /** Machine-readable cause so callers can react (e.g. "truncated_output"). */
+  code?: "truncated_output" | "reasoning_only";
 
   constructor(
     message: string,
     status: number,
     body: string,
     stage?: ProviderCallOptions["stage"],
+    code?: ProviderError["code"],
   ) {
     super(message);
     this.name = "ProviderError";
     this.status = status;
     this.body = body;
     this.stage = stage;
+    this.code = code;
+  }
+}
+
+/**
+ * Response was understood but is unusable in a way retrying request variants
+ * cannot fix (e.g. a thinking stream where strict JSON was required).
+ */
+class UnusableResponseError extends Error {
+  code: ProviderError["code"];
+
+  constructor(message: string, code: ProviderError["code"]) {
+    super(message);
+    this.name = "UnusableResponseError";
+    this.code = code;
   }
 }
 
@@ -180,6 +208,42 @@ function extractReasoningFields(message: Record<string, unknown>): string | null
   return joined || null;
 }
 
+/**
+ * Read the stop reason across OpenAI-compatible / Responses shapes.
+ * Returns a lowercased string, or "" when the provider omits it.
+ */
+export function readFinishReason(payload: unknown): string {
+  if (!payload || typeof payload !== "object") return "";
+  const data = payload as Record<string, unknown>;
+
+  const pick = (v: unknown): string =>
+    typeof v === "string" && v.trim() ? v.trim().toLowerCase() : "";
+
+  if (Array.isArray(data.choices) && data.choices[0] && typeof data.choices[0] === "object") {
+    const c0 = data.choices[0] as Record<string, unknown>;
+    const direct = pick(c0.finish_reason) || pick(c0.finishReason) || pick(c0.stop_reason);
+    if (direct) return direct;
+  }
+
+  // Responses API: incomplete_details.reason === "max_output_tokens"
+  if (data.incomplete_details && typeof data.incomplete_details === "object") {
+    const reason = pick((data.incomplete_details as Record<string, unknown>).reason);
+    if (reason) return reason;
+  }
+  return pick(data.stop_reason) || pick(data.finish_reason);
+}
+
+/** True when the stop reason means "ran out of output budget". */
+export function isTruncatedFinishReason(finish: string): boolean {
+  return (
+    finish === "length" ||
+    finish === "max_tokens" ||
+    finish === "max_output_tokens" ||
+    finish === "model_length" ||
+    finish === "token_limit"
+  );
+}
+
 function summarizeUnparseable(payload: unknown): string {
   try {
     if (!payload || typeof payload !== "object") {
@@ -212,9 +276,16 @@ function summarizeUnparseable(payload: unknown): string {
 /**
  * Extract assistant text from OpenAI-compatible / Mimo / Responses shapes.
  * Reasoning models (MiMo deep thinking, o-series) often put useful text in
- * `reasoning_content` while `content` is null/empty — that must still count.
+ * `reasoning_content` while `content` is null/empty — that must still count
+ * for prose passes. Strict-JSON callers pass `allowReasoningFallback: false`,
+ * because a thinking stream is never valid JSON.
  */
-export function extractChatText(payload: unknown): string {
+export function extractChatText(
+  payload: unknown,
+  opts?: { allowReasoningFallback?: boolean },
+): string {
+  const allowReasoningFallback = opts?.allowReasoningFallback !== false;
+
   if (!payload || typeof payload !== "object") {
     throw new Error("Empty provider response");
   }
@@ -249,6 +320,15 @@ export function extractChatText(payload: unknown): string {
 
       const reasoning = extractReasoningFields(message);
       if (reasoning) {
+        if (!allowReasoningFallback) {
+          throw new UnusableResponseError(
+            "Model returned only a reasoning/thinking stream with no final content, " +
+              "so there is no JSON to parse. Use a non-reasoning instruct model for " +
+              "the structuring pass, or raise its token budget so it can finish " +
+              "answering after it thinks.",
+            "reasoning_only",
+          );
+        }
         console.info(
           "[provider] using reasoning_* field (content empty) — common for deep-thinking models",
         );
@@ -275,7 +355,7 @@ export function extractChatText(payload: unknown): string {
     const content = extractTextFromContent(msg.content);
     const reasoning = extractReasoningFields(msg);
     if (content) return content;
-    if (reasoning) return reasoning;
+    if (reasoning && allowReasoningFallback) return reasoning;
   }
 
   // Responses API shape
@@ -301,7 +381,9 @@ export function extractChatText(payload: unknown): string {
         const chunk = c as Record<string, unknown>;
         if (typeof chunk.text === "string") parts.push(chunk.text);
         if (typeof chunk.output_text === "string") parts.push(chunk.output_text);
-        if (typeof chunk.thinking === "string") parts.push(chunk.thinking);
+        if (typeof chunk.thinking === "string" && allowReasoningFallback) {
+          parts.push(chunk.thinking);
+        }
       }
     }
     if (parts.length) return parts.join("\n");
@@ -413,8 +495,29 @@ export async function callProvider(
   for (let i = 0; i < variants.length; i++) {
     const result = await postJson(chatUrl, headers, variants[i], signal);
     if (result.ok) {
+      const finish = readFinishReason(result.json);
+      if (isTruncatedFinishReason(finish)) {
+        console.warn(
+          `[provider] output hit the token ceiling (stage=${stage ?? "?"} finish_reason=${finish} max_tokens=${maxTokens})`,
+        );
+        if (options.jsonMode) {
+          // A half-written JSON object cannot be repaired by trying another
+          // request variant — fail loudly with the real cause.
+          throw new ProviderError(
+            `${stage === "pass2" ? "Pass 2 (structuring)" : "Provider"}: output was cut off at the token limit before the JSON closed (finish_reason=${finish}, max_tokens=${maxTokens}). The response is truncated, not malformed. Raise the token budget, or use a non-reasoning model whose thinking tokens don't eat the budget.`,
+            422,
+            `truncated_output finish_reason=${finish} max_tokens=${maxTokens}`,
+            stage,
+            "truncated_output",
+          );
+        }
+        options.onTruncated?.({ stage, maxTokens, finishReason: finish });
+      }
+
       try {
-        const text = extractChatText(result.json);
+        const text = extractChatText(result.json, {
+          allowReasoningFallback: !options.jsonMode,
+        });
         if (!text.trim()) {
           lastFail = {
             status: 422,
@@ -428,6 +531,13 @@ export async function callProvider(
           parseErr instanceof Error
             ? parseErr.message
             : "Failed to parse provider response";
+
+        // Unusable-by-shape (e.g. thinking stream where JSON was required):
+        // other request variants will produce the same thing. Stop now.
+        if (parseErr instanceof UnusableResponseError) {
+          throw new ProviderError(parseMsg, 422, parseMsg, stage, parseErr.code);
+        }
+
         console.warn("[provider] parse fail variant", i, parseMsg);
         // 422 = we got a response but couldn't extract text (not "server down")
         lastFail = {
@@ -491,7 +601,38 @@ export async function callProvider(
       options.signal,
     );
     if (responsesRes.ok) {
-      return extractChatText(responsesRes.json);
+      const finish = readFinishReason(responsesRes.json);
+      if (isTruncatedFinishReason(finish)) {
+        console.warn(
+          `[provider] responses output hit the token ceiling (stage=${stage ?? "?"} reason=${finish})`,
+        );
+        if (options.jsonMode) {
+          throw new ProviderError(
+            `Provider: output was cut off at the token limit before the JSON closed (reason=${finish}). Raise the token budget, or use a non-reasoning model for structuring.`,
+            422,
+            `truncated_output reason=${finish}`,
+            stage,
+            "truncated_output",
+          );
+        }
+        options.onTruncated?.({ stage, maxTokens, finishReason: finish });
+      }
+      try {
+        return extractChatText(responsesRes.json, {
+          allowReasoningFallback: !options.jsonMode,
+        });
+      } catch (parseErr) {
+        if (parseErr instanceof UnusableResponseError) {
+          throw new ProviderError(
+            parseErr.message,
+            422,
+            parseErr.message,
+            stage,
+            parseErr.code,
+          );
+        }
+        throw parseErr;
+      }
     }
     lastFail = { status: responsesRes.status, body: responsesRes.body };
   }

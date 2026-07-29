@@ -368,12 +368,68 @@ html.dark .analyze-btn{ color:#171310; background:var(--ink); }
   max-width:26ch; margin-bottom:14px;
   font-variation-settings:"opsz" 60;
 }
+/* Raw user input — folded by default (native <details>) so a long draft doesn't
+   push the report down. Styled as a document field: one quiet row that opens
+   into the verbatim text. */
 .report-idea{
+  max-width:68ch; margin:14px 0 22px;
+  border:1px solid var(--hair); border-radius:10px;
+  background:transparent;
+  transition:border-color .18s var(--ease), background-color .18s var(--ease);
+}
+.report-idea:hover{ border-color:var(--ink-3); }
+.report-idea[open]{ background:var(--bg-inset); border-color:var(--hair); }
+
+.report-idea > summary{
+  display:flex; align-items:center; gap:14px;
+  padding:11px 14px;
+  cursor:pointer; list-style:none;
+  border-radius:10px;
+}
+.report-idea > summary::-webkit-details-marker{ display:none; }
+.report-idea > summary:focus-visible{ outline:1px solid var(--signal); outline-offset:2px; }
+
+.report-idea-label{
+  flex:0 0 auto;
+  font-family:var(--sans);
+  font-size:10px; font-weight:650; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3);
+  transition:color .18s var(--ease);
+}
+.report-idea:hover .report-idea-label,
+.report-idea[open] .report-idea-label{ color:var(--ink-2); }
+
+.report-idea-peek{
+  flex:1 1 auto; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-family:var(--serif); font-style:italic;
+  font-size:14px; line-height:1.5; color:var(--ink-3);
+}
+.report-idea[open] .report-idea-peek{ visibility:hidden; }
+
+.report-idea-caret{
+  display:inline-flex; flex:0 0 auto; color:var(--ink-3);
+  transition:transform .28s var(--ease), color .18s var(--ease);
+}
+.report-idea:hover .report-idea-caret{ color:var(--ink-2); }
+.report-idea[open] .report-idea-caret{ transform:rotate(180deg); }
+
+.report-idea-body{ padding:0 14px 14px; }
+.report-idea-full{
   font-family:var(--serif); font-style:italic; font-weight:400;
-  font-size:clamp(15px,1.8vw,17.5px); line-height:1.65; color:var(--ink-2);
-  max-width:68ch;
-  border-left:2px solid var(--hair); padding-left:18px;
-  margin:6px 0 22px;
+  font-size:clamp(14.5px,1.6vw,16px); line-height:1.7; color:var(--ink-2);
+  white-space:pre-wrap;
+  border-left:2px solid var(--hair); padding-left:16px; margin:0;
+}
+.report-idea-hint{
+  margin:12px 0 0; padding-top:10px;
+  border-top:1px solid var(--hair-soft);
+  font-size:11px; line-height:1.5; color:var(--ink-3);
+}
+
+@media (max-width:560px){
+  .report-idea-peek{ display:none; }
+  .report-idea > summary{ justify-content:space-between; }
 }
 .report-meta{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
 .chip{

@@ -876,6 +876,39 @@ export function pass2NovelClaimWarnings(
   return warnings;
 }
 
+/**
+ * Scan for an unclosed object/array/string, ignoring braces inside strings.
+ * A truncated model response is the common cause, and `JSON.parse` reports it
+ * as a misleading "expected ',' or ']'" at the cut point.
+ */
+function jsonLooksTruncated(text: string): boolean {
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let sawOpen = false;
+
+  for (const ch of text) {
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === "{" || ch === "[") {
+      depth++;
+      sawOpen = true;
+    } else if (ch === "}" || ch === "]") {
+      depth--;
+      // A complete top-level value exists; anything after it is trailing noise,
+      // which the brace-slice fallback handles.
+      if (depth === 0 && sawOpen) return false;
+    }
+  }
+
+  return inString || (sawOpen && depth > 0);
+}
+
 export function extractJsonObject(text: string): unknown {
   const trimmed = text.trim();
 
@@ -884,12 +917,22 @@ export function extractJsonObject(text: string): unknown {
 
   try {
     return JSON.parse(candidate);
-  } catch {
+  } catch (parseErr) {
+    if (jsonLooksTruncated(candidate)) {
+      // Do NOT fall through to brace-slicing: it would "succeed" on a nested
+      // object and silently return partial data.
+      throw new Error(
+        `Model output appears truncated — the JSON never closed (${candidate.length} chars received). Raise the structuring token budget or use a model that doesn't spend the budget on thinking.`,
+      );
+    }
+
     const start = candidate.indexOf("{");
     const end = candidate.lastIndexOf("}");
     if (start >= 0 && end > start) {
       return JSON.parse(candidate.slice(start, end + 1));
     }
-    throw new Error("Model did not return valid JSON");
+    throw new Error(
+      `Model did not return valid JSON (${parseErr instanceof Error ? parseErr.message : "parse failed"})`,
+    );
   }
 }

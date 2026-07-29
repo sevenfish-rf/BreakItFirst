@@ -36,6 +36,18 @@ export { liveStageToUiIndex } from "@/lib/pipeline-stages";
 /** Max Pass 2 re-attempts after a failed parse/validation (masterplan F3 = 1). */
 const PASS2_MAX_RETRIES = 1;
 
+/**
+ * Output ceilings. A ceiling costs nothing unless it is used, while truncated
+ * prose silently degrades every downstream section — so keep them generous.
+ * Reasoning models spend part of this budget on thinking tokens, which is what
+ * used to cut Pass 2 JSON off mid-array.
+ */
+const PASS1_MAX_TOKENS = 8192;
+const PASS2_MAX_TOKENS = 8192;
+const PASS2_MAX_TOKENS_DEEP = 12288;
+/** Hard ceiling when escalating after a truncated Pass 2. */
+const PASS2_MAX_TOKENS_CEILING = 24576;
+
 export type PipelineProvider = {
   baseUrl: string;
   apiKey: string;
@@ -102,6 +114,7 @@ async function callPass2Once(params: {
   generatedAt: string;
   locale: Locale;
   deepAnalysis: boolean;
+  maxTokens: number;
   priorIssues?: string[];
 }): Promise<string> {
   const {
@@ -113,6 +126,7 @@ async function callPass2Once(params: {
     generatedAt,
     locale,
     deepAnalysis,
+    maxTokens,
     priorIssues,
   } = params;
 
@@ -129,10 +143,11 @@ async function callPass2Once(params: {
     userContent += `
 
 ---
-Your previous JSON output failed validation. Fix ONLY the schema/format issues
-listed below. Still do not invent new claims beyond the analysis prose.
+Your previous JSON output was rejected. Fix ONLY the format/completeness issues
+listed below. Still do not invent new claims beyond the analysis prose. Output
+the JSON object and nothing else — no prose, no code fences.
 
-Validation issues:
+Issues:
 ${priorIssues.map((i) => `- ${i}`).join("\n")}
 `;
   }
@@ -141,7 +156,7 @@ ${priorIssues.map((i) => `- ${i}`).join("\n")}
     ...shared,
     model: pass2Model,
     temperature: 0.1,
-    maxTokens: 4096,
+    maxTokens,
     jsonMode: true,
     stage: "pass2",
     messages: [
@@ -198,6 +213,16 @@ export async function runFailureAnalysisPipeline(params: {
     console.info(`[pipeline] ${msg}`);
   };
 
+  /** Prose passes survive truncation — record it instead of failing. */
+  const noteTruncation =
+    (label: string) =>
+    (info: { maxTokens: number; finishReason: string }) => {
+      warnings.push(
+        `${label} hit the ${info.maxTokens}-token output ceiling and may be cut short (finish_reason=${info.finishReason})`,
+      );
+      console.warn(`[pipeline] ${label} truncated at ${info.maxTokens} tokens`);
+    };
+
   emit("ingest", "Input accepted");
 
   // ── Pass 1: freeform reasoning (×2 if deep) ─────────────────────────
@@ -214,8 +239,9 @@ export async function runFailureAnalysisPipeline(params: {
             ...shared,
             model: provider.pass1Model,
             temperature: 0.45,
-            maxTokens: 4096,
+            maxTokens: PASS1_MAX_TOKENS,
             stage: "pass1",
+            onTruncated: noteTruncation("Pass 1 (draft A)"),
             messages: [
               {
                 role: "system",
@@ -233,8 +259,9 @@ export async function runFailureAnalysisPipeline(params: {
             ...shared,
             model: provider.pass1Model,
             temperature: 0.7,
-            maxTokens: 4096,
+            maxTokens: PASS1_MAX_TOKENS,
             stage: "pass1",
+            onTruncated: noteTruncation("Pass 1 (draft B)"),
             messages: [
               {
                 role: "system",
@@ -259,8 +286,9 @@ export async function runFailureAnalysisPipeline(params: {
           ...shared,
           model: provider.pass1Model,
           temperature: 0.5,
-          maxTokens: 4096,
+          maxTokens: PASS1_MAX_TOKENS,
           stage: "pass1",
+          onTruncated: noteTruncation("Pass 1"),
           messages: [
             {
               role: "system",
@@ -319,8 +347,9 @@ export async function runFailureAnalysisPipeline(params: {
         ...shared,
         model: provider.pass1Model,
         temperature: deepAnalysis ? 0.35 : 0.4,
-        maxTokens: 4096,
+        maxTokens: PASS1_MAX_TOKENS,
         stage: "pass1_5",
+        onTruncated: noteTruncation("Pass 1.5 (critique)"),
         messages: [
           {
             role: "system",
@@ -371,14 +400,15 @@ export async function runFailureAnalysisPipeline(params: {
   // ── Pass 2: schema-constrained extraction (+ max 1 retry) ───────────
   let priorIssues: string[] | undefined;
   let lastFailure: PipelineFailure | null = null;
+  let pass2MaxTokens = deepAnalysis ? PASS2_MAX_TOKENS_DEEP : PASS2_MAX_TOKENS;
 
   for (let attempt = 0; attempt <= PASS2_MAX_RETRIES; attempt++) {
     let structuredRaw: string;
     try {
       logStage(
         attempt === 0
-          ? "Pass 2 structuring starting…"
-          : "Pass 2 retry starting…",
+          ? `Pass 2 structuring starting… (budget ${pass2MaxTokens} tokens)`
+          : `Pass 2 retry starting… (budget ${pass2MaxTokens} tokens)`,
       );
       emit(
         attempt === 0 ? "pass2" : "pass2_retry",
@@ -396,10 +426,42 @@ export async function runFailureAnalysisPipeline(params: {
           generatedAt,
           locale,
           deepAnalysis,
+          maxTokens: pass2MaxTokens,
           priorIssues,
         }),
       );
     } catch (err) {
+      const truncated =
+        err instanceof ProviderError && err.code === "truncated_output";
+
+      // Truncation is a budget problem, not a model-quality problem: retry with
+      // a bigger ceiling rather than re-sending the same doomed request.
+      if (truncated && attempt < PASS2_MAX_RETRIES) {
+        const nextBudget = Math.min(
+          Math.round(pass2MaxTokens * 1.75),
+          PASS2_MAX_TOKENS_CEILING,
+        );
+        logStage(
+          `Pass 2 truncated at ${pass2MaxTokens} tokens — retrying with ${nextBudget}`,
+        );
+        priorIssues = [
+          `Your previous output was cut off at the ${pass2MaxTokens}-token limit before the JSON closed. Emit the complete object; keep every field but write tighter strings.`,
+        ];
+        pass2MaxTokens = nextBudget;
+        lastFailure = {
+          ok: false,
+          code: "schema_invalid",
+          stage: "pass2",
+          message: err.message,
+          details: [
+            "Pass 2 output truncated at the token limit",
+            `Retrying with a ${nextBudget}-token budget`,
+          ],
+          meta: buildMeta(),
+        };
+        continue;
+      }
+
       return {
         ok: false,
         code: "provider_error",
@@ -407,11 +469,15 @@ export async function runFailureAnalysisPipeline(params: {
         message: humanizeCaughtError(err, "pass2"),
         details: [
           err instanceof ProviderError
-            ? `status=${err.status}`
+            ? `status=${err.status}${err.code ? ` code=${err.code}` : ""}`
             : err instanceof Error
               ? err.message
               : "Pass 2 failed",
-          attempt > 0 ? `pass2_retry_attempt=${attempt}` : "pass2_attempt=0",
+          truncated
+            ? `Pass 2 truncated even at ${pass2MaxTokens} tokens — use a non-reasoning model for structuring`
+            : attempt > 0
+              ? `pass2_retry_attempt=${attempt}`
+              : "pass2_attempt=0",
         ],
         meta: buildMeta(),
       };
@@ -426,6 +492,16 @@ export async function runFailureAnalysisPipeline(params: {
       const issue =
         err instanceof Error ? err.message : "Invalid JSON from Pass 2";
       priorIssues = [issue];
+
+      // Some providers omit finish_reason; extractJsonObject catches those.
+      // Same remedy: more room, not more scolding.
+      if (/truncated/i.test(issue)) {
+        pass2MaxTokens = Math.min(
+          Math.round(pass2MaxTokens * 1.75),
+          PASS2_MAX_TOKENS_CEILING,
+        );
+      }
+
       lastFailure = {
         ok: false,
         code: "schema_invalid",

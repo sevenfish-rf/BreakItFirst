@@ -98,6 +98,19 @@ export function humanizeCaughtError(
   err: unknown,
   stage?: "pass1" | "pass1_5" | "pass2" | "models" | "test",
 ): string {
+  // Truncation / thinking-only are already precise — don't flatten them into
+  // a generic "unprocessable (422)".
+  if (err && typeof err === "object") {
+    const tagged = err as { code?: unknown; message?: unknown };
+    if (
+      (tagged.code === "truncated_output" || tagged.code === "reasoning_only") &&
+      typeof tagged.message === "string" &&
+      tagged.message.trim()
+    ) {
+      return redactSecrets(tagged.message);
+    }
+  }
+
   if (err && typeof err === "object" && "status" in err && "body" in err) {
     const pe = err as { status: number; body: string; message?: string };
     return humanizeProviderFailure({

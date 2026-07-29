@@ -329,6 +329,12 @@ const COPY_ICON = (
   </svg>
 );
 
+const CHEVRON_ICON = (
+  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 4.5l3 3 3-3" />
+  </svg>
+);
+
 const CHECK_ICON = (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2.5 7.5l3 3 6-7" />
@@ -406,6 +412,8 @@ export function AnalysisReport({
 
   /* --- derived masthead / summary values --- */
   const [firstSentence, restSummary] = splitFirstSentence(analysis.summary);
+  /** One-line form of the raw input, for the folded preview. */
+  const ideaOneLine = analysis.meta.idea_input.replace(/\s+/g, " ").trim();
   const [statementLead, statementU] = splitStatement(spof.component);
   const critSet = new Set(spof.critical_assumption_indices ?? []);
   const nodes = analysis.cascade.nodes;
@@ -478,7 +486,25 @@ export function AnalysisReport({
             </span>
           </div>
           <h2 className="report-title">{condenseHeadline(firstSentence)}</h2>
-          <p className="report-idea">&ldquo;{analysis.meta.idea_input}&rdquo;</p>
+          {/* Raw input is reference material, not the argument — keep it folded
+              so the masthead stays short on long drafts. */}
+          <details className="report-idea">
+            <summary>
+              <span className="report-idea-label">
+                {t.report.analysisBase}
+              </span>
+              <span className="report-idea-peek">{ideaOneLine}</span>
+              <span className="report-idea-caret" aria-hidden="true">
+                {CHEVRON_ICON}
+              </span>
+            </summary>
+            <div className="report-idea-body">
+              <blockquote className="report-idea-full">
+                {analysis.meta.idea_input}
+              </blockquote>
+              <p className="report-idea-hint">{t.report.analysisBaseHint}</p>
+            </div>
+          </details>
           <div className="report-meta">
             <span className="chip">
               {t.form.categoryLabel}&nbsp;<b>{analysis.meta.category}</b>
