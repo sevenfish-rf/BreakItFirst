@@ -26,23 +26,24 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function readStoredMode(): ThemeMode {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "navy";
   try {
     const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (raw && isThemeMode(raw)) return raw;
+    if (raw && isThemeMode(raw)) {
+      if (raw === "light") return "navy";
+      return raw;
+    }
   } catch {
     /* ignore */
   }
-  return systemPrefersDark() ? "dark" : "light";
+  return systemPrefersDark() ? "dark" : "navy";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Lazy init from storage (client) / "light" (server, matches pre-paint script).
   const [mode, setModeState] = useState<ThemeMode>(() =>
-    typeof window === "undefined" ? "light" : readStoredMode(),
+    typeof window === "undefined" ? "navy" : readStoredMode(),
   );
 
-  // Keep <html> class in sync with state (writes to DOM, not React state).
   useEffect(() => {
     applyThemeToDocument(mode);
   }, [mode]);
@@ -65,7 +66,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const toggle = useCallback(() => {
     setModeState((prev) => {
-      const next: ThemeMode = prev === "dark" ? "light" : "dark";
+      let next: ThemeMode = "navy";
+      if (prev === "navy" || prev === "light") {
+        next = "crimson";
+      } else if (prev === "crimson") {
+        next = "dark";
+      } else {
+        next = "navy";
+      }
       persist(next);
       return next;
     });

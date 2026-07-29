@@ -132,17 +132,23 @@ export function Header({ onOpenSettings, providerReady }: HeaderProps) {
         <div className={s.controls}>
           <LanguageToggle locale={locale} onChange={setLocale} />
 
-          {/* Theme Toggle Button (Clean single icon with Framer Motion animation) */}
+          {/* Theme Toggle Button (3-way preset cycle: Navy -> Crimson -> Dark) */}
           <button
             className={s.iconBtn}
             onClick={toggle}
-            aria-label="Toggle light and dark theme"
-            title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label="Cycle theme presets"
+            title={
+              mode === "navy"
+                ? "Light Combo 1: Navy & Buttercream (Click to switch to Crimson)"
+                : mode === "crimson"
+                ? "Light Combo 2: Emerald & Linen (Click to switch to Dark Mode)"
+                : "Dark Mode: Midnight Obsidian (Click to switch to Navy)"
+            }
           >
             <AnimatePresence mode="wait" initial={false}>
-              {mode === "dark" ? (
+              {mode === "navy" ? (
                 <motion.svg
-                  key="sun-icon"
+                  key="navy-icon"
                   width="18"
                   height="18"
                   viewBox="0 0 16 16"
@@ -157,6 +163,25 @@ export function Header({ onOpenSettings, providerReady }: HeaderProps) {
                 >
                   <circle cx="8" cy="8" r="3.2" />
                   <path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M12.8 3.2l-1.1 1.1M4.3 11.7l-1.1 1.1" />
+                </motion.svg>
+              ) : mode === "crimson" ? (
+                <motion.svg
+                  key="crimson-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  initial={{ scale: 0.5, rotate: 90, opacity: 0 }}
+                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                  exit={{ scale: 0.5, rotate: -90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <circle cx="8" cy="8" r="4.5" />
+                  <path d="M8 3.5v9M3.5 8h9" />
                 </motion.svg>
               ) : (
                 <motion.svg
