@@ -24,12 +24,22 @@ import type { Locale } from "@/lib/i18n/types";
 import type {
   PipelineLiveStage,
   PipelineStageEvent,
+  PipelineStageTiming,
 } from "@/lib/pipeline-stages";
-import type { AnalysisError, FailureAnalysis } from "@/types/analysis";
+import {
+  buildAnalysisTrace,
+  writeAnalysisTrace,
+} from "@/lib/analysis-trace";
+import type {
+  AnalysisError,
+  FailureAnalysis,
+  RunProvenance,
+} from "@/types/analysis";
 
 export type {
   PipelineLiveStage,
   PipelineStageEvent,
+  PipelineStageTiming,
 } from "@/lib/pipeline-stages";
 export { liveStageToUiIndex } from "@/lib/pipeline-stages";
 
@@ -55,16 +65,15 @@ export type PipelineProvider = {
   pass2Model: string;
 };
 
-export type PipelineStageTiming = {
-  stage: "pass1" | "pass1_b" | "pass1_5" | "pass2";
-  ms: number;
-  ok: boolean;
-};
-
 export type PipelineMeta = {
   deepAnalysis: boolean;
   stages: PipelineStageTiming[];
   totalMs: number;
+  /**
+   * K1 — same provenance stamped onto analysis.meta.run, repeated here for
+   * callers that keep only the pipeline meta (eval harness, job snapshots).
+   */
+  run: RunProvenance;
 };
 
 export type PipelineSuccess = {
@@ -184,6 +193,8 @@ export async function runFailureAnalysisPipeline(params: {
   const generatedAt = new Date().toISOString();
   const stages: PipelineStageTiming[] = [];
   const pipelineStarted = Date.now();
+  /** Updated once Pass 1 is known to have produced two usable drafts. */
+  let pass1Runs = 1;
 
   const shared: Pick<
     ProviderCallOptions,
@@ -194,10 +205,29 @@ export async function runFailureAnalysisPipeline(params: {
     signal,
   };
 
+  /** Host only — the key never leaves this module, and the path can carry ids. */
+  const providerHost = (() => {
+    try {
+      return new URL(provider.baseUrl).host;
+    } catch {
+      return "unknown";
+    }
+  })();
+
+  const buildRun = (): RunProvenance => ({
+    mode: deepAnalysis ? "deep" : "standard",
+    locale,
+    pass1_model: provider.pass1Model,
+    pass2_model: provider.pass2Model,
+    provider_host: providerHost,
+    pass1_runs: pass1Runs,
+  });
+
   const buildMeta = (): PipelineMeta => ({
     deepAnalysis,
     stages: [...stages],
     totalMs: Date.now() - pipelineStarted,
+    run: buildRun(),
   });
 
   const emit = (stage: PipelineLiveStage, detail?: string) => {
@@ -335,6 +365,10 @@ export async function runFailureAnalysisPipeline(params: {
   if (deepAnalysis && reasoningB && !reasoningB.trim()) {
     warnings.push("Deep analysis draft B was empty; continuing with draft A only");
     reasoningB = undefined;
+  }
+
+  if (reasoningB?.trim()) {
+    pass1Runs = 2;
   }
 
   // ── Pass 1.5: adversarial critique / calibration ────────────────────
@@ -555,6 +589,8 @@ export async function runFailureAnalysisPipeline(params: {
         idea_input: idea,
         category,
         generated_at: generatedAt,
+        // K1 — pipeline-authored, never taken from model output
+        run: buildRun(),
       },
     };
 
@@ -605,6 +641,21 @@ export async function runFailureAnalysisPipeline(params: {
       warningCount: warnings.length,
       spof: analysis.single_point_of_failure.component,
     });
+
+    // K3 — opt-in raw dump so the discarded SPOF candidates stay recoverable.
+    // No-op unless BIF_TRACE=1; never allowed to affect the returned result.
+    writeAnalysisTrace(
+      buildAnalysisTrace({
+        analysis,
+        run: meta.run,
+        reasoningA,
+        reasoningB,
+        reasoning,
+        structuredRaw,
+        warnings,
+        stages: meta.stages,
+      }),
+    );
 
     return { ok: true, analysis, warnings, meta };
   }

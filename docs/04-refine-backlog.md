@@ -62,8 +62,12 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | Q4 | Process | Suite verdict after full set | P0 | **done** | Aâ€“E | `03-quality-gap` Â§5 | See rollup Â§5 below |
 | Q5 | Process | **Candidates = Claude + GLM + BIF only**; GPT/ChatGPT = judge optional, not premortem rival | P0 | done | Bâ€“E | `03-quality-gap` | |
 | Q7 | Process | Run **implement batch** from P0 board (prompt + UI + docs) | P0 | **done** | suite | shipped 2026-07-21 |
+| Q8 | Process | Stamp **run provenance** (mode, locale, Pass 1/2 model, provider host, draft count) on every report + Markdown export | P0 | **done** | dogfood | `types/analysis.ts` `meta.run`, `pipeline.ts`, `report-markdown.ts`, report chip | Closes the Q1 hole on the product side: the 5 dogfood exports pin no model id, so none of them can be compared. Shipped 2026-07-30 |
+| Q9 | Process | Opt-in **raw pass trace** (`BIF_TRACE=1`) so discarded SPOF candidates stay recoverable | P0 | **done** | dogfood | `lib/analysis-trace.ts`, `pipeline.ts`, `eval/env.example` | Pass 1 makes 3 candidates and Standard mode keeps 1 with no record. Trace writes Pass 1/1.5/2 prose to gitignored `.breakitfirst-traces/`. Local dev only — contains idea text. Shipped 2026-07-30 |
+| Q10 | Process | Re-run baseline + paraphrase-variant run; compare **SPOF labels**, not the 34-pt score | P0 | **todo** | dogfood | `eval/run-baseline.ts`, new `eval/stability.ts` | Blocked on owner provider credentials. Rubric is saturated (3 runs of 2026-07-16 all 33–34/34, own summary: "ceiling already high at 33.8"), so the score cannot detect the instability the dogfood runs describe — the label diff can |
+| Q11 | Process | Engine/prompt work **frozen** until measurement infra lands | P0 | **doing** | dogfood | `prompts.ts`, `schema.ts` checks | Owner directive 2026-07-30: prompt + rule engine are the core; do not touch while infra has no measurement floor. Q8/Q9 land under the freeze because they add provenance and capture only — no prompt, schema rule or soft check changed |
 
-**Counts:** todo **0** · doing **0** · **done (suite + implement batch)** · see master board
+**Counts:** todo **1** (Q10) · doing **1** (Q11 freeze) · **done (suite + implement batch + Q8/Q9 provenance & trace)** · see master board
 
 ---
 

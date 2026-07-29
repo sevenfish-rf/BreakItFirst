@@ -27,6 +27,9 @@
 # local analysis job snapshots (dev resume)
 .breakitfirst-jobs/
 
+# BIF_TRACE=1 raw pass dumps (contain idea text + full model output; local only)
+.breakitfirst-traces/
+
 # third-party agent skills / tools (local only — do not push)
 .vendor/
 .agents/

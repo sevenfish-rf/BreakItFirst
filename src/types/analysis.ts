@@ -38,11 +38,30 @@ export type StressTestItem = {
   reason: string;
 };
 
+/**
+ * K1 — run provenance. A report that does not say which models produced it
+ * cannot be compared against another report, so every stored/exported analysis
+ * carries this. Filled by the pipeline after Pass 2 validation, never by the
+ * model. Deliberately excludes the API key and the full BYOK base URL.
+ */
+export type RunProvenance = {
+  mode: "standard" | "deep";
+  locale: "en" | "id";
+  pass1_model: string;
+  pass2_model: string;
+  /** Host only (e.g. api.example.com) — enough to identify the provider */
+  provider_host: string;
+  /** Pass 1 drafts that actually produced text (2 = deep with both drafts) */
+  pass1_runs: number;
+};
+
 export interface FailureAnalysis {
   meta: {
     idea_input: string;
     category: string;
     generated_at: string;
+    /** Optional: reports saved before K1 shipped have no provenance. */
+    run?: RunProvenance;
   };
   summary: string;
   assumptions: string[];

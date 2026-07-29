@@ -515,6 +515,16 @@ export function AnalysisReport({
             <span className="chip">
               <b>{S.passes(isDeep ? 5 : 3)}</b>
             </span>
+            {/* K1 — model id on the report itself; a model id is not
+                translatable, so this needs no i18n string. */}
+            {analysis.meta.run ? (
+              <span
+                className="chip"
+                title={`Pass 1: ${analysis.meta.run.pass1_model} · Pass 2: ${analysis.meta.run.pass2_model} · ${analysis.meta.run.provider_host}`}
+              >
+                <b>{analysis.meta.run.pass1_model}</b>
+              </span>
+            ) : null}
             <span className="chip chip--signal">
               {S.dominantPathway}&nbsp;<b>{truncate(spof.component, 48)}</b>
             </span>

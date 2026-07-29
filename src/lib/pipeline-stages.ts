@@ -19,6 +19,16 @@ export type PipelineStageEvent = {
   detail?: string;
 };
 
+/**
+ * Per-pass wall time. Lives here rather than in pipeline.ts so the trace writer
+ * can reference it without importing the provider/schema-heavy pipeline module.
+ */
+export type PipelineStageTiming = {
+  stage: "pass1" | "pass1_b" | "pass1_5" | "pass2";
+  ms: number;
+  ok: boolean;
+};
+
 /** Map live stage → UI stage list index (0-based). */
 export function liveStageToUiIndex(stage: PipelineLiveStage): number {
   switch (stage) {

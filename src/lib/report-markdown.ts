@@ -53,6 +53,29 @@ export function analysisToMarkdown(
   );
   lines.push(`**${generated}:** ${a.meta.generated_at}`);
   lines.push("");
+
+  // K1 — an exported report with no model id cannot be compared to another one.
+  const run = a.meta.run;
+  if (run) {
+    lines.push(
+      h(2, id ? "Provenans run" : "Run provenance"),
+    );
+    lines.push("");
+    lines.push(
+      id
+        ? "_Konfigurasi yang menghasilkan laporan ini — dibutuhkan supaya dua laporan bisa dibandingkan._"
+        : "_The configuration that produced this report — required before two reports can be compared._",
+    );
+    lines.push("");
+    lines.push(`- **${id ? "Mode" : "Mode"}:** ${run.mode}`);
+    lines.push(`- **${id ? "Bahasa" : "Locale"}:** ${run.locale}`);
+    lines.push(`- **${id ? "Model Pass 1" : "Pass 1 model"}:** \`${run.pass1_model}\``);
+    lines.push(`- **${id ? "Model Pass 2" : "Pass 2 model"}:** \`${run.pass2_model}\``);
+    lines.push(`- **${id ? "Host provider" : "Provider host"}:** \`${run.provider_host}\``);
+    lines.push(`- **${id ? "Jumlah draft Pass 1" : "Pass 1 drafts"}:** ${run.pass1_runs}`);
+    lines.push("");
+  }
+
   lines.push("---");
   lines.push("");
 

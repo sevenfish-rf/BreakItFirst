@@ -46,12 +46,26 @@ const stressItemSchema = z.object({
   reason: nonEmptyString,
 });
 
+/**
+ * K1 — provenance is written by the pipeline, not the model, so it is optional
+ * here: Pass 2 output never contains it and must not be rejected for that.
+ */
+const runProvenanceSchema = z.object({
+  mode: z.enum(["standard", "deep"]),
+  locale: z.enum(["en", "id"]),
+  pass1_model: z.string(),
+  pass2_model: z.string(),
+  provider_host: z.string(),
+  pass1_runs: z.number().int().min(1).max(5),
+});
+
 /** Zod schema for Pass 2 structured output. */
 export const failureAnalysisSchema = z.object({
   meta: z.object({
     idea_input: z.string(),
     category: z.string(),
     generated_at: z.string(),
+    run: runProvenanceSchema.optional(),
   }),
   summary: nonEmptyString,
   assumptions: z
