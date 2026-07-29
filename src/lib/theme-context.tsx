@@ -26,22 +26,19 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function readStoredMode(): ThemeMode {
-  if (typeof window === "undefined") return "navy";
+  if (typeof window === "undefined") return "light";
   try {
     const raw = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (raw && isThemeMode(raw)) {
-      if (raw === "light") return "navy";
-      return raw;
-    }
+    if (raw && isThemeMode(raw)) return raw;
   } catch {
     /* ignore */
   }
-  return systemPrefersDark() ? "dark" : "navy";
+  return systemPrefersDark() ? "dark" : "light";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>(() =>
-    typeof window === "undefined" ? "navy" : readStoredMode(),
+    typeof window === "undefined" ? "light" : readStoredMode(),
   );
 
   useEffect(() => {
@@ -66,14 +63,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const toggle = useCallback(() => {
     setModeState((prev) => {
-      let next: ThemeMode = "navy";
-      if (prev === "navy" || prev === "light") {
-        next = "crimson";
-      } else if (prev === "crimson") {
-        next = "dark";
-      } else {
-        next = "navy";
-      }
+      const next: ThemeMode = prev === "dark" ? "light" : "dark";
       persist(next);
       return next;
     });

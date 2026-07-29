@@ -10,86 +10,52 @@
    (Fraunces / Inter / IBM Plex Mono) via CSS variables.
    ============================================================ */
 
-:root,
-html.theme-navy {
-  --bg: #F5F0EA;
-  --bg-raised: #FAF6F0;
-  --bg-inset: #EDEBE8;
-  --bg-faq: #EFE4D4;
-  --bg-switch-track: #EDEBE8;
-  --ink: #1C4777;
-  --ink-2: #385A82;
-  --ink-3: #6485AD;
-  --hair: #DFD6C8;
-  --hair-soft: #E7E0D3;
-  --logo-signal: #D9381E;
-  --signal: #0F2C4C;
-  --signal-deep: #081B30;
-  --signal-wash: rgba(15, 44, 76, 0.09);
-  --signal-wash-2: rgba(15, 44, 76, 0.18);
-  --amber: #C4841D;
-  --amber-wash: rgba(196, 132, 29, 0.10);
-  --calm: #2A7B5F;
-  --calm-wash: rgba(42, 123, 95, 0.10);
-  --shadow-card: 0 1px 2px rgba(15, 44, 76, 0.04), 0 8px 32px -12px rgba(15, 44, 76, 0.10);
-  --shadow-pop: 0 2px 4px rgba(15, 44, 76, 0.05), 0 24px 64px -24px rgba(15, 44, 76, 0.18);
+:root {
+  --bg:            #FAF7F1;
+  --bg-raised:     #FFFFFF;
+  --bg-inset:      #F3EEE4;
+  --ink:           #1B1712;
+  --ink-2:         #57503F;
+  --ink-3:         #8A8171;
+  --hair:          #E4DCCB;
+  --hair-soft:     #EDE7D9;
+  --signal:        #B03A1B;
+  --signal-deep:   #8F2E14;
+  --signal-wash:   rgba(176,58,27,.07);
+  --signal-wash-2: rgba(176,58,27,.14);
+  --amber:         #96690E;
+  --amber-wash:    rgba(150,105,14,.09);
+  --calm:          #3E6650;
+  --calm-wash:     rgba(62,102,80,.09);
+  --shadow-card:   0 1px 2px rgba(27,23,18,.04), 0 8px 32px -12px rgba(27,23,18,.10);
+  --shadow-pop:    0 2px 4px rgba(27,23,18,.05), 0 24px 64px -24px rgba(27,23,18,.18);
   --serif: var(--font-fraunces), Georgia, serif;
-  --sans: var(--font-lora), var(--font-inter), -apple-system, Georgia, serif;
-  --mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
-  --ease: cubic-bezier(.22, .9, .24, 1);
-  --highlight-color: rgba(15, 44, 76, 0.16);
-  color-scheme: light;
-}
-
-html.theme-crimson {
-  --bg: #F5F0EA;
-  --bg-raised: #FAF6F0;
-  --bg-inset: #EDEBE8;
-  --bg-switch-track: #EDEBE8;
-  --ink: #013E37;
-  --ink-2: #185E55;
-  --ink-3: #3B7E76;
-  --hair: #DFD6C8;
-  --hair-soft: #E7E0D3;
-  --logo-signal: #D9381E;
-  --signal: #013E37;
-  --signal-deep: #002823;
-  --signal-wash: rgba(1, 62, 55, 0.08);
-  --signal-wash-2: rgba(1, 62, 55, 0.16);
-  --amber: #C4841D;
-  --amber-wash: rgba(196, 132, 29, 0.10);
-  --calm: #013E37;
-  --calm-wash: rgba(1, 62, 55, 0.10);
-  --shadow-card: 0 1px 2px rgba(1, 62, 55, 0.04), 0 8px 32px -12px rgba(1, 62, 55, 0.10);
-  --shadow-pop: 0 2px 4px rgba(1, 62, 55, 0.05), 0 24px 64px -24px rgba(1, 62, 55, 0.18);
-  --serif: var(--font-fraunces), Georgia, serif;
-  --sans: var(--font-lora), var(--font-inter), -apple-system, Georgia, serif;
-  --mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
-  --ease: cubic-bezier(.22, .9, .24, 1);
-  --highlight-color: rgba(1, 62, 55, 0.15);
+  --sans:  var(--font-lora), var(--font-inter), -apple-system, Georgia, serif;
+  --mono:  var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+  --ease:  cubic-bezier(.22,.9,.24,1);
+  --highlight-color: var(--signal-wash-2);
   color-scheme: light;
 }
 
 html.dark {
-  --bg: #0C0C0E;
-  --bg-raised: #141418;
-  --bg-inset: #1A1A20;
-  --bg-switch-track: #1C1920;
-  --ink: #F4F3EF;
-  --ink-2: #B5B2A8;
-  --ink-3: #78756C;
-  --hair: #26262E;
-  --hair-soft: #1F1F26;
-  --signal: #ED5438;
-  --signal-deep: #FF6C52;
-  --signal-wash: rgba(237, 84, 56, .10);
-  --signal-wash-2: rgba(237, 84, 56, .18);
-  --amber: #E5A83B;
-  --amber-wash: rgba(229, 168, 59, .12);
-  --calm: #52B788;
-  --calm-wash: rgba(82, 183, 136, .12);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 32px -12px rgba(0, 0, 0, .6);
-  --shadow-pop: 0 2px 4px rgba(0, 0, 0, .4), 0 24px 64px -24px rgba(0, 0, 0, .7);
+  --bg:            #14110E;
+  --bg-raised:     #1B1713;
+  --bg-inset:      #211C17;
+  --ink:           #EFE8DB;
+  --ink-2:         #B4A992;
+  --ink-3:         #7C7261;
+  --hair:          #2E2820;
+  --hair-soft:     #262019;
+  --signal:        #E4633A;
+  --signal-deep:   #F07A50;
+  --signal-wash:   rgba(228,99,58,.10);
+  --signal-wash-2: rgba(228,99,58,.18);
+  --amber:         #D9A23E;
+  --amber-wash:    rgba(217,162,62,.11);
+  --calm:          #7FAE90;
+  --calm-wash:     rgba(127,174,144,.10);
+  --shadow-card:   0 1px 2px rgba(0,0,0,.25), 0 8px 32px -12px rgba(0,0,0,.5);
+  --shadow-pop:    0 2px 4px rgba(0,0,0,.3), 0 24px 64px -24px rgba(0,0,0,.6);
   --highlight-color: var(--signal-wash-2);
   color-scheme: dark;
 }

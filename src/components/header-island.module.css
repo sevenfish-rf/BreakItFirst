@@ -62,7 +62,7 @@
   transition: stroke 0.35s var(--ease);
 }
 .brandMark path:last-child {
-  stroke: var(--logo-signal, #D9381E);
+  stroke: var(--signal);
   transition: stroke 0.35s var(--ease);
 }
 
@@ -114,7 +114,7 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  background: var(--bg-switch-track, #DCD8D2);
+  background: var(--bg-inset);
   padding: 3px;
   border-radius: 9999px;
   border: 1px solid var(--hair-soft);
