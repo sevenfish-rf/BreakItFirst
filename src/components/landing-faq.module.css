@@ -16,8 +16,8 @@
   font-family: var(--serif);
   color: var(--ink);
   font-weight: 600;
-  font-size: clamp(28px, 4.2vw, 44px);
-  line-height: 1.1;
+  font-size: var(--lp-title);
+  line-height: 1.14;
   letter-spacing: -0.025em;
   margin-bottom: 16px;
   font-variation-settings: "opsz" 100;
@@ -28,12 +28,12 @@
 .sub {
   font-family: var(--serif);
   color: var(--ink-2);
-  font-size: clamp(14px, 1.4vw, 15.5px);
+  font-size: var(--lp-lead);
   font-style: italic;
   font-weight: 420;
   line-height: 1.55;
   margin-bottom: 28px;
-  max-width: 32ch;
+  max-width: 34ch;
   font-variation-settings: "opsz" 18;
 }
 
@@ -76,7 +76,7 @@
   font-family: var(--serif);
   color: var(--ink);
   font-weight: 500;
-  font-size: 15.5px;
+  font-size: var(--lp-heading);
   line-height: 1.35;
   letter-spacing: -0.01em;
   font-variation-settings: "opsz" 24;
@@ -102,8 +102,8 @@
 .answer {
   padding: 0 22px 18px;
   color: var(--ink-2);
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: var(--lp-body);
+  line-height: 1.62;
 }
 
 /* ── Grid ───────────────────────────────────────────────────────── */

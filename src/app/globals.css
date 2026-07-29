@@ -963,6 +963,24 @@ html.dark .btn-solid{ color:#171310; }
 /* ============================================================
    LANDING PAGE (marketing route "/") — specimen-plate motif
    ============================================================ */
+
+/* One type scale for the whole marketing route. Every text role maps to
+   exactly one tier — that is what makes the hierarchy legible. Before this,
+   section titles existed at both 36px and 44px and "deck" paragraphs at
+   24.5 / 21.5 / 15.5 / 15px, so the same level shouted at four volumes.
+   The landing modules (spine / metrics / faq / footer) read these too.
+   Figure and diagram annotations are deliberately NOT on this scale. */
+:root{
+  --lp-display:  clamp(40px,6vw,72px);      /* hero h1 only */
+  --lp-title:    clamp(27px,3.4vw,42px);    /* every section headline */
+  --lp-title-sm: clamp(21px,2.5vw,28px);    /* pull quote, sub-band titles */
+  --lp-lead:     clamp(16px,1.6vw,18.5px);  /* every deck / intro paragraph */
+  --lp-heading:  17.5px;                    /* card + item titles */
+  --lp-body:     15.5px;                    /* all reading copy */
+  --lp-body-sm:  13.5px;                    /* notes, captions, secondary */
+  --lp-micro:    11.5px;                    /* figcaps, chips, pills */
+}
+
 .lp-hero{ padding:clamp(52px,8vw,100px) 0 clamp(44px,6vw,72px); overflow:hidden; }
 .lp-hero-grid{
   display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);
@@ -970,15 +988,21 @@ html.dark .btn-solid{ color:#171310; }
 }
 .lp-h1{
   font-family:var(--serif);
-  font-size:clamp(42px,6.4vw,78px);
+  font-size:var(--lp-display);
   font-weight:480;
   font-variation-settings:"opsz" 144, "SOFT" 0;
-  line-height:1.04; letter-spacing:-.022em;
-  max-width:14ch; margin-bottom:22px;
+  line-height:1.05; letter-spacing:-.022em;
+  max-width:15ch; margin-bottom:20px;
 }
 .lp-h1 em{
   font-style:italic; font-weight:420; color:var(--signal);
   font-variation-settings:"opsz" 144;
+}
+/* The landing deck sits on the shared lead tier; .hero-sub keeps its larger
+   app-hero size because /app has no side figure competing with it. */
+.lp-hero .hero-sub{
+  font-size:var(--lp-lead); line-height:1.62;
+  max-width:52ch; margin-bottom:0;
 }
 .lp-cta-row{ display:flex; align-items:center; gap:22px; margin-top:30px; flex-wrap:wrap; }
 .lp-cta{ text-decoration:none; }
@@ -1013,7 +1037,7 @@ html.dark .btn-solid{ color:#171310; }
 }
 .lp-figcap{
   margin-top:12px; padding-top:10px; border-top:1px solid var(--hair-soft);
-  font-family:var(--serif); font-style:italic; font-size:12.5px; color:var(--ink-3);
+  font-family:var(--serif); font-style:italic; font-size:var(--lp-micro); color:var(--ink-3);
 }
 .lp-figcap--center{ border-top:none; text-align:center; margin-top:16px; }
 
@@ -1102,18 +1126,18 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
   border-top:1px solid var(--hair); padding-top:22px; margin-bottom:14px;
 }
 .lp-sec-no{
-  font-family:var(--serif); font-style:italic; font-size:15px; color:var(--signal);
+  font-family:var(--serif); font-style:italic; font-size:var(--lp-heading); color:var(--signal);
   font-feature-settings:"tnum"; flex:none;
 }
 .lp-sec-title{
   font-family:var(--serif); font-weight:500;
-  font-size:clamp(24px,3.2vw,36px); letter-spacing:-.015em; line-height:1.18;
-  max-width:24ch;
+  font-size:var(--lp-title); letter-spacing:-.018em; line-height:1.14;
+  max-width:22ch;
   font-variation-settings:"opsz" 60;
 }
 .lp-intro{
-  font-size:clamp(19.5px,2vw,21.5px); line-height:1.65; color:var(--ink-2);
-  max-width:62ch; margin-bottom:clamp(26px,4vw,40px);
+  font-size:var(--lp-lead); line-height:1.66; color:var(--ink-2);
+  max-width:66ch; margin-bottom:clamp(26px,4vw,40px);
 }
 
 /* 01 — manifest (is / is not) */
@@ -1128,7 +1152,7 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
 }
 .lp-manifest-is,.lp-manifest-not{
   display:flex; gap:11px; align-items:flex-start;
-  font-size:14px; line-height:1.55;
+  font-size:var(--lp-body); line-height:1.58;
 }
 .lp-manifest-is{ color:var(--ink); font-weight:500; }
 .lp-manifest-is svg{ color:var(--calm); flex:none; margin-top:4px; }
@@ -1153,11 +1177,14 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
 }
 .lp-glyph .g-mut{ stroke:var(--ink-3); }
 .lp-glyph .g-sig{ stroke:var(--signal); }
+/* Pass and audience cards are siblings in the reading order, so they share one
+   heading treatment (serif 550 / --lp-heading) instead of the old
+   sans-650-14.5px vs serif-550-19px split. */
 .lp-pass h3{
-  font-family:var(--sans); font-size:14.5px; font-weight:650; letter-spacing:-.005em;
-  margin-bottom:7px;
+  font-family:var(--serif); font-size:var(--lp-heading); font-weight:550; letter-spacing:-.01em;
+  margin-bottom:8px;
 }
-.lp-pass p{ font-size:13px; line-height:1.6; color:var(--ink-2); }
+.lp-pass p{ font-size:var(--lp-body); line-height:1.6; color:var(--ink-2); }
 .lp-pass-arrow{
   position:absolute; right:-13px; top:50%; transform:translateY(-50%);
   z-index:1; font-family:var(--serif); color:var(--ink-3); font-size:15px;
@@ -1172,7 +1199,7 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
   display:flex; flex-direction:column; gap:7px;
 }
 .lp-note:first-child{ border-left-color:var(--signal); }
-.lp-note p{ font-size:13.5px; line-height:1.6; color:var(--ink-2); }
+.lp-note p{ font-size:var(--lp-body-sm); line-height:1.62; color:var(--ink-2); }
 
 /* 04 — audience cards */
 .lp-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
@@ -1183,15 +1210,15 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
 }
 .lp-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-card); }
 .lp-card h3{
-  font-family:var(--serif); font-weight:550; font-size:19px; letter-spacing:-.01em;
+  font-family:var(--serif); font-weight:550; font-size:var(--lp-heading); letter-spacing:-.01em;
   margin:10px 0 8px;
 }
-.lp-card p{ font-size:13.5px; line-height:1.62; color:var(--ink-2); }
+.lp-card p{ font-size:var(--lp-body); line-height:1.62; color:var(--ink-2); }
 .lp-quote{ margin-top:clamp(34px,5vw,52px); text-align:center; }
-.lp-quote-lead{ font-size:13px; color:var(--ink-3); margin-bottom:10px; }
+.lp-quote-lead{ font-size:var(--lp-body-sm); color:var(--ink-3); margin-bottom:10px; }
 .lp-quote blockquote{
   font-family:var(--serif); font-style:italic; font-weight:450;
-  font-size:clamp(21px,3vw,30px); letter-spacing:-.012em; line-height:1.3;
+  font-size:var(--lp-title-sm); letter-spacing:-.012em; line-height:1.32;
   color:var(--ink); max-width:26ch; margin:0 auto;
   font-variation-settings:"opsz" 60;
 }
@@ -1202,16 +1229,18 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
   text-align:center; display:flex; flex-direction:column; align-items:center; gap:16px;
   border-top:1px solid var(--hair); padding-top:clamp(44px,6vw,64px);
 }
+/* The closing headline is a section headline, not a second hero — one display
+   size per page keeps the hero unambiguous. */
 .lp-final-title{
   font-family:var(--serif); font-weight:480;
-  font-size:clamp(30px,4.6vw,52px); letter-spacing:-.02em; line-height:1.12;
+  font-size:var(--lp-title); letter-spacing:-.02em; line-height:1.14;
   max-width:22ch;
   font-variation-settings:"opsz" 100;
 }
 .lp-final-title em{ font-style:italic; font-weight:420; color:var(--signal); }
-.lp-final-sub{ font-size:15px; color:var(--ink-2); max-width:48ch; }
+.lp-final-sub{ font-size:var(--lp-lead); line-height:1.6; color:var(--ink-2); max-width:52ch; }
 .lp-final .lp-cta{ margin-top:8px; }
-.lp-final-footnote{ font-size:11.5px; color:var(--ink-3); margin-top:6px; }
+.lp-final-footnote{ font-size:var(--lp-micro); color:var(--ink-3); margin-top:6px; }
 
 /* landing responsive */
 @media (max-width: 920px){

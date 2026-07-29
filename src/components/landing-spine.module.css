@@ -46,8 +46,8 @@
 .title {
   font-family: var(--serif);
   font-weight: 500;
-  font-size: clamp(28px, 4vw, 44px);
-  line-height: 1.12;
+  font-size: var(--lp-title);
+  line-height: 1.14;
   letter-spacing: -.02em;
   font-variation-settings: "opsz" 100;
   color: var(--ink);
@@ -65,8 +65,8 @@
 }
 
 .sub {
-  font-size: clamp(14px, 1.5vw, 15.5px);
-  line-height: 1.65;
+  font-size: var(--lp-lead);
+  line-height: 1.66;
   color: var(--ink-2);
   max-width: 66ch;
 }
@@ -185,15 +185,15 @@
 .hingeTitle {
   font-family: var(--serif);
   font-weight: 550;
-  font-size: clamp(21px, 2.4vw, 28px);
+  font-size: var(--lp-title-sm);
   letter-spacing: -.015em;
   line-height: 1.18;
   color: var(--ink);
 }
 
 .hingeBody {
-  font-size: 13.5px;
-  line-height: 1.65;
+  font-size: var(--lp-body);
+  line-height: 1.66;
   color: var(--ink-2);
 }
 
@@ -352,14 +352,14 @@
 .cardTitle {
   font-family: var(--serif);
   font-weight: 550;
-  font-size: 18px;
+  font-size: var(--lp-heading);
   letter-spacing: -.012em;
   color: var(--ink);
 }
 
 .cardBody {
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: var(--lp-body);
+  line-height: 1.62;
   color: var(--ink-2);
 }
 
