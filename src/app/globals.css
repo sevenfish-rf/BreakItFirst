@@ -30,9 +30,10 @@
   --shadow-card:   0 1px 2px rgba(27,23,18,.04), 0 8px 32px -12px rgba(27,23,18,.10);
   --shadow-pop:    0 2px 4px rgba(27,23,18,.05), 0 24px 64px -24px rgba(27,23,18,.18);
   --serif: var(--font-fraunces), Georgia, serif;
-  --sans:  var(--font-inter), -apple-system, system-ui, sans-serif;
+  --sans:  var(--font-lora), var(--font-inter), -apple-system, Georgia, serif;
   --mono:  var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
   --ease:  cubic-bezier(.22,.9,.24,1);
+  --highlight-color: var(--signal-wash-2);
   color-scheme: light;
 }
 
@@ -55,6 +56,7 @@ html.dark{
   --calm-wash:     rgba(127,174,144,.10);
   --shadow-card:   0 1px 2px rgba(0,0,0,.25), 0 8px 32px -12px rgba(0,0,0,.5);
   --shadow-pop:    0 2px 4px rgba(0,0,0,.3), 0 24px 64px -24px rgba(0,0,0,.6);
+  --highlight-color: var(--signal-wash-2);
   color-scheme: dark;
 }
 
@@ -62,7 +64,7 @@ html.dark{
 html{ scroll-behavior:smooth; height:100%; }
 body{
   font-family:var(--sans);
-  font-size:15px; line-height:1.6;
+  font-size:20px; line-height:1.65;
   background:var(--bg); color:var(--ink);
   min-height:100%;
   -webkit-font-smoothing:antialiased;
@@ -187,7 +189,7 @@ html.dark .theme-toggle .moon{ display:block; }
   font-variation-settings:"opsz" 144;
 }
 .hero-sub{
-  font-size:clamp(15.5px,1.6vw,18px); line-height:1.55;
+  font-size:clamp(21px,2.2vw,24.5px); line-height:1.6;
   color:var(--ink-2); max-width:56ch; margin-bottom:8px;
 }
 .hero-sub strong{ font-weight:600; color:var(--ink); }
@@ -1054,7 +1056,7 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
   font-variation-settings:"opsz" 60;
 }
 .lp-intro{
-  font-size:clamp(14.5px,1.5vw,16px); line-height:1.65; color:var(--ink-2);
+  font-size:clamp(19.5px,2vw,21.5px); line-height:1.65; color:var(--ink-2);
   max-width:62ch; margin-bottom:clamp(26px,4vw,40px);
 }
 
@@ -1204,3 +1206,34 @@ html.dark .lps2-end svg{ stroke:#1B1713; }
      carries the brand and remains the link home */
   .nav .brand-name{ display:none; }
 }
+
+/* ============================================================
+   GSAP SCROLLTRIGGER TEXT HIGHLIGHT (BreakItFirst Brand Identity)
+   ============================================================ */
+.text-highlight,
+.hl-line {
+  all: unset;
+  display: inline;
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  padding: 2px 6px;
+  margin: 0 -2px;
+  border-radius: 4px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  /* Default: Full background wash using light-brown/cream highlight color */
+  background-image: linear-gradient(
+    var(--highlight-color),
+    var(--highlight-color)
+  );
+}
+
+.text-highlight[data-highlight="underline"],
+.hl-line[data-highlight="underline"] {
+  background-image: linear-gradient(
+    transparent calc(100% - 3px),
+    var(--highlight-color) 3px
+  );
+}
+
+

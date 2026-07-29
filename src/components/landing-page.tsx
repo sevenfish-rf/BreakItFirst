@@ -9,6 +9,7 @@ import { LandingFooter } from "@/components/landing-footer";
 import { LandingFaq } from "@/components/landing-faq";
 import { SmoothScroller } from "@/components/smooth-scroller";
 import { ScrollChoreography } from "@/components/scroll-choreography";
+import { ScrollHighlight } from "@/components/scroll-highlight";
 import { LanguageProvider, useLanguage } from "@/lib/i18n/context";
 import { ThemeProvider } from "@/lib/theme-context";
 import { LANDING_COPY, type LandingCopy } from "@/lib/landing-copy";
@@ -28,6 +29,20 @@ function em(text: string): ReactNode {
   const parts = text.split("|");
   return parts.map((part, i) =>
     i % 2 === 1 ? <em key={i}>{part}</em> : <span key={i}>{part}</span>,
+  );
+}
+
+/** Render `*highlighted*` fragments as GSAP ScrollTrigger animated text highlights. */
+function hl(text: string, style: "half" | "background" | "underline" = "background"): ReactNode {
+  const parts = text.split("*");
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <mark key={i} className="text-highlight" data-highlight={style}>
+        {part}
+      </mark>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
   );
 }
 
@@ -53,7 +68,7 @@ function LandingInner() {
                 {em(c.hero.headline)}
               </h1>
               <p className="hero-sub reveal" data-delay="2">
-                {c.hero.sub}
+                {hl(c.hero.sub)}
               </p>
               <div className="lp-cta-row reveal" data-delay="3">
                 <Link className="analyze-btn lp-cta" href="/app">
@@ -89,7 +104,7 @@ function LandingInner() {
         <section className="lp-sec">
           <div className="wrap">
             <LpSecHead no={c.manifest.no} title={c.manifest.title} />
-            <p className="lp-intro reveal">{c.manifest.intro}</p>
+            <p className="lp-intro reveal">{hl(c.manifest.intro)}</p>
 
             <div className="lp-manifest reveal">
               <div className="lp-manifest-head">
@@ -139,7 +154,7 @@ function LandingInner() {
         <section className="lp-sec" id="method">
           <div className="wrap">
             <LpSecHead no={c.method.no} title={c.method.title} />
-            <p className="lp-intro reveal">{c.method.intro}</p>
+            <p className="lp-intro reveal">{hl(c.method.intro)}</p>
 
             <div className="lp-passes reveal" role="list">
               {c.method.passes.map((p, i) => (
@@ -185,7 +200,7 @@ function LandingInner() {
         <section className="lp-sec">
           <div className="wrap">
             <LpSecHead no={c.audience.no} title={c.audience.title} />
-            <p className="lp-intro reveal">{c.audience.intro}</p>
+            <p className="lp-intro reveal">{hl(c.audience.intro)}</p>
 
             <div className="lp-cards reveal">
               {c.audience.cards.map((card) => (
@@ -199,7 +214,7 @@ function LandingInner() {
 
             <div className="lp-quote reveal">
               <p className="lp-quote-lead">{c.audience.quoteLead}</p>
-              <blockquote>{c.audience.quote}</blockquote>
+              <blockquote>{hl(c.audience.quote)}</blockquote>
             </div>
           </div>
         </section>
@@ -237,6 +252,7 @@ function LandingInner() {
       <LandingFooter />
       </SmoothScroller>
       <ScrollChoreography viewKey="landing-marketing" />
+      <ScrollHighlight />
     </>
   );
 }

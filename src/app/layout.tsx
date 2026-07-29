@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Fraunces, Inter, IBM_Plex_Mono, Lora } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
@@ -22,6 +22,13 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+  display: "swap",
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
   title: "BreakItFirst — What Would Break This?",
   description:
@@ -42,7 +49,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${fraunces.variable} ${plexMono.variable}`}
+      className={`${inter.variable} ${fraunces.variable} ${plexMono.variable} ${lora.variable}`}
       suppressHydrationWarning
     >
       <head>

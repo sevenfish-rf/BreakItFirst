@@ -63,7 +63,7 @@ const en: LandingCopy = {
   hero: {
     kicker: "Structured premortem · for unbuilt ideas",
     headline: "Every idea hides its own |fault line.|",
-    sub: "BreakItFirst is a premortem engine for product and business ideas that don't exist yet. Paste the idea — get one dominant failure argument: the single point of failure, and the causal cascade that follows it. Before reality runs the experiment for you.",
+    sub: "*BreakItFirst is a premortem engine for product and business ideas that don't exist yet.* Paste the idea — get one dominant failure argument: the single point of failure, and the causal cascade that follows it. Before reality runs the experiment for you.",
     ctaPrimary: "Run a premortem",
     ctaSecondary: "See the method",
     figCaption: "Fig. 01 — Anatomy of a failure path, specimen view.",
@@ -79,7 +79,7 @@ const en: LandingCopy = {
     no: "01",
     title: "A premortem, not a pep talk.",
     intro:
-      "Most idea feedback is either encouragement or a checklist. This is neither. The engine argues one specific way your idea collapses — and is judged only on whether that argument is sharper than the risk you already feared.",
+      "Most idea feedback is either encouragement or a checklist. This is neither. *The engine argues one specific way your idea collapses* — and is judged only on whether that argument is sharper than the risk you already feared.",
     isLabel: "What you get",
     isNotLabel: "What you don't",
     rows: [
@@ -105,7 +105,7 @@ const en: LandingCopy = {
     no: "02",
     title: "The engine attacks its own argument before you see it.",
     intro:
-      "A single model answer is a first draft. The report you read is the survivor of a three-pass argument.",
+      "A single model answer is a first draft. *The report you read is the survivor of a three-pass argument.*",
     figCaption: "Fig. 02 — Three-pass analysis pipeline.",
     passes: [
       {
@@ -134,7 +134,7 @@ const en: LandingCopy = {
     no: "04",
     title: "Built for the moment before you commit.",
     intro:
-      "The cheapest time to watch an idea fail is before anything is built.",
+      "*The cheapest time to watch an idea fail is before anything is built.*",
     cards: [
       {
         who: "Solo founders",
@@ -153,7 +153,7 @@ const en: LandingCopy = {
       },
     ],
     quoteLead: "The report has exactly one success condition —",
-    quote: "“I never considered that failure path.”",
+    quote: "“*I never considered that failure path.*”",
   },
   cta: {
     kicker: "The experiment runs either way",
@@ -169,7 +169,7 @@ const id: LandingCopy = {
   hero: {
     kicker: "Premortem terstruktur · untuk ide yang belum dibangun",
     headline: "Setiap ide menyimpan |garis retaknya| sendiri.",
-    sub: "BreakItFirst adalah mesin premortem untuk ide produk dan bisnis yang belum dibangun. Tempel idenya — dapatkan satu argumen kegagalan dominan: single point of failure, beserta rantai kausal yang mengikutinya. Sebelum realita menjalankan eksperimennya untukmu.",
+    sub: "BreakItFirst adalah mesin premortem untuk ide produk dan bisnis yang belum dibangun. Tempel idenya — dapatkan satu argumen kegagalan dominan: single point of failure, beserta rantai kausal yang mengikutinya. *Sebelum realita menjalankan eksperimennya untukmu.*",
     ctaPrimary: "Jalankan premortem",
     ctaSecondary: "Lihat metodenya",
     figCaption: "Gbr. 01 — Anatomi jalur kegagalan, tampilan spesimen.",
@@ -185,7 +185,7 @@ const id: LandingCopy = {
     no: "01",
     title: "Premortem, bukan pep talk.",
     intro:
-      "Kebanyakan feedback ide itu antara penyemangat atau checklist. Ini bukan keduanya. Mesin ini berargumen tentang satu cara spesifik idemu runtuh — dan hanya dinilai dari apakah argumen itu lebih tajam daripada risiko yang sudah kamu takuti.",
+      "Kebanyakan feedback ide itu antara penyemangat atau checklist. Ini bukan keduanya. *Mesin ini berargumen tentang satu cara spesifik idemu runtuh* — dan hanya dinilai dari apakah argumen itu lebih tajam daripada risiko yang sudah kamu takuti.",
     isLabel: "Yang kamu dapat",
     isNotLabel: "Yang tidak",
     rows: [
@@ -211,7 +211,7 @@ const id: LandingCopy = {
     no: "02",
     title: "Mesin menyerang argumennya sendiri sebelum kamu membacanya.",
     intro:
-      "Satu jawaban model hanyalah draf pertama. Laporan yang kamu baca adalah yang selamat dari argumen tiga tahap.",
+      "Satu jawaban model hanyalah draf pertama. *Laporan yang kamu baca adalah yang selamat dari argumen tiga tahap.*",
     figCaption: "Gbr. 02 — Pipeline analisis tiga tahap.",
     passes: [
       {
@@ -240,7 +240,7 @@ const id: LandingCopy = {
     no: "04",
     title: "Dibuat untuk momen sebelum kamu berkomitmen.",
     intro:
-      "Waktu termurah untuk menonton sebuah ide gagal adalah sebelum ada yang dibangun.",
+      "*Waktu termurah untuk menonton sebuah ide gagal adalah sebelum ada yang dibangun.*",
     cards: [
       {
         who: "Solo founder",
@@ -259,7 +259,7 @@ const id: LandingCopy = {
       },
     ],
     quoteLead: "Laporan ini hanya punya satu syarat sukses —",
-    quote: "“Jalur kegagalan itu belum pernah terpikir olehku.”",
+    quote: "“*Jalur kegagalan itu belum pernah terpikir olehku.*”",
   },
   cta: {
     kicker: "Eksperimennya tetap berjalan",
