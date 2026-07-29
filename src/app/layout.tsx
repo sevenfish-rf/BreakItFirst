@@ -1,32 +1,56 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter, IBM_Plex_Mono, Lora } from "next/font/google";
+import { Crimson_Pro, Fraunces, Hanken_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+/**
+ * Four faces, one job each.
+ *
+ * Display / prose serif (`--serif`) is Crimson Pro: a screen rebuild of Crimson
+ * Text with a taller x-height and open counters, so it holds at the 11-13px
+ * italic captions as well as the 44px headline. Variable 200-900 with italic.
+ */
+const crimsonPro = Crimson_Pro({
+  variable: "--font-crimson",
   subsets: ["latin"],
   display: "swap",
+  style: ["normal", "italic"],
 });
 
+/**
+ * Body / interface (`--sans`) is Hanken Grotesk: humanist grotesque that stays
+ * legible at small sizes without the flatness of a system font. Variable
+ * 100-900, so the 550/600/650 call sites are real cuts.
+ */
+const hankenGrotesk = Hanken_Grotesk({
+  variable: "--font-hanken",
+  subsets: ["latin"],
+  display: "swap",
+  style: ["normal", "italic"],
+});
+
+/**
+ * Figures (`--figure`) is Fraunces — chosen for the numerals specifically.
+ * Every counter, step index, pass number and stat in the route routes here
+ * instead of to `--serif`, so the digits keep Fraunces' character while the
+ * running prose stays Crimson Pro. `opsz` is requested because these numerals
+ * run from 12px step badges up to the 64px metric, and the optical-size axis is
+ * what keeps the small ones from thinning out.
+ */
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
+  style: ["normal", "italic"],
+  axes: ["opsz"],
 });
 
+/** Data voice (`--mono`): labels, timers, byte counts. Unchanged. */
 const plexMono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
   display: "swap",
-});
-
-const lora = Lora({
-  variable: "--font-lora",
-  subsets: ["latin"],
-  display: "swap",
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -49,7 +73,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${fraunces.variable} ${plexMono.variable} ${lora.variable}`}
+      className={`${crimsonPro.variable} ${hankenGrotesk.variable} ${fraunces.variable} ${plexMono.variable}`}
       suppressHydrationWarning
     >
       <head>

@@ -7,7 +7,7 @@
    BREAKITFIRST — Direction A: "Editorial Analyst"
    Light-first, print-inspired, one signal color for failure.
    Ported 1:1 from the approved concept. Fonts come from next/font
-   (Fraunces / Inter / IBM Plex Mono) via CSS variables.
+   (Crimson Pro / Hanken Grotesk / Fraunces numerals / IBM Plex Mono) via CSS variables.
    ============================================================ */
 
 :root {
@@ -29,8 +29,11 @@
   --calm-wash: rgba(62, 102, 80, .09);
   --shadow-card: 0 1px 2px rgba(27, 23, 18, .04), 0 8px 32px -12px rgba(27, 23, 18, .10);
   --shadow-pop: 0 2px 4px rgba(27, 23, 18, .05), 0 24px 64px -24px rgba(27, 23, 18, .18);
-  --serif: var(--font-fraunces), Georgia, serif;
-  --sans: var(--font-lora), var(--font-inter), -apple-system, Georgia, serif;
+  --serif: var(--font-crimson), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans: var(--font-hanken), ui-sans-serif, system-ui, "Segoe UI", Helvetica, sans-serif;
+  /* Numerals only — counters, step indices, pass numbers, stats. Kept as its own
+     token so the digits can be Fraunces while the prose stays Crimson Pro. */
+  --figure: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
   --mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
   --ease: cubic-bezier(.22, .9, .24, 1);
   --highlight-color: rgba(74, 155, 255, 0.26);
@@ -80,7 +83,15 @@ body {
   min-height: 100%;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "cv11", "ss01";
+  /* Ligatures and contextual alternates only — nothing face-specific, so this
+     survives a font swap. */
+  font-feature-settings: "liga", "calt";
+  font-kerning: normal;
+  /* Never let the browser fake a weight or a slant: with variable faces every
+     weight in use is a real cut, and a synthesized one would only show up when
+     a font swap accidentally drops below the range a call site asks for. Better
+     that it looks light than smeared. */
+  font-synthesis-weight: none;
   transition: background .45s var(--ease), color .45s var(--ease);
 }
 
@@ -132,7 +143,7 @@ body {
 }
 
 .num {
-  font-family: var(--serif);
+  font-family: var(--figure);
   font-weight: 400;
   font-style: italic;
   font-size: 13px;
@@ -343,7 +354,6 @@ html.dark .theme-toggle .moon {
   font-family: var(--serif);
   font-size: clamp(46px, 8.2vw, 96px);
   font-weight: 480;
-  font-variation-settings: "opsz" 144, "SOFT" 0;
   line-height: 1.02;
   letter-spacing: -.022em;
   max-width: 11ch;
@@ -354,7 +364,6 @@ html.dark .theme-toggle .moon {
   font-style: italic;
   font-weight: 420;
   color: var(--signal);
-  font-variation-settings: "opsz" 144;
 }
 
 .hero-sub {
@@ -442,7 +451,6 @@ html.dark .theme-toggle .moon {
   line-height: 1.6;
   font-weight: 420;
   color: var(--ink);
-  font-variation-settings: "opsz" 18;
 }
 
 .console textarea::placeholder {
@@ -735,7 +743,7 @@ html.dark .analyze-btn {
 }
 
 .pass-n {
-  font-family: var(--serif);
+  font-family: var(--figure);
   font-style: italic;
   font-size: 14px;
   color: var(--signal);
@@ -798,7 +806,6 @@ html.dark .analyze-btn {
   line-height: 1.15;
   max-width: 26ch;
   margin-bottom: 14px;
-  font-variation-settings: "opsz" 60;
 }
 
 /* Raw user input — folded by default (native <details>) so a long draft doesn't
@@ -1120,7 +1127,7 @@ html.dark .btn-tool--primary {
 }
 
 .sec-no {
-  font-family: var(--serif);
+  font-family: var(--figure);
   font-style: italic;
   font-size: 15px;
   color: var(--signal);
@@ -1133,7 +1140,6 @@ html.dark .btn-tool--primary {
   font-weight: 550;
   font-size: clamp(19px, 2.2vw, 23px);
   letter-spacing: -.01em;
-  font-variation-settings: "opsz" 40;
 }
 
 .sec-aside {
@@ -1157,7 +1163,6 @@ html.dark .btn-tool--primary {
   font-size: clamp(17px, 2vw, 20.5px);
   line-height: 1.6;
   letter-spacing: -.005em;
-  font-variation-settings: "opsz" 24;
 }
 
 .summary-lede .drop {
@@ -1228,7 +1233,7 @@ html.dark .btn-tool--primary {
 
 .assump-list li::before {
   content: counter(assump, decimal-leading-zero);
-  font-family: var(--serif);
+  font-family: var(--figure);
   font-style: italic;
   font-size: 13px;
   color: var(--signal);
@@ -1376,7 +1381,6 @@ html.dark .btn-tool--primary {
   font-size: clamp(26px, 4vw, 44px);
   line-height: 1.12;
   letter-spacing: -.02em;
-  font-variation-settings: "opsz" 100;
   max-width: 20ch;
   margin-bottom: 22px;
 }
@@ -1463,7 +1467,7 @@ html.dark .btn-tool--primary {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--serif);
+  font-family: var(--figure);
   font-style: italic;
   font-size: 13px;
   color: var(--ink-2);
@@ -2595,7 +2599,6 @@ html.dark .btn-solid {
   font-family: var(--serif);
   font-size: var(--lp-display);
   font-weight: 480;
-  font-variation-settings: "opsz" 144, "SOFT" 0;
   line-height: 1.12;
   letter-spacing: -.018em;
   max-width: 15ch;
@@ -2606,7 +2609,6 @@ html.dark .btn-solid {
   font-style: italic;
   font-weight: 420;
   color: var(--signal);
-  font-variation-settings: "opsz" 144;
 }
 
 /* The landing deck sits on the shared lead tier; .hero-sub keeps its larger
@@ -2822,7 +2824,7 @@ html.dark .btn-solid {
   border-radius: 50%;
   background: var(--bg);
   border: 1px solid var(--hair);
-  font-family: var(--serif);
+  font-family: var(--figure);
   font-style: italic;
   font-size: 12.5px;
   color: var(--ink-2);
@@ -2940,7 +2942,7 @@ html.dark .lps2-end svg {
 }
 
 .lp-sec-no {
-  font-family: var(--serif);
+  font-family: var(--figure);
   font-style: italic;
   font-size: var(--lp-heading);
   color: var(--signal);
@@ -2956,7 +2958,6 @@ html.dark .lps2-end svg {
   line-height: 1.2;
   max-width: 44ch;
   text-wrap: balance;
-  font-variation-settings: "opsz" 60;
 }
 
 /* A deck is one or two lines, not a reading block — so it takes the full
@@ -3052,7 +3053,7 @@ html.dark .lps2-end svg {
 }
 
 .lp-pass-n {
-  font-family: var(--serif);
+  font-family: var(--figure);
   font-style: italic;
   font-size: 14px;
   color: var(--signal);
@@ -3180,7 +3181,6 @@ html.dark .lps2-end svg {
   color: var(--ink);
   max-width: 28ch;
   margin: 0 auto;
-  font-variation-settings: "opsz" 60;
 }
 
 /* final CTA */
@@ -3208,7 +3208,6 @@ html.dark .lps2-end svg {
   line-height: 1.2;
   max-width: 30ch;
   text-wrap: balance;
-  font-variation-settings: "opsz" 100;
 }
 
 .lp-final-title em {
