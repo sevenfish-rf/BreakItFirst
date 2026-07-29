@@ -162,12 +162,16 @@
 }
 
 .hingeCopy {
+  position: relative;
   padding: clamp(26px, 3.4vw, 44px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 12px;
-  background: linear-gradient(140deg, var(--signal-wash) 0%, transparent 62%);
+  background-color: var(--bg-raised);
+  background-image: 
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.38'/%3E%3C/svg%3E"),
+    radial-gradient(circle at 12% 12%, #DAEBF9 0%, #EDF5FD 20%, transparent 45%);
 }
 
 .pill {
