@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { useLanguage } from "@/lib/i18n/context";
 import type { Locale } from "@/lib/i18n/types";
 import s from "./landing-spine.module.css";
@@ -275,7 +275,11 @@ export function LandingSpine() {
                     <h4 className={s.cardTitle}>{b.title}</h4>
                     <p className={s.cardBody}>{b.body}</p>
                   </div>
-                  <Vignette branch={b} />
+                  <Vignette
+                    branch={b}
+                    delay={T.card(i)}
+                    reduced={reduced}
+                  />
                 </motion.article>
               </div>
             ))}
@@ -338,22 +342,66 @@ function Line({
   );
 }
 
+/**
+ * Entrance for a vignette's rows. The list waits for its card to land, then
+ * runs its own stagger — so a branch reads as "box arrives, then the box fills
+ * in", not as one flat fade. `hidden`/`show` are set on the list, and each row
+ * inherits them through variant propagation.
+ */
+const listVariants = (delay: number): Variants => ({
+  hidden: {},
+  show: { transition: { delayChildren: delay + 0.22, staggerChildren: 0.07 } },
+});
+
+/** Cascade steps and domain rows arrive along the axis they're read on. */
+const rowVariants: Variants = {
+  hidden: { opacity: 0, x: -12 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.42, ease: "easeOut" } },
+};
+
+/** Archetype rings are answers, not a sequence — they pop rather than slide. */
+const popVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.86 },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.38, ease: "easeOut" } },
+};
+
 /** Small in-card figure. Content comes from the branch data, never invented. */
-function Vignette({ branch }: { branch: Branch }) {
+function Vignette({
+  branch,
+  delay,
+  reduced,
+}: {
+  branch: Branch;
+  delay: number;
+  reduced: boolean;
+}) {
+  // Reduced motion opts out of the mechanism entirely rather than running it
+  // at zero duration, so no transform or opacity is ever applied.
+  const list = reduced
+    ? {}
+    : ({
+        initial: "hidden",
+        whileInView: "show",
+        viewport: { once: true, amount: 0.3 },
+        variants: listVariants(delay),
+      } as const);
+  const row = reduced ? {} : { variants: rowVariants };
+  const pop = reduced ? {} : { variants: popVariants };
+
   if (branch.kind === "cascade") {
     return (
       <div className={s.fig}>
-        <ol className={s.chain}>
+        <motion.ol className={s.chain} {...list}>
           {branch.items.map((step, i) => (
-            <li key={step}>
+            <motion.li key={step} {...row}>
               <span className={s.chainDot} aria-hidden="true" />
               <span className={s.chainText}>{step}</span>
               {i === branch.items.length - 1 ? null : (
                 <span className={s.chainRail} aria-hidden="true" />
               )}
-            </li>
+            </motion.li>
           ))}
-        </ol>
+        </motion.ol>
       </div>
     );
   }
@@ -361,29 +409,36 @@ function Vignette({ branch }: { branch: Branch }) {
   if (branch.kind === "modes") {
     return (
       <div className={s.fig}>
-        <ul className={s.domains}>
+        <motion.ul className={s.domains} {...list}>
           {branch.items.map((d) => (
-            <li key={d}>
+            <motion.li key={d} {...row}>
               <span className={s.domainTick} aria-hidden="true" />
               {d}
-            </li>
+            </motion.li>
           ))}
-        </ul>
+        </motion.ul>
       </div>
     );
   }
 
+  // The note is not a pattern, so it stays a sibling of the list. Both hang
+  // off one motion parent, which forwards the variant label down through the
+  // (variant-less) motion.ul to each row.
   return (
-    <div className={s.fig}>
-      <ul className={s.patterns}>
+    <motion.div className={s.fig} {...list}>
+      <motion.ul className={s.patterns}>
         {branch.items.map((p) => (
-          <li key={p}>
+          <motion.li key={p} {...pop}>
             <span className={s.patternRing} aria-hidden="true" />
             <span className={s.patternName}>{p}</span>
-          </li>
+          </motion.li>
         ))}
-      </ul>
-      {branch.note ? <p className={s.patternNote}>{branch.note}</p> : null}
-    </div>
+      </motion.ul>
+      {branch.note ? (
+        <motion.p className={s.patternNote} {...row}>
+          {branch.note}
+        </motion.p>
+      ) : null}
+    </motion.div>
   );
 }

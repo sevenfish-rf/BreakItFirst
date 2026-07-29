@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type ReactNode } from "react";
+import { type CSSProperties, type ReactNode } from "react";
 import { Header } from "@/components/header";
 import { LandingMetrics } from "@/components/landing-metrics";
 import { LandingSpine } from "@/components/landing-spine";
@@ -22,6 +22,16 @@ export function LandingPage() {
       </ThemeProvider>
     </LanguageProvider>
   );
+}
+
+/**
+ * Position in a `.stagger` group. One custom property drives every entrance
+ * delay (see `.stagger-item` / `.stagger-wipe` / `.stagger-link` in
+ * globals.css), so the sequence is derived from render order instead of
+ * hand-written `nth-child` delays that drift when markup changes.
+ */
+function cssIndex(i: number): CSSProperties {
+  return { "--i": i } as CSSProperties;
 }
 
 /** Render `|emphasized|` fragments as signal-colored italics. */
@@ -106,13 +116,17 @@ function LandingInner() {
             <LpSecHead no={c.manifest.no} title={c.manifest.title} />
             <p className="lp-intro reveal">{hl(c.manifest.intro)}</p>
 
-            <div className="lp-manifest reveal">
-              <div className="lp-manifest-head">
+            <div className="lp-manifest stagger">
+              <div className="lp-manifest-head stagger-wipe">
                 <span className="label label--signal">{c.manifest.isLabel}</span>
                 <span className="label">{c.manifest.isNotLabel}</span>
               </div>
               {c.manifest.rows.map((row, i) => (
-                <div className="lp-manifest-row" key={i}>
+                <div
+                  className="lp-manifest-row stagger-wipe"
+                  style={cssIndex(i + 1)}
+                  key={i}
+                >
                   <div className="lp-manifest-is">
                     <svg
                       width="13"
@@ -156,9 +170,14 @@ function LandingInner() {
             <LpSecHead no={c.method.no} title={c.method.title} />
             <p className="lp-intro reveal">{hl(c.method.intro)}</p>
 
-            <div className="lp-passes reveal" role="list">
+            <div className="lp-passes stagger" role="list">
               {c.method.passes.map((p, i) => (
-                <article className="lp-pass" role="listitem" key={p.n}>
+                <article
+                  className="lp-pass stagger-item"
+                  style={cssIndex(i)}
+                  role="listitem"
+                  key={p.n}
+                >
                   <div className="lp-pass-head">
                     <span className="lp-pass-n">{p.n}</span>
                     <PassGlyph index={i} />
@@ -166,7 +185,11 @@ function LandingInner() {
                   <h3>{p.title}</h3>
                   <p>{p.body}</p>
                   {i < c.method.passes.length - 1 ? (
-                    <span className="lp-pass-arrow" aria-hidden="true">
+                    <span
+                      className="lp-pass-arrow stagger-link"
+                      style={cssIndex(i)}
+                      aria-hidden="true"
+                    >
                       →
                     </span>
                   ) : null}
@@ -202,9 +225,13 @@ function LandingInner() {
             <LpSecHead no={c.audience.no} title={c.audience.title} />
             <p className="lp-intro reveal">{hl(c.audience.intro)}</p>
 
-            <div className="lp-cards reveal">
-              {c.audience.cards.map((card) => (
-                <article className="lp-card" key={card.who}>
+            <div className="lp-cards stagger">
+              {c.audience.cards.map((card, i) => (
+                <article
+                  className="lp-card stagger-item"
+                  style={cssIndex(i)}
+                  key={card.who}
+                >
                   <span className="label label--signal">{card.when}</span>
                   <h3>{card.who}</h3>
                   <p>{card.body}</p>

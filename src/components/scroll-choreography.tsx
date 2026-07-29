@@ -19,7 +19,11 @@ export function ScrollChoreography({ viewKey }: { viewKey: string }) {
 
     // rAF so the freshly-swapped view is in the DOM
     const raf = requestAnimationFrame(() => {
-      const reveals = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
+      // `.stagger` groups share the reveal observer: both want one class
+      // toggled once on entry, and the group's children own the motion.
+      const reveals = Array.from(
+        document.querySelectorAll<HTMLElement>(".reveal, .stagger"),
+      );
       const cascades = Array.from(document.querySelectorAll<HTMLElement>(".cascade"));
       const axesGroups = Array.from(document.querySelectorAll<HTMLElement>(".axes"));
       const bands = Array.from(document.querySelectorAll<HTMLElement>(".band"));

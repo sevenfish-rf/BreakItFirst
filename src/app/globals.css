@@ -2360,6 +2360,99 @@ html.dark .btn-solid {
   transition-delay: .24s;
 }
 
+/* ── Grouped entrance (containers, not text) ───────────────────
+   A `.stagger` group gets `.in` from the same IntersectionObserver that
+   drives `.reveal` (see ScrollChoreography). Its children carry the motion,
+   so what animates is the box — card, table row — and its text rides along
+   inside it. `--i` is the child's index, set in markup; one variable drives
+   every delay, so re-ordering markup cannot desync the sequence.
+
+   Keyframes, not transitions, on purpose. `.lp-pass` and `.lp-card` declare
+   their own `transition: transform .3s` for the hover lift; an entrance
+   written as a transition has equal specificity and loses to whichever rule
+   comes later in the file, which silently dropped the opacity transition and
+   made the card snap in with no visible animation at all. An animation lives
+   in a different part of the cascade, so the two cannot collide.
+
+   `backwards` fill and not `both`: during the delay the `from` frame holds the
+   box hidden, and once the run ends the animation stops contributing entirely,
+   so `:hover` gets its transform back. `both` would pin `transform: none`
+   forever and kill the hover lift. */
+.stagger-item {
+  opacity: 0;
+}
+
+.stagger.in .stagger-item {
+  opacity: 1;
+  animation: stagger-rise .72s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 130ms);
+}
+
+@keyframes stagger-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Table rows read as a table being drawn: the row box — hairline, glyph and
+   copy together — wipes in from the left rather than fading in place.
+
+   Not `--ease`: that curve front-loads its distance, so a wipe on it covers
+   most of the row in the first third of the duration and reads fast however
+   long the duration is. This curve spends its time more evenly, which is what
+   makes the wipe legible as a wipe. */
+.stagger-wipe {
+  opacity: 0;
+}
+
+.stagger.in .stagger-wipe {
+  opacity: 1;
+  animation: stagger-wipe 1.6s cubic-bezier(.42, .04, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 190ms);
+}
+
+@keyframes stagger-wipe {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+    clip-path: inset(0 100% 0 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Connectors land after the two boxes they join. Opacity only — the arrow's
+   transform is load-bearing (it centres the pill on the card edge). */
+.stagger-link {
+  opacity: 0;
+}
+
+.stagger.in .stagger-link {
+  opacity: 1;
+  animation: stagger-fade .45s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 130ms + 420ms);
+}
+
+@keyframes stagger-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 .cstep {
   opacity: 0;
   transform: translateY(14px);
@@ -2442,9 +2535,18 @@ html.dark .btn-solid {
   }
 
   .reveal,
-  .cstep {
+  .cstep,
+  .stagger-item,
+  .stagger-wipe,
+  .stagger-link {
     opacity: 1;
     transform: none;
+    clip-path: none;
+    transition-delay: 0s !important;
+    /* !important because the entrance lives on `.stagger.in .stagger-item`,
+       which outranks this selector. Cancelling the animation outright is the
+       point: nothing should move, not even briefly. */
+    animation: none !important;
   }
 }
 
