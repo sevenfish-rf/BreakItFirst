@@ -1,0 +1,17 @@
+{
+  "id": "04-saas-team-wiki-flip",
+  "variant_of": "04-saas-team-wiki",
+  "variant_kind": "flip",
+  "title": "AI-first team wiki SaaS (reordered pitch)",
+  "category": "SaaS",
+  "locale": "en",
+  "fragile_hint": "false",
+  "idea": "The thesis first: Notion is passive storage, and what a team actually needs is active knowledge maintenance. So we sell to series-A startups that already pay for Notion + Slack, at $12/seat/month with a 10-seat minimum. Integrations are Slack, Google Meet, and Notion import. The mechanism behind 'docs that update themselves' is a weekly AI refresh job. Concretely, it is a B2B SaaS wiki that auto-summarizes Slack and meeting transcripts into living docs.",
+  "focus_notes": [
+    "Churn if AI summaries are wrong or noisy",
+    "Seat-min friction vs Notion free habit",
+    "Integration dependency / API policy changes",
+    "Whether 'auto-update' creates trust issues with wrong edits"
+  ],
+  "expected_spof_themes": ["churn", "accuracy", "integration", "positioning", "seat economics"]
+}

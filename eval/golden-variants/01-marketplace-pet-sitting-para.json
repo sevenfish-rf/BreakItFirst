@@ -1,6 +1,7 @@
 {
-  "id": "01-marketplace-pet-sitting-v",
+  "id": "01-marketplace-pet-sitting-para",
   "variant_of": "01-marketplace-pet-sitting",
+  "variant_kind": "para",
   "title": "Neighborhood pet-sitting marketplace (paraphrase)",
   "category": "Marketplace",
   "locale": "en",

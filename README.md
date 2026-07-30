@@ -79,8 +79,9 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run smoke:session` | Jobs + history smoke (no API key) |
 | `npm run eval:assert-sample` | Schema assertions (no API key) |
 | `npm run eval:baseline` | Golden set via `BIF_*` env |
-| `npm run eval:compare` | Diff two baseline runs (⚠ 34-pt rubric is saturated) |
-| `npm run eval:stability` | Original ↔ paraphrase run; compares **SPOF labels**, not the score |
+| `npm run eval:compare` | Diff two baseline runs (⚠ scores from the old 34-pt rubric are not comparable to the current 48/52) |
+| `npm run eval:hinge-check` | Stability preflight — fixture set + theme screen, no API key |
+| `npm run eval:stability` | Original vs `para`/`strip`/`flip` rewrites; auto verdict on **SPOF themes**, not the score |
 | `npm run eval:traces` | Read `BIF_TRACE=1` pass dumps: hinge per draft, drift across runs |
 | `npm run eval:baseline:ps1` | PowerShell baseline helper |
 
@@ -114,7 +115,7 @@ Or: `.\scripts\eval-baseline.ps1`. Guide: [`eval/README.md`](./eval/README.md)
 src/app/           API routes + pages
 src/components/    UI, header, landing, report, visuals
 src/lib/           pipeline, jobs, prompts, schema, rate limit, trace
-eval/              golden + golden-variants fixtures, rubric, baseline runner, stability runner, trace reader
+eval/              golden + 3 rewrites per fixture, rubric (48/52), baseline runner, stability runner + hinge screen, trace reader
 docs/              00-index · 01-product · 02-develop · 03-quality-gap · 04-refine-backlog · 05-doc-audit · Scoring/ · dogfood/ · 90/91 archive
 ```
 
@@ -156,7 +157,7 @@ docs/              00-index · 01-product · 02-develop · 03-quality-gap · 04-
 - [x] Session jobs / poll / cancel / single-flight / client history  
 - [x] Reasoning refine (selection + pathway semantics)  
 - [x] Run provenance on every report + opt-in raw pass trace  
-- [ ] **Re-run the measurement after the prompt refine — required, currently blocked.** The 34-pt rubric is saturated (3 runs at 33–34/34), so `eval:stability`'s SPOF-label diff is the instrument; it needs owner provider credentials. Prompt and rule-engine work is frozen until this lands — see `docs/04-refine-backlog.md` Q10 / Q11  
+- [ ] **Run the stability measurement — required, currently blocked on provider credentials only.** The instrument is complete: 5 fixtures × 3 rewrites (`para`/`strip`/`flip`), an automatic SPOF-theme verdict, an offline preflight (`eval:hinge-check`, passing), and an opt-in CI gate. The old 34-pt rubric was saturated (3 runs at 33–34/34) and now covers all 10 report blocks at 48/52, but score is still the wrong instrument for hinge stability. Prompt and rule-engine work stays frozen until the run happens — see `docs/04-refine-backlog.md` Q10 / Q11  
 - [ ] Production fixed provider UX  
 - [ ] Redis multi-instance  
 - [ ] Export PDF / server-side history (if needed)  

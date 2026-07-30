@@ -1,0 +1,17 @@
+{
+  "id": "05-hardware-fitness-ring-strip",
+  "variant_of": "05-hardware-fitness-ring",
+  "variant_kind": "strip",
+  "title": "Budget sleep-tracking fitness ring (stripped)",
+  "category": "Hardware",
+  "locale": "en",
+  "fragile_hint": "true",
+  "idea": "A $49 sleep and HRV tracking ring for consumers in a fast-growing emerging region, priced far under the established premium product in the category. A single contract manufacturer abroad produces every unit, on net-60 terms. The device runs white-label firmware from that same manufacturer, paired with a cross-platform companion app; a $3/month subscription optionally unlocks an automated sleep-coaching feature. The first batch of 5,000 units was pre-ordered through a social feed. There is no medical certification; it is sold as a wellness product. Battery life is advertised at 5 days. Returns are handled by a 2-person team in one city, shipping replacements from a home warehouse.",
+  "focus_notes": [
+    "OEM single-source / quality defect cascade",
+    "Margin vs returns and logistics at $49",
+    "Certification / wellness claims risk",
+    "Support ops cannot scale with viral demand"
+  ],
+  "expected_spof_themes": ["supply chain", "margins", "defects", "ops", "claims"]
+}

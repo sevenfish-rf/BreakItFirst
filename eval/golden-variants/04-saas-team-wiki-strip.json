@@ -1,0 +1,17 @@
+{
+  "id": "04-saas-team-wiki-strip",
+  "variant_of": "04-saas-team-wiki",
+  "variant_kind": "strip",
+  "title": "AI-first team wiki SaaS (stripped)",
+  "category": "SaaS",
+  "locale": "en",
+  "fragile_hint": "false",
+  "idea": "A B2B documentation product that auto-summarizes team chat history and meeting transcripts into living docs. Pricing is $12 per seat per month with a 10-seat minimum. The differentiator is docs that update themselves, delivered by a weekly automated refresh job. It integrates with the team's chat tool and its video-meeting tool, and can import an existing page tree from the incumbent documentation product. Buyers are recently funded startups already paying for both that chat tool and that incumbent documentation product. The founder's thesis is that existing documentation tools are passive storage while this one performs active knowledge maintenance.",
+  "focus_notes": [
+    "Churn if AI summaries are wrong or noisy",
+    "Seat-min friction vs Notion free habit",
+    "Integration dependency / API policy changes",
+    "Whether 'auto-update' creates trust issues with wrong edits"
+  ],
+  "expected_spof_themes": ["churn", "accuracy", "integration", "positioning", "seat economics"]
+}

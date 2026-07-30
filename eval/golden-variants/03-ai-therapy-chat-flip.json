@@ -1,0 +1,17 @@
+{
+  "id": "03-ai-therapy-chat-flip",
+  "variant_of": "03-ai-therapy-chat",
+  "variant_kind": "flip",
+  "title": "AI chat therapist subscription (reordered pitch)",
+  "category": "AI Product",
+  "locale": "en",
+  "fragile_hint": "true",
+  "idea": "The backend is a single frontier LLM provider behind a long system prompt, plus RAG over CBT worksheets — no human clinicians in the loop. Crisis keywords trigger a static hotline message. In the footer, in small text, we say 'always available support, not a replacement for licensed care'. Launch markets are the US and Indonesia. It is sold as a consumer subscription at $19/month, and what the user gets is 24/7 AI 'therapy-style' chat for anxiety and mild depression.",
+  "focus_notes": [
+    "Quality ceiling / harmful advice / hallucination in clinical-adjacent domain",
+    "Liability & regulatory (medical device / counseling rules)",
+    "Trust collapse after one viral failure story",
+    "Provider cost and single-vendor lock-in"
+  ],
+  "expected_spof_themes": ["liability", "trust", "hallucination", "regulation", "provider lock-in"]
+}

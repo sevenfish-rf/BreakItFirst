@@ -1,0 +1,17 @@
+{
+  "id": "02-api-usage-billing-strip",
+  "variant_of": "02-api-usage-billing",
+  "variant_kind": "strip",
+  "title": "Usage-based public developer API (stripped)",
+  "category": "API",
+  "locale": "en",
+  "fragile_hint": "mixed",
+  "idea": "A public web service that takes a company's web domain and returns descriptive attributes about that company: employee count bands, funding stage, hints about the software it runs. Billing is pure usage-based: $0.02 per successful lookup, with a free tier of 500 calls per month. The only authentication method is a static API key; no delegated-authorization flow exists yet. The underlying records are partly scraped from the open web and partly licensed from third-party feeds, and the refresh interval is promised as weekly. The customers are sales-automation vendors that batch-enrich their own customers' contact databases in overnight jobs.",
+  "focus_notes": [
+    "Abuse / key leakage and unbounded batch jobs",
+    "Data licensing & accuracy liability",
+    "Versioning / breaking changes for CRM integrators",
+    "Unit economics when free tier + scrapers dominate cost"
+  ],
+  "expected_spof_themes": ["abuse", "data quality", "licensing", "pricing", "sla"]
+}

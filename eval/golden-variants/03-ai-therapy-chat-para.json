@@ -1,6 +1,7 @@
 {
-  "id": "03-ai-therapy-chat-v",
+  "id": "03-ai-therapy-chat-para",
   "variant_of": "03-ai-therapy-chat",
+  "variant_kind": "para",
   "title": "AI chat therapist subscription (paraphrase)",
   "category": "AI Product",
   "locale": "en",

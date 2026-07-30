@@ -1,6 +1,7 @@
 {
-  "id": "05-hardware-fitness-ring-v",
+  "id": "05-hardware-fitness-ring-para",
   "variant_of": "05-hardware-fitness-ring",
+  "variant_kind": "para",
   "title": "Budget sleep-tracking fitness ring (paraphrase)",
   "category": "Hardware",
   "locale": "en",

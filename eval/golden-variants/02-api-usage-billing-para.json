@@ -1,6 +1,7 @@
 {
-  "id": "02-api-usage-billing-v",
+  "id": "02-api-usage-billing-para",
   "variant_of": "02-api-usage-billing",
+  "variant_kind": "para",
   "title": "Usage-based public developer API (paraphrase)",
   "category": "API",
   "locale": "en",

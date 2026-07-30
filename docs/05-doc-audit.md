@@ -125,7 +125,7 @@ the highest-drift doc as predicted.
 | A2 env list (`BIF_BASE_URL/API_KEY/PASS1_MODEL/PASS2_MODEL`) | `missing` | `eval/env.example` also documents `BIF_LOCALE`, `BIF_ONLY`, `BIF_DEEP`, `BIF_TRACE`; `stability.ts` adds `BIF_REF`; `run-baseline.ts` reads `BIF_CALL_TIMEOUT_MS` | List the optional vars or point at `eval/env.example` |
 | A3 tree: `eval/ golden, rubric, baselines` | `missing` | `eval/` also has `golden-variants/`, `stability.ts`, `read-traces.ts`, `assertions.ts`, `compare-baseline.ts`, `stability/` output dir | Update the tree |
 | A3 tree: `docs/ 00-index · 01-product · 02-develop · 90/91 archive` | `stale` | `03`, `04`, `05`, `Scoring/`, `dogfood/` all exist | Update the tree |
-| A3 tree: `src/app/ pages + api/...` | `missing` | `src/app/type-lab/page.tsx` is a live route and is documented nowhere | Delete the route or document it |
+| A3 tree: `src/app/ pages + api/...` | `missing` | `src/app/type-lab/page.tsx` was a live route documented nowhere | **Resolved 2026-07-30:** route deleted (owner decision, backlog `S5`); tree updated |
 | Report provenance chip + Markdown "Run provenance" block | `missing` | Shipped 2026-07-30 (`report-markdown.ts`, `analysis-report.tsx`) — no mention in Part D | Add to Part D / feature map |
 | Rate limits: analyze 8 / 15 min, Deep costs 2, models 40 / min | `ok` | `rate-limit.ts:32-41` (`limit: 8`, `windowMs: 15*60*1000`, `limit: 40`, `windowMs: 60*1000`); `api/analyze/route.ts:91` `cost: deepAnalysis ? 2 : 1` | — |
 | Rate limits list is complete | `missing` | `LIMITS.analyzeStrict` (after repeated `not_analyzable`) and the 1-hour abuse-strike window are undocumented | Add both |
@@ -209,8 +209,8 @@ semantics did not move. Every checkable numeric claim matched.
 | Claim | Verdict | Evidence | Fix |
 |-------|---------|----------|-----|
 | "Sumber: tabel Baik/Buruk di `docs/project-overview.md`" | `stale` | No such file; those tables live in `docs/01-product.md` §4 | Repoint |
-| Block totals sum to **max 34** | `ok` | 4+6+6+6+4+4+4 = 34; matches the `max_points: 34` stub in `run-baseline.ts:238` | — |
-| Rubric covers the shipped report | `missing` | No criteria for `stress_test`, `failure_velocity`, `self_consistency`, or the F1/F2/F3 fields (`critical_assumption_indices`, `point_of_no_return_index`, `compounding_note`) — all shipped and all rendered | Add criteria, or state the omission |
+| Block totals sum to **max 34** | `superseded` | Was `ok` (4+6+6+6+4+4+4 = 34). **Rewritten 2026-07-30** to 10 blocks = **48 standard / 52 deep** (backlog `Q13`); the `run-baseline.ts` stub still writes the old `max_points`, which only affects the stub, not the sheet | Stub value is cosmetic; per-block comparison is the documented rule |
+| Rubric covers the shipped report | `missing` → **fixed** | No criteria existed for `stress_test`, `failure_velocity`, `self_consistency`, or F1/F2/F3. **Resolved 2026-07-30:** T1–T2, V1–V2, X1–X2 (deep only, `null` in standard), F1–F3 added | Done (`Q13`) |
 | Rubric can detect a quality regression | `drift` | Not a claim the rubric makes, but the reason it must be read with a caveat: all three 2026-07-16 baselines scored 33–34/34 with zero failures and that run's own summary says *"ceiling already high at 33.8"*. **Saturated.** | Add the caveat + point at `eval/stability.ts` |
 | Instructions reference `eval/baselines/<date>/scores/<id>.json` + `score-template.json` | `ok` | Both exist; `run-baseline.ts` writes the stubs | — |
 
@@ -252,7 +252,7 @@ backlog IDs were **assigned to different work** when it shipped, so reading §7 
 | §7 ID map: N1=`Q8`, N2=`Q9`, N3=`E19`, N4=`Q10`, N8=`E22`, "utang abuse"=`Q11` | `drift` | Shipped board: **Q8** = run provenance, **Q9** = raw pass trace, **Q10** = stability run (blocked), **Q11** = engine freeze, **Q12** = trace reader. Only Q10 keeps roughly its meaning | Renumber §7 to the real IDs; move the abuse-debt row off `Q11` |
 | Header status: "belum ada baris backlog · belum ada implementasi" | `stale` | Q8/Q9/Q12 shipped 2026-07-30 and the board carries rows for them | Update the status line |
 | §7 preamble "Board saat ini kosong (todo 0) sementara §6 memuat 9 item" | `stale` | Board is `todo 0 · doing 1 (Q11) · blocked 1 (Q10)` — no longer "kosong" in the sense meant | Rewrite the sentence |
-| §6 N1: four variants `base` / `para` / `strip` / `flip`, pass bar ≥4/5 | `drift` | `eval/stability.ts` ships **`para` only**. `strip` and `flip` were not built | State that only `para` shipped, or add the two |
+| §6 N1: four variants `base` / `para` / `strip` / `flip`, pass bar ≥4/5 | `drift` → **fixed** | `eval/stability.ts` shipped **`para` only**. **Resolved 2026-07-30** (backlog `Q14`): `strip` and `flip` now exist for all 5 fixtures (15 variants) and the verdict is computed, not hand-filled | Done |
 | §6 N1 file claim: variants live in `eval/golden/variants/` | `drift` | Shipped path is `eval/golden-variants/` | Correct the path |
 | §6 N4 "baseline ulang + `eval:compare` → delta terukur" | `drift` | Rubric is saturated (3 runs of 2026-07-16 at 33–34/34, own summary: "ceiling already high at 33.8"), so `eval:compare` on the 34-pt score cannot show the delta N4 asks for. The label diff can | Add the saturation caveat; point at `eval:stability` |
 | §6 N3 / §7 E19 cite `schema.ts:111–118` for `candidate_spofs` in `self_consistency` | `drift` | Now `schema.ts:125-132` (`self_consistency` object, `candidate_spofs` at :130). Lines 111-118 are `stress_test` | Update the line ref |
@@ -262,7 +262,7 @@ backlog IDs were **assigned to different work** when it shipped, so reading §7 
 | K4 code claim: `input-validation.ts` rejects empty, `< MIN_IDEA_LENGTH`, `> 8000`, control chars, `isMostlyRepeated`, **10** injection patterns, `< 5` unique words | `ok` | `input-validation.ts:3` `MAX_IDEA_LENGTH = 8000`; `:20-31` exactly 10 `SUSPICIOUS_PATTERNS`; `:46` `isMostlyRepeated`; `:159` `uniqueWords.size < 5` | — |
 | K4: nothing measures discriminating context | `ok` | No sufficiency scoring anywhere in `input-validation.ts` | — |
 | K5 chronology row "2026-07-30: todo 0 · doing 0 · 32 baris done" | `stale` | Counts line now reads `todo 0 · doing 1 · blocked 1` | Date-stamp the row as a snapshot |
-| §10 definition-of-done checkbox "`npm run eval:stability` ada dan lulus kriteria §6 N1" | `drift` | The script exists but cannot "lulus" §6 N1 — that bar needs `strip`/`flip`, which do not exist, and a run, which is blocked on credentials | Split into "exists" (done) and "passes" (blocked) |
+| §10 definition-of-done checkbox "`npm run eval:stability` ada dan lulus kriteria §6 N1" | `drift` → **partly fixed** | Split into two claims. **Exists and can now satisfy the §6 N1 shape** — `strip`/`flip` built, verdict automatic, offline preflight `eval:hinge-check` passing (`Q14`, 2026-07-30). **Passes** is still unknown: the run itself is blocked on owner credentials (`Q10`) | Keep the checkbox open until a run exists |
 | §11 validity limits (self-referential, n=5, non-identical ideas, corrupt run-3 input, no human judge) | `ok` | Honest and still accurate; the Q1 self-violation is correctly owned | — |
 | Report-storage + rate-limit refs (`report-storage.ts`, `01-product.md` §2 Deep = 2 slots) | `ok` | `MAX_REPORT_HISTORY = 10`; `api/analyze/route.ts:91` | — |
 
@@ -283,12 +283,12 @@ Applied after §3 was complete, doc by doc. No file under RECORD was touched.
 | File | What changed |
 |------|--------------|
 | `docs/00-index.md` | Added `05` and a `dogfood/` row; `Scoring/` row now describes all 8 files and drops the dead `7-head-to-head.md` link; all links normalised to the on-disk case, with an explicit note about case-sensitive hosts; RECORD warning widened to cover `Scoring/` and `dogfood/{1,2,3}test*` |
-| `docs/02-develop.md` | Header re-dated to 2026-07-30; A4 rewritten as light/dark **mode** (no named palettes); `breakitfirst.theme` described as a mode; command table + env list gained `eval:stability`, `eval:traces` and every optional `BIF_*`; A3 tree updated (incl. `type-lab`, landing components, `golden-variants/`, `stability.ts`, `read-traces.ts`, docs 03–05, `Scoring/`, `dogfood/`); rate limits became a table incl. `analyzeStrict` + the 1 h abuse-strike window; `maxDuration` qualified per route (300s analyze/status, **30s** models) in both places; schema block gained `meta.run`; soft-check list corrected to **17** with `security_legal_when_data_path`; module + component tables completed; new "Report provenance (Q8)" section; feature map gained provenance, trace and the blocked stability run |
+| `docs/02-develop.md` | Header re-dated to 2026-07-30; A4 rewritten as light/dark **mode** (no named palettes); `breakitfirst.theme` described as a mode; command table + env list gained `eval:stability`, `eval:traces` and every optional `BIF_*`; A3 tree updated (landing components, `golden-variants/`, `stability.ts`, `read-traces.ts`, docs 03–05, `Scoring/`, `dogfood/`; `type-lab` was listed here in the first pass and then removed with the route); rate limits became a table incl. `analyzeStrict` + the 1 h abuse-strike window; `maxDuration` qualified per route (300s analyze/status, **30s** models) in both places; schema block gained `meta.run`; soft-check list corrected to **17** with `security_legal_when_data_path`; module + component tables completed; new "Report provenance (Q8)" section; feature map gained provenance, trace and the blocked stability run |
 | `README.md` | "5 themes" → light/dark; quick-start step 2 no longer offers a theme picker; scripts table gained the four missing scripts; tree and Documentation table updated (03/04/05); `maxDuration` qualified per route; rate limits mention strict mode; new provenance feature row; roadmap item "Re-baseline … (optional)" rewritten as **required and blocked**, with the saturation reason and a pointer to Q10/Q11 |
 | `docs/01-product.md` | New **§4.10 Run provenance** (fields, host-only rule, why it is a report block); §4.9 now states the Standard-mode asymmetry and that the top-level-candidates fix is frozen with Q9/Q12 as the shipped substitute |
 | `docs/03-quality-gap.md` | Header lists spot-checks 6, 7 **and** 8; §3 gained a note that these five texts are deliberately *not* `eval/golden/*.json` (and points at `golden-variants/`); "Q7 implement batch next" replaced with the real open state (Q10 blocked under the Q11 freeze); §8 dead "template remains `7-head-to-head.md`" removed; all `scoring/` paths → `Scoring/` |
 | `docs/04-refine-backlog.md` | All `scoring/` paths → `Scoring/` |
-| `eval/rubric.md` | Dead `docs/project-overview.md` source line repointed to `docs/01-product.md` §4; prominent saturation warning added (3 runs at 33–34/34, "ceiling already high at 33.8"), directing quality-delta questions to `eval:stability`; records that the 34 points cover neither `stress_test`, `failure_velocity`, `self_consistency` nor F1/F2/F3 |
+| `eval/rubric.md` | Dead `docs/project-overview.md` source line repointed to `docs/01-product.md` §4; prominent saturation warning added (3 runs at 33–34/34, "ceiling already high at 33.8"), directing quality-delta questions to `eval:stability`; the coverage gap was first *recorded* (34 points covered neither `stress_test`, `failure_velocity`, `self_consistency` nor F1/F2/F3) and then **closed** on 2026-07-30 — 10 blocks, **48 standard / 52 deep** (`Q13`), with the caveat that old 34-pt totals are not a direct comparator |
 | `eval/README.md` | Already corrected during the audit (folder table + stability/trace sections) |
 | `BreakItFirst.md` | Superseded banner at the top: reclassified **RECORD**, points at `01-product.md` / `02-develop.md` / `README.md` / `04-refine-backlog.md`, and lists the five concrete differences (three passes not two, ten blocks not seven, `cascade.nodes` object shape, no named themes, BYOK dev-only). Dead doc targets repointed; the rest left as the historical plan it is |
 | `docs/dogfood/00-analysis.md` | Status line corrected; an ID-map box added near the head because §7's proposed `Q8`/`Q9`/`Q10`/`Q11` collide with the shipped meanings; N1 corrected (`eval/golden-variants/`, `para` only, human `Same hinge?` column); N3 marked frozen with the Q9/Q12 substitute and its honest limit; N4 given the saturation correction; `schema.ts:111–118` → `:125–132` in both places; §7 reframed as a superseded proposal; §10 checklist split into what exists vs what is blocked; K5 snapshot row date-stamped; abuse-debt no longer claims the `Q11` id |
@@ -298,10 +298,15 @@ Applied after §3 was complete, doc by doc. No file under RECORD was touched.
 | Item | Why |
 |------|-----|
 | `spof_candidates` at top level (dogfood K3 / N3) | Needs `prompts.ts` + `schema.ts` — **frozen** by Q11. Documented as frozen instead of implemented |
-| `src/app/type-lab/` | Documented in the A3 tree as a dev-only playground rather than deleted. Deleting a live route is an owner decision, not a doc fix |
-| The `strip` / `flip` stability variants | Building them means new fixtures and a second run design; recorded as a gap in N1 rather than silently dropped from the pass criteria |
 | RECORD files (`90`, `91`, `Scoring/*`, `dogfood/{1,2,3}test*`) | Rewriting them would destroy the dated evidence — see §1 |
 | Q10's actual run | Blocked on owner provider credentials |
+
+Two rows left the table on 2026-07-30, after the owner ruled on them:
+
+| Was unfixed | Now |
+|-------------|-----|
+| `src/app/type-lab/` — documented rather than deleted, because deleting a live route is an owner decision | **Deleted** (backlog `S5`). It was unlinked, undocumented and still shipped in the production bundle |
+| The `strip` / `flip` stability variants — recorded as a gap in N1 rather than built | **Built** for all 5 fixtures (backlog `Q14`), together with the automatic theme verdict, the offline preflight and the CI gate. With only `para`, a `same` verdict could have meant the rewrite was too gentle rather than the hinge being stable |
 
 
 

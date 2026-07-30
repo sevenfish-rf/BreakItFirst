@@ -78,8 +78,10 @@ Idea:
 
 > These five texts are the **human head-to-head** fixtures. They are deliberately
 > *not* the same texts as `eval/golden/*.json`, which drive the automated harness
-> and its 34-point rubric. Two fixture sets, two purposes — do not "sync" them.
-> Paraphrase twins for the stability run live in `eval/golden-variants/`.
+> and its scoring rubric (34 points until 2026-07-30, 48/52 after the coverage
+> fix). Two fixture sets, two purposes — do not "sync" them. The stability run's
+> rewrites of the `golden` set (`para`/`strip`/`flip`) live in
+> `eval/golden-variants/`.
 
 ### Idea A — Marketplace (thick domain)
 

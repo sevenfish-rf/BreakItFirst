@@ -2,6 +2,7 @@
   "fixture_id": "REPLACE_WITH_FIXTURE_ID",
   "scored_at": "",
   "scorer": "",
+  "mode": "standard",
   "model_pass1": "",
   "model_pass2": "",
   "baseline_run_id": "",
@@ -22,7 +23,16 @@
     "L1": null,
     "L2": null,
     "R1": null,
-    "R2": null
+    "R2": null,
+    "T1": null,
+    "T2": null,
+    "V1": null,
+    "V2": null,
+    "F1": null,
+    "F2": null,
+    "F3": null,
+    "X1": null,
+    "X2": null
   },
   "global": {
     "G1_not_template": null,
@@ -36,9 +46,14 @@
     "cascade": "",
     "failure_modes": "",
     "likelihood": "",
-    "resilience": ""
+    "resilience": "",
+    "stress_test": "",
+    "failure_velocity": "",
+    "fields_f1_f2_f3": "",
+    "self_consistency": ""
   },
   "total_points": null,
-  "max_points": 34,
+  "_max_points": "48 in standard mode. 52 in deep mode, where X1/X2 apply. Leave X1/X2 null (not 0) when self_consistency is absent and score out of 48.",
+  "max_points": 48,
   "overall_notes": ""
 }

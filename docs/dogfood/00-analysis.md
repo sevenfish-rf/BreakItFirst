@@ -20,12 +20,12 @@ berikutnya?
 >
 > | Usulan di file ini | ID sebenarnya di `04-refine-backlog.md` | Status |
 > |---|---|---|
-> | N1 (`Q8` diusulkan) suite stabilitas | **Q10** | Harness shipped (`eval/stability.ts` + `eval/golden-variants/`, `npm run eval:stability`); **run blocked** — butuh kredensial provider owner. Hanya varian `para` yang dibangun; `strip` dan `flip` tidak |
+> | N1 (`Q8` diusulkan) suite stabilitas | **Q10** + **Q14** | Instrumen **lengkap 2026-07-30**: 5 fixture × 3 tulisan-ulang (`para`/`strip`/`flip`) di `eval/golden-variants/`, verdict tema otomatis (`eval/hinge-labels.ts`), preflight offline `npm run eval:hinge-check`, gate CI `BIF_STABILITY_GATE=1`. **Run-nya masih blocked** — hanya butuh kredensial provider owner. Arti `strip`/`flip` berbeda dari rencana §6 N1 — lihat update di sana |
 > | N2 (`Q9` diusulkan) collision check | belum ada ID | `todo` — belum dibangun |
-> | N3 (`E19` diusulkan) `spof_candidates` top-level | — | **Frozen** oleh Q11: butuh ubah `prompts.ts` + `schema.ts`. Gantinya: **Q9** raw pass trace (`BIF_TRACE=1`) + **Q12** `npm run eval:traces` |
-> | N4 (`Q10` diusulkan) baseline ulang + re-score | **Q10** (bagian run) | Blocked; **lihat catatan saturasi di N4** — `eval:compare` atas skor 34 tidak bisa menjawab pertanyaan N4 |
+> | N3 (`E19` diusulkan) `spof_candidates` top-level | — | **Frozen** oleh Q11: butuh ubah `prompts.ts` + `schema.ts`. Gantinya: **Q9** raw pass trace (`BIF_TRACE=1`) + **Q12** `npm run eval:traces`. Usulan id `E19` **tidak diadopsi**; id itu kini dipakai utang abuse di bawah |
+> | N4 (`Q10` diusulkan) baseline ulang + re-score | **Q10** (bagian run) | Blocked; **lihat catatan saturasi di N4** — `eval:compare` atas skor rubrik tidak bisa menjawab pertanyaan N4. Rubrik diperluas 34 → 48/52 (`Q13`), yang menutup lubang cakupan tapi **tidak** membuat skor jadi alat ukur stabilitas |
 > | N5/N6/N7/N8 | belum ada ID | belum dibangun; N6 masih butuh keputusan owner |
-> | "utang abuse" (`Q11` diusulkan) | **bukan Q11** | `Q11` sudah dipakai untuk **engine freeze** (arahan owner 2026-07-30). Utang abuse belum punya ID |
+> | "utang abuse" (`Q11` diusulkan) | **E19** | `Q11` sudah dipakai untuk **engine freeze** (arahan owner 2026-07-30). Utang abuse dicatat sebagai **`E19`** di board 2026-07-30 — usulan `E19` untuk N3 tidak pernah diadopsi |
 >
 > Yang benar-benar shipped 2026-07-30: **Q8** run provenance di tiap report +
 > export Markdown, **Q9** raw pass trace opt-in, **Q12** trace reader. Ketiganya
@@ -512,16 +512,45 @@ pernah bergantung pada ide tersebut.
 `run-baseline.ts`, `golden/*.json`, `compare-baseline.ts`. Varian `para`/`strip`
 disimpan sebagai fixture turunan di `eval/golden/variants/`.
 
-> **Update 2026-07-30 — yang benar-benar shipped (ID sebenarnya: Q10).**
+> **Update 2026-07-30 — yang benar-benar shipped (ID sebenarnya: Q10 + Q14).**
 > Path fixture adalah **`eval/golden-variants/`**, bukan `eval/golden/variants/`.
-> Hanya varian **`para`** yang dibangun (5 pasangan, satu per fixture golden);
-> **`strip` dan `flip` tidak ada**, jadi kriteria lulus "≥4/5 bergeser pada
-> `strip`" belum bisa dievaluasi sama sekali. Runner sengaja **tidak** memutuskan
-> sama/beda: `REPORT.md` menulis kolom **`Same hinge?` = `TODO`** untuk diisi
-> manusia, karena `"OEM-owned firmware"` dan `"vendor firmware dependency"` adalah
-> hinge yang sama dengan kata berbeda dan tidak ada perbandingan string yang benar
-> untuk itu. Opsional `BIF_REF=<baseline run_id>` mendiff ke label baseline lama.
-> Run-nya sendiri **blocked** pada kredensial provider owner.
+> Ketiga varian kini **ada** untuk kelima fixture (15 file), dan verdict-nya
+> **otomatis**. Dua hal berubah dari rencana di atas dan harus dicatat, bukan
+> disamarkan:
+>
+> **1. Arti `strip` dan `flip` bergeser.** Rencana ini memakai `strip` = nama
+> produk + kategori dibuang, *ekspektasi SPOF berubah*, dan `flip` = locale
+> dibalik. Yang dibangun berbeda: ketiga kind menyerang satu cara hinge bisa jadi
+> artefak **teks**, dan ketiganya karena itu berekspektasi **SPOF tetap sama**.
+>
+> | Kind | Yang diubah | Pertanyaan |
+> |------|-------------|------------|
+> | `para` | semua kata diganti | hinge menempel pada kosakata? |
+> | `strip` | merek, pembanding, nama kota dibuang — **semua angka dan relasi struktural tetap** | hinge menempel pada merek/geografi yang dikenali? |
+> | `flip` | fakta identik, urutan dibalik, gaya jadi pitch founder | hinge menempel pada apa yang disebut pertama? |
+>
+> Konsekuensinya kriteria lulus lama "≥4/5 **bergeser** pada `strip`" **tidak
+> berlaku** untuk instrumen ini: kalau `strip` juga membuang angka dan relasi,
+> SPOF yang berubah tidak bisa dibedakan dari hinge yang tidak stabil — dua
+> hipotesis, satu pengamatan. Uji "hinge tidak bergantung pada ide" yang dimaksud
+> N1 tetap belum ada instrumennya. Locale-flip pindah ke §N1-verifikasi (`BIF_LOCALE`).
+>
+> **2. Kolom `Same hinge?` tidak lagi diisi manusia.** Alasan lama masih benar —
+> `"OEM-owned firmware"` dan `"vendor firmware dependency"` adalah hinge yang sama
+> dengan kata berbeda — tapi jawabannya bukan diff string, melainkan **diff tema**:
+> `eval/hinge-labels.ts` + `eval/theme-keywords.json` memetakan SPOF ke tema lalu
+> membandingkan tema (`same` / `partial` / `shift` / `unmatched`). Verdict itu
+> ditulis ke `REPORT.md` sebagai default yang **boleh ditimpa**, plus rollup per
+> kind. Batas yang harus tetap terlihat: **tema lebih kasar daripada hinge**, jadi
+> dua mekanisme berbeda di satu tema juga keluar `same` — baca `same` sebagai
+> *tidak terdeteksi bergeser*. Risiko sebaliknya (satu stem terlalu lebar → semua
+> hinge satu tema → drift nol yang **terlihat seperti sukses**) dijaga
+> `npm run eval:hinge-check`, preflight offline dengan dua probe diskriminasi.
+> `BIF_REF=<baseline run_id>` mendiff ke label baseline lama;
+> `BIF_STABILITY_GATE=1` exit non-zero kalau ada yang bergeser.
+>
+> Run-nya sendiri tetap **blocked** pada kredensial provider owner — itu satu-satunya
+> yang tersisa; tidak ada lagi langkah manual antara run dan angka.
 
 **Effort.** ~1 hari + biaya provider 5 fixture × 4 varian.
 
@@ -595,6 +624,12 @@ semua item lain.
 > bukan skor. Baseline ulang tetap berguna sebagai arsip provenance — bukan sebagai
 > pengukur kualitas. Caveat ini juga sudah ditulis di `eval/rubric.md` dan
 > `eval/README.md`.
+>
+> **Tambahan 2026-07-30.** Rubrik lalu diperluas ke 10 blok (**48 standard / 52
+> deep**, `Q13`) karena empat blok laporan yang di-render tidak dinilai sama sekali.
+> Itu memperbaiki cakupan, **bukan** saturasi: batas atas yang lebih lebar tetap
+> batas atas, dan satu laporan tetap bukan pengukuran stabilitas antar laporan.
+> Total 34 lama dan 48/52 baru juga bukan pembanding langsung — bandingkan per blok.
 
 **Menutup.** K5.
 
@@ -739,7 +774,8 @@ dipasarkan sebagai fitur**, produksi akan memakai provider yang lebih stabil, da
 sebelumnya tidak tercatat: verdict `abuse_fraud_spiral` = **No** pada run 2–5
 **bergantung** pada BYOK dev-only. Begitu ada endpoint termeter atau free tier di
 produksi, verdict itu balik. **Dicatat sekarang, bukan saat migrasi** — tapi **bukan** sebagai `Q11`: ID itu
-sudah dipakai untuk engine freeze. Utang ini masih menunggu ID baru di board.
+sudah dipakai untuk engine freeze. Utang ini sekarang ada di board sebagai **`E19`**
+(`src/lib/input-validation.ts`, P2, `todo`).
 
 ---
 
@@ -772,13 +808,13 @@ Alasan urutannya:
 
 **Definition of done untuk gelombang ini:**
 
-- [x] `npm run eval:stability` **ada** (Q10 harness, varian `para` saja)
-- [ ] `npm run eval:stability` **lulus** kriteria §6 N1 — masih blocked dua kali: butuh kredensial provider, dan varian `strip`/`flip` belum dibangun
+- [x] `npm run eval:stability` **ada** — dan instrumennya lengkap: `para`/`strip`/`flip` ×5 fixture, verdict tema otomatis, preflight `eval:hinge-check` lulus, gate CI opsional (Q10 + Q14)
+- [ ] `npm run eval:stability` **lulus** — blocked **satu kali saja** sekarang: kredensial provider owner. Catatan: kriteria "≥4/5 bergeser pada `strip`" di §6 N1 tidak berlaku untuk instrumen yang dibangun (semantik `strip` berbeda — lihat update N1); bar-nya adalah tidak ada `shift` pada ketiga kind
 - [ ] 0 tabrakan hinge lintas 5 fixture (N2) — belum dibangun
 - [ ] `rejected_candidates` terisi di 5/5 fixture, kedua mode (N3) — **frozen** (Q11); pengganti Q9/Q12 sudah ada
 - [ ] delta C dan E pasca E9–E18 terukur dan tercatat di `Scoring/` (N4) — lihat koreksi saturasi di N4: pengukurnya harus diff label, bukan skor
-- [x] `04-refine-backlog.md` §1 memuat baris untuk temuan dogfood, dengan status akurat (Q8, Q9, Q10, Q11, Q12)
-- [ ] `01-product.md` memuat P7 (moat) dan utang abuse (butuh ID baru — `Q11` sudah dipakai untuk freeze)
+- [x] `04-refine-backlog.md` §1 memuat baris untuk temuan dogfood, dengan status akurat (Q8, Q9, Q10, Q11, Q12, Q13, Q14, E19)
+- [ ] `01-product.md` memuat P7 (moat) dan utang abuse — ID-nya sekarang **`E19`** (`Q11` dipakai untuk freeze)
 
 ---
 

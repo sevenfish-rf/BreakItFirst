@@ -1,0 +1,17 @@
+{
+  "id": "01-marketplace-pet-sitting-strip",
+  "variant_of": "01-marketplace-pet-sitting",
+  "variant_kind": "strip",
+  "title": "Neighborhood pet-sitting marketplace (stripped)",
+  "category": "Marketplace",
+  "locale": "en",
+  "fragile_hint": "true",
+  "idea": "An app-based marketplace for booking short-notice pet care — walks and in-home sitting — from other residents of the same building or block. The person providing the care keeps 80% of the fee and the platform keeps 20%. Providers are screened with a government ID check and a recorded video introduction, and their first three bookings are free. There is no insurance partner; the owner accepts a liability waiver inside the app before booking. The initial rollout covers only vertical residential towers in a single metropolitan area.",
+  "focus_notes": [
+    "Chicken-egg supply/demand inside buildings",
+    "Trust & safety / liability without insurance",
+    "Take-rate vs neighbor disintermediation (go off-app after intro)",
+    "Cold-start density per building"
+  ],
+  "expected_spof_themes": ["trust", "liability", "cold-start", "density", "disintermediation"]
+}

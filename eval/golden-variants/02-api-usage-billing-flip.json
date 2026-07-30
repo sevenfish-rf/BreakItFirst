@@ -1,0 +1,17 @@
+{
+  "id": "02-api-usage-billing-flip",
+  "variant_of": "02-api-usage-billing",
+  "variant_kind": "flip",
+  "title": "Usage-based public developer API (reordered pitch)",
+  "category": "API",
+  "locale": "en",
+  "fragile_hint": "mixed",
+  "idea": "Our customers are B2B SaaS sales tools, and the way they use us is one overnight job that batch-enriches an entire CRM list. Pricing matches that shape: pure usage-based, $0.02 per successful lookup, free tier 500 calls/month. Auth is API keys only — no OAuth yet. We promise a 'weekly' refresh SLA. The data itself is scraped and licensed from mixed sources. What comes back for a company domain is firmographic: employee count bands, funding stage, tech stack hints. It's a public REST API.",
+  "focus_notes": [
+    "Abuse / key leakage and unbounded batch jobs",
+    "Data licensing & accuracy liability",
+    "Versioning / breaking changes for CRM integrators",
+    "Unit economics when free tier + scrapers dominate cost"
+  ],
+  "expected_spof_themes": ["abuse", "data quality", "licensing", "pricing", "sla"]
+}

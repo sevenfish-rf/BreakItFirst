@@ -233,9 +233,12 @@ async function main() {
       model_pass2: pass2Model,
       status: "pending_manual_score",
       note: "Copy criteria from eval/score-template.json and fill 0|1|2 per rubric.md",
+      mode: deepAnalysis ? "deep" : "standard",
       criteria: null,
       total_points: null,
-      max_points: 34,
+      // 10 blocks since 2026-07-30. X1/X2 (self-consistency) only apply in deep
+      // mode; in standard they stay null, not 0, so the max drops to 48.
+      max_points: deepAnalysis ? 52 : 48,
     };
     await writeFile(
       path.join(scoresDir, `${fixture.id}.json`),

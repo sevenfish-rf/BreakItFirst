@@ -1,6 +1,7 @@
 {
-  "id": "04-saas-team-wiki-v",
+  "id": "04-saas-team-wiki-para",
   "variant_of": "04-saas-team-wiki",
+  "variant_kind": "para",
   "title": "AI-first team wiki SaaS (paraphrase)",
   "category": "SaaS",
   "locale": "en",

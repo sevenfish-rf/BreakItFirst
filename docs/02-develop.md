@@ -42,7 +42,7 @@ Refresh mid-run **reconnects** (unless Cancel). Draft persists in the browser.
 | Opt-in raw pass trace (`BIF_TRACE=1`) + trace reader | Shipped 2026-07-30 (Q9 / Q12) |
 | Theme mode (light/dark) · i18n EN/ID | Shipped |
 | Eval harness | Shipped (`eval/`) |
-| SPOF stability run (original ↔ paraphrase) | Harness shipped; **run blocked** on provider credentials (Q10) |
+| SPOF stability run (original vs para/strip/flip, auto theme verdict) | Harness + preflight shipped; **run blocked** on provider credentials (Q10) |
 | Redis / multi-instance / server DB | Deferred |
 
 ## A2. Setup
@@ -66,14 +66,17 @@ npm run lint
 | `npm run eval:baseline` | Golden set via `BIF_*` |
 | `npm run eval:compare` | Diff scores |
 | `npm run eval:baseline:ps1` | PowerShell helper |
-| `npm run eval:stability` | Q10 — original ↔ paraphrase pair per fixture, compares **SPOF labels** not the 34-pt score |
+| `npm run eval:hinge-check` | Offline preflight for the stability run — fixture set + theme screen, no provider |
+| `npm run eval:stability` | Q10 — original vs `para`/`strip`/`flip` rewrite per fixture; auto verdict on **SPOF themes**, not the 48-pt score |
 | `npm run eval:traces` | Q12 — read `.breakitfirst-traces/` dumps (`BIF_TRACE=1`): hinge per draft + label drift |
 
 **Env:** not required for UI. Keys via browser BYOK, not stored server-side.  
 Eval only — required: `BIF_BASE_URL`, `BIF_API_KEY`, `BIF_PASS1_MODEL`,
 `BIF_PASS2_MODEL`. Optional: `BIF_LOCALE`, `BIF_ONLY`, `BIF_DEEP=1`,
-`BIF_CALL_TIMEOUT_MS`, `BIF_TRACE=1`, `BIF_TRACE_DIR`, `BIF_REF=<baseline run_id>`
-(stability only). Canonical list: `eval/env.example` + `eval/README.md`.
+`BIF_CALL_TIMEOUT_MS`, `BIF_TRACE=1`, `BIF_TRACE_DIR`, and — stability only —
+`BIF_REF=<baseline run_id>`, `BIF_KINDS=para,strip,flip`,
+`BIF_STABILITY_GATE=1` (exit non-zero on any hinge shift).
+Canonical list: `eval/env.example` + `eval/README.md`.
 
 **Provider UI:** base URL, API key, Pass 1 / Pass 2 model. Presets: OpenAI, OpenRouter, Ollama (`http://127.0.0.1:11434/v1`), custom. Test → `POST /api/models`. SSRF guard on base URL.
 
@@ -97,11 +100,11 @@ Eval only — required: `BIF_BASE_URL`, `BIF_API_KEY`, `BIF_PASS1_MODEL`,
 **Stack:** Next.js 16 · React 19 · TypeScript · Tailwind v4 · Zod · Framer Motion · React Flow · Recharts · three.js
 
 ```
-src/app/           pages + api/analyze (+ status, cancel) + api/models + type-lab (dev-only type playground)
+src/app/           pages + api/analyze (+ status, cancel) + api/models
 src/components/    shell, header, landing (page/faq/metrics/spine/footer + scroll choreography), form, report, overlay, history, visuals/effects
 src/lib/           pipeline, jobs, prompts, schema, provider, i18n, analysis-trace
 src/types/         FailureAnalysis
-eval/              golden, golden-variants, rubric, assertions, run-baseline, compare-baseline, stability, read-traces, baselines/, stability/
+eval/              golden, golden-variants (para/strip/flip), rubric, score-template, assertions, run-baseline, compare-baseline, stability, hinge-labels, hinge-check, theme-keywords, read-traces, baselines/, stability/
 scripts/           smoke-session, eval-baseline.ps1
 docs/              00-index · 01-product · 02-develop · 03-quality-gap · 04-refine-backlog · 05-doc-audit · Scoring/ · dogfood/ · 90/91 archive
 ```
@@ -323,8 +326,9 @@ ids. Two reports without this stamp cannot be compared, which is why it exists.
 |---------|--|
 | `npm run eval:assert-sample` | No provider |
 | `npm run eval:baseline` | Needs `BIF_*` |
-| `npm run eval:compare` | Diff scores (⚠ the 34-pt rubric is saturated — see `eval/README.md`) |
-| `npm run eval:stability` | Original ↔ paraphrase SPOF-label diff (Q10) |
+| `npm run eval:compare` | Diff scores (⚠ the score rubric was saturated at 34 and is now 48/52 — see `eval/rubric.md`) |
+| `npm run eval:hinge-check` | Stability preflight, offline |
+| `npm run eval:stability` | Original vs para/strip/flip, auto SPOF-theme verdict (Q10) |
 | `npm run eval:traces` | Read `BIF_TRACE=1` dumps (Q12) |
 | `npm run smoke:session` | Jobs + history |
 

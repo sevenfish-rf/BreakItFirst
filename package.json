@@ -12,6 +12,7 @@
     "eval:baseline:ps1": "powershell -ExecutionPolicy Bypass -File ./scripts/eval-baseline.ps1",
     "eval:compare": "tsx --tsconfig tsconfig.json eval/compare-baseline.ts",
     "eval:stability": "tsx --tsconfig tsconfig.json eval/stability.ts",
+    "eval:hinge-check": "tsx --tsconfig tsconfig.json eval/hinge-check.ts",
     "eval:traces": "tsx --tsconfig tsconfig.json eval/read-traces.ts",
     "smoke:session": "tsx --tsconfig tsconfig.json scripts/smoke-session-resilience.ts"
   },
