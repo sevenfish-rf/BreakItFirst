@@ -41,8 +41,25 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (do not commit real secrets)
 .env*
+!.env.example
+!eval/env.example
+
+# eval baseline & stability runs (raw model output; keep folder via .gitkeep)
+eval/baselines/*
+!eval/baselines/.gitkeep
+eval/stability/*
+!eval/stability/.gitkeep
+
+# Python caches & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.pytest_cache/
 
 # vercel
 .vercel
@@ -50,10 +67,15 @@ yarn-error.log*
 # obsidian
 .obsidian
 
+# Modal & cloud artifacts
+.modal/
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# eval baseline runs (raw model output; keep folder via .gitkeep)
-eval/baselines/*
-!eval/baselines/.gitkeep
