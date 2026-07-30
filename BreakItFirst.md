@@ -1,3 +1,33 @@
+> ## ⚠ SUPERSEDED — historical masterplan, not current spec
+>
+> Reclassified as a **RECORD** on 2026-07-30 by the drift audit
+> ([`docs/05-doc-audit.md`](./docs/05-doc-audit.md)). It is the original plan and
+> is two architectural steps behind the shipped system. Do not use it to answer
+> "how does BreakItFirst work today".
+>
+> | Current source of truth | For |
+> |---|---|
+> | [`docs/01-product.md`](./docs/01-product.md) | Report block semantics, positioning, bands |
+> | [`docs/02-develop.md`](./docs/02-develop.md) | Setup, architecture, API, schema, modules |
+> | [`README.md`](./README.md) | Public setup + feature list |
+> | [`docs/04-refine-backlog.md`](./docs/04-refine-backlog.md) | What is actually open |
+>
+> Known differences from the shipped system, kept here so the drift is legible
+> rather than silently misleading:
+>
+> - **Pipeline is three passes, not two.** Pass 1 (×2 in Deep) → **Pass 1.5
+>   adversarial critique** → Pass 2 JSON → Zod + 17 soft checks + claim guard.
+> - **Ten report blocks, not seven.** This file omits `stress_test`,
+>   `failure_velocity`, `self_consistency`, the F1/F2/F3 fields, and `meta.run`.
+> - **`cascade.nodes` is `{ step, observable_signal }[]`**, not `string[]`.
+> - **No named colour themes.** There is light/dark mode only
+>   (`src/lib/themes.ts` → `ThemeMode`). Ember/Violet/Ocean/Forest/Gold never shipped.
+> - **BYOK is development-only** and is not marketed as a feature; production will
+>   use a fixed provider.
+>
+> Rate limits, provider presets and the numeric bounds (assumptions 5–10, cascade
+> 7–12, resilience 0–100) below are still accurate.
+
 BreakItFirst
 What Would Break This?
 A structured failure-analysis engine for product and business ideas.
@@ -36,7 +66,7 @@ Failure cascade — 7–12 ordered causal steps (graph)
 Failure modes — technical · business · security · legal · operations
 Likelihood — qualitative band + reason
 Resilience scores — 0–100 per dimension (never collapsed to one vanity number)
-Deep definitions for each block: docs/project-overview.md
+Deep definitions for each block: docs/01-product.md §4
 
 
 Click Provider — set base URL, API key (optional for local Ollama), Pass 1 & Pass 2 model IDs
@@ -62,16 +92,19 @@ src/
 docs/                  # Product & technical documentation
 Documentation
 Document	Contents
-docs/project-overview.md	Product core — every report section explained in depth
-docs/guide.md	Setup, architecture, themes, i18n
-docs/reference.md	API, schema, modules, components
-docs/README.md	Docs index
+docs/00-index.md	Docs index
+docs/01-product.md	Product core — every report section explained in depth
+docs/02-develop.md	Setup, architecture, API, schema, modules, components
+docs/03-quality-gap.md	Head-to-head quality-gap protocol + trials
+docs/04-refine-backlog.md	Work ledger (open + shipped)
+docs/05-doc-audit.md	Doc ↔ code drift audit
+eval/README.md	Eval harness
 Configuration notes
 Provider presets: OpenAI, OpenRouter, Ollama (http://127.0.0.1:11434/v1), custom
 Rate limits (in-memory): analyze ~8 / 15 min per IP+session; models ~40 / min
 No database in MVP — analysis is session-ephemeral unless the user copies it
 Privacy: API keys are not written to a backend store; treat the app host as a proxy you control
-Full configuration details: docs/guide.md
+Full configuration details: docs/02-develop.md
 
 Roadmap (high level)
  MVP two-pass pipeline + structured report + visuals (done)
@@ -90,7 +123,7 @@ Product framing: structured failure analysis over generic chat
 
 Dokumen ini menjelaskan **inti produk**: apa yang dianalisis, **setiap bagian output report** (core), bagaimana bagian-bagian itu saling terkait, dan apa arti “hasil bagus” vs “hasil jelek”.  
 
-Detail setup/API/kode → [guide.md](./guide.md) · [reference.md](./reference.md).
+Detail setup/API/kode → [docs/02-develop.md](./docs/02-develop.md) · semantik report terkini → [docs/01-product.md](./docs/01-product.md).
 
 ---
 

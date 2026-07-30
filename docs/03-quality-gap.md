@@ -3,7 +3,7 @@
 **Purpose:** Validate (or refute) the dogfood SPOF —  
 *Is BreakItFirst’s failure argument clearly sharper than strong free-form chat premortems on the same idea?*
 
-**Status:** **Suite complete** (A–E) · **Post-refine spot-check** → [scoring/6.md](./scoring/6.md) (BreakPath API)  
+**Status:** **Suite complete** (A–E) · post-refine spot-checks → [Scoring/6.md](./Scoring/6.md) (BreakPath API), [Scoring/7.md](./Scoring/7.md) (H2H API image CDN), [Scoring/8.md](./Scoring/8.md) (PasarKerja Migran, complex)  
 **Date started:** 2026-07-21  
 **Locale used:** id (Idea A); pin per scoring file for B+  
 **BreakItFirst mode:** Standard (Deep off for fair cost) · model pin: Mimo 2.5 Pro (A; re-pin each file)
@@ -17,9 +17,9 @@
 | **Candidate G** | **GLM 5.2** | New competitor chat (added Idea B) |
 | **Not a candidate** | GPT / ChatGPT | **Dropped as premortem rival** after weak scores (Idea A low teens–21; Idea B early signal **18/25**). May still help as **judge/scorer only**. |
 
-Idea A historical note: compared Claude + ChatGPT + BIF. Keep that in [scoring/1.md](./scoring/1.md); do not re-run A for protocol change.
+Idea A historical note: compared Claude + ChatGPT + BIF. Keep that in [scoring/1.md](./Scoring/1.md); do not re-run A for protocol change.
 
-Related: [01-product.md](./01-product.md) · [00-index.md](./00-index.md) · [scoring/](./scoring/) · **[04-refine-backlog.md](./04-refine-backlog.md)** (all todos)
+Related: [01-product.md](./01-product.md) · [00-index.md](./00-index.md) · [scoring/](./Scoring/) · **[04-refine-backlog.md](./04-refine-backlog.md)** (all todos)
 
 ---
 
@@ -30,7 +30,7 @@ For **each idea** (B–E; A already archived):
 1. Same idea text into **BIF** + **Claude** + **GLM** (matching category/language on BIF).
 2. Paste **§2 baseline prompt** + idea into Claude and GLM (same prompt both).
 3. Score outputs 1–5 with **§4 criteria** (prefer multi-judge; GPT may score but not compete).
-4. Write `scoring/N.md` summary + register todos in [04-refine-backlog.md](./04-refine-backlog.md).
+4. Write `Scoring/N.md` summary + register todos in [04-refine-backlog.md](./04-refine-backlog.md).
 5. Save BIF export/history id; note SPOF labels for A/G/C.
 
 **Rules**
@@ -39,7 +39,7 @@ For **each idea** (B–E; A already archived):
 |----|--------|
 | Same idea text all candidates | Use GPT as a **candidate** again (judge OK) |
 | Score **content** first (SPOF/cascade/insight); schema extras (stress/PONR/velocity) **secondary** (S4) | Cherry-pick only flattering BIF runs |
-| Pin **platform + model ids** on every `scoring/N.md` (Q1) | Compare Deep BIF vs single-shot chat without noting it |
+| Pin **platform + model ids** on every `Scoring/N.md` (Q1) | Compare Deep BIF vs single-shot chat without noting it |
 | Prefer ≥1 judge outside platform family; footnote self-scores (Q2) | Sole-trust one scorer on dogfood/meta — use **≥3 judges** (Q6) |
 
 **Pass bar (working rule)**
@@ -75,6 +75,11 @@ Idea:
 ---
 
 ## 3. Test ideas
+
+> These five texts are the **human head-to-head** fixtures. They are deliberately
+> *not* the same texts as `eval/golden/*.json`, which drive the automated harness
+> and its 34-point rubric. Two fixture sets, two purposes — do not "sync" them.
+> Paraphrase twins for the stability run live in `eval/golden-variants/`.
 
 ### Idea A — Marketplace (thick domain)
 
@@ -162,7 +167,7 @@ Free tier 10k/mo. Risk abuse, key sharing, competitor Cloudflare Images.
 - **Judges used:** (e.g. GLM / Claude / GPT-as-judge only / …)  
 - **One-sentence why:**  
 
-**Per-trial write-up:** `docs/scoring/N.md` = summary + verdict + pointer to new backlog rows.  
+**Per-trial write-up:** `docs/Scoring/N.md` = summary + verdict + pointer to new backlog rows.  
 **All todos:** [04-refine-backlog.md](./04-refine-backlog.md) only (required update after each idea).
 
 ---
@@ -173,11 +178,11 @@ Free tier 10k/mo. Risk abuse, key sharing, competitor Cloudflare Images.
 
 | Idea | File | Candidates | Winner | BIF SPOF (short) | Notes |
 |------|------|------------|--------|------------------|--------|
-| A Marketplace | [scoring/1.md](./scoring/1.md) | Claude + **GPT** + BIF | **BIF** (provisional) | Demand sporadis vs retensi sitter | GPT last as candidate; then dropped |
-| B SaaS | [scoring/2.md](./scoring/2.md) | Claude + GPT* + BIF + **GLM** | **BIF + GLM tie** | Auto-overwrite wiki / no review + noise | *GPT last candidate run (~16 mean); then dropped |
-| C AI premortem (dogfood) | [scoring/3.md](./scoring/3.md) | Claude + GLM + BIF | **Claude** (BIF mid) | Camouflage vs no-grounding | First BIF underperformance |
-| D Hardware ring | [scoring/4.md](./scoring/4.md) | Claude + GLM + BIF | **Thin: GLM edge, BIF ~#2** | Sensor claim vs OEM | Same hinge family; BIF recovered |
-| E API image CDN | [scoring/5.md](./scoring/5.md) | Claude + GLM + BIF | **GLM** (BIF 3rd/low) | Key-share cache flood vs flat pricing | Second clear BIF loss |
+| A Marketplace | [scoring/1.md](./Scoring/1.md) | Claude + **GPT** + BIF | **BIF** (provisional) | Demand sporadis vs retensi sitter | GPT last as candidate; then dropped |
+| B SaaS | [scoring/2.md](./Scoring/2.md) | Claude + GPT* + BIF + **GLM** | **BIF + GLM tie** | Auto-overwrite wiki / no review + noise | *GPT last candidate run (~16 mean); then dropped |
+| C AI premortem (dogfood) | [scoring/3.md](./Scoring/3.md) | Claude + GLM + BIF | **Claude** (BIF mid) | Camouflage vs no-grounding | First BIF underperformance |
+| D Hardware ring | [scoring/4.md](./Scoring/4.md) | Claude + GLM + BIF | **Thin: GLM edge, BIF ~#2** | Sensor claim vs OEM | Same hinge family; BIF recovered |
+| E API image CDN | [scoring/5.md](./Scoring/5.md) | Claude + GLM + BIF | **GLM** (BIF 3rd/low) | Key-share cache flood vs flat pricing | Second clear BIF loss |
 
 **Tally (suite complete):** BIF sole **1** (A) · BIF-GLM co **1** (B) · Claude sole **1** (C) · GLM edge **1** (D) · GLM sole **1** (E) · **BIF top-tier 2/5 · clear losses 2/5**
 
@@ -203,7 +208,10 @@ Free tier 10k/mo. Risk abuse, key sharing, competitor Cloudflare Images.
 | Claude+GLM as real quality bar | GPT as serious premortem rival |
 | Targeted prompt fixes (abuse, metering, no invent) | Infra rewrite as quality fix |
 
-**Rolled-up todos:** [04-refine-backlog.md](./04-refine-backlog.md) §1 + §5 — **Q7 implement batch** next.
+**Rolled-up todos:** [04-refine-backlog.md](./04-refine-backlog.md) §1 + §5. Q7 (implement
+batch) shipped 2026-07-21. The open item is **Q10** — re-run the measurement and compare
+SPOF labels — which is `blocked` on owner provider credentials, and **Q11**, the engine
+freeze that holds `prompts.ts` + the schema rule engine shut until Q10 runs.
 
 ---
 
@@ -213,10 +221,10 @@ Free tier 10k/mo. Risk abuse, key sharing, competitor Cloudflare Images.
 
 | After each idea | Do this |
 |-----------------|---------|
-| 1 | Write `scoring/N.md` (setup, scores, verdict, SPOF labels) |
+| 1 | Write `Scoring/N.md` (setup, scores, verdict, SPOF labels) |
 | 2 | Open `04-refine-backlog.md` → add/update **Master board** rows (reuse ID if same issue) |
 | 3 | Fill **§4 Log by trial** for that idea |
-| 4 | In `scoring/N.md`, list only **IDs contributed** + link to `04` |
+| 4 | In `Scoring/N.md`, list only **IDs contributed** + link to `04` |
 
 Do **not** keep five separate full todo lists in five scoring files.
 
@@ -240,7 +248,7 @@ Do **not** keep five separate full todo lists in five scoring files.
 
 | Idea | BIF export / history id | Comparator notes |
 |------|-------------------------|------------------|
-| A | | Claude + ChatGPT + multi-judge → scoring/1.md |
+| A | | Claude + ChatGPT + multi-judge → Scoring/1.md |
 | B | | |
 | C | | |
 | D | | |
@@ -256,6 +264,6 @@ Do **not** keep five separate full todo lists in five scoring files.
 | 2026-07-21 | Idea A complete; todos in **04-refine-backlog.md** |
 | 2026-07-21 | **Protocol v2:** candidates = Claude + GLM + BIF; GPT judge-only |
 | 2026-07-21 | **Suite A–E complete**; mixed outcome; implement Q7 prompt batch from 04 |
-| 2026-07-21 | **scoring/6.md** after-refine BreakPath (BIF top/co-win vs A/B) |
-| 2026-07-23 | **scoring/7.md** H2H API image CDN only (BIF 25 vs Claude/Gemini/GLM); template remains 7-head-to-head.md |
-| 2026-07-23 | **scoring/8.md** PasarKerja Migran complex (BIF co-lead with Claude; GLM strong) |
+| 2026-07-21 | **Scoring/6.md** after-refine BreakPath (BIF top/co-win vs A/B) |
+| 2026-07-23 | **Scoring/7.md** H2H API image CDN only (BIF 25 vs Claude/Gemini/GLM) |
+| 2026-07-23 | **Scoring/8.md** PasarKerja Migran complex (BIF co-lead with Claude; GLM strong) |

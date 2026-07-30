@@ -6,7 +6,26 @@ Skor tiap run golden set dengan checklist ini.
 
 Isi skor di `eval/baselines/<date>/scores/<fixture-id>.json` (template di `score-template.json`).
 
-Sumber: tabel Baik/Buruk di `docs/project-overview.md`.
+Sumber: tabel Baik/Buruk di [`../docs/01-product.md`](../docs/01-product.md) §4.
+
+> ## ⚠ Rubrik ini saturasi — baca sebelum memakai skornya
+>
+> Tiga run `eval/baselines/2026-07-16_*` semuanya mendapat **33–34 dari 34**
+> dengan **nol** hard fail dan **nol** soft fail; summary run itu sendiri menulis
+> *"ceiling already high at 33.8"*. Artinya rubrik ini **tidak bisa mendeteksi
+> regresi** dalam rentang yang penting: perubahan prompt bisa menggeser hinge
+> sepenuhnya dan totalnya tetap ~34.
+>
+> Untuk pertanyaan "apakah hinge-nya stabil / berubah", pakai
+> **`npm run eval:stability`** (`eval/stability.ts`) — ia membandingkan **label
+> SPOF** antara ide asli dan parafrasenya, bukan skor. Rubrik ini tetap berguna
+> untuk memeriksa satu laporan secara kualitatif, bukan untuk mengukur delta.
+>
+> **Cakupan belum lengkap.** Tidak ada kriteria untuk `stress_test`,
+> `failure_velocity`, `self_consistency`, maupun field F1/F2/F3
+> (`critical_assumption_indices`, `point_of_no_return_index`,
+> `compounding_note`) — padahal semuanya sudah shipped dan dirender. Skor 34
+> karena itu menilai sebagian laporan, bukan seluruhnya.
 
 ---
 

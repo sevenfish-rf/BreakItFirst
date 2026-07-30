@@ -1,0 +1,16 @@
+{
+  "id": "03-ai-therapy-chat-v",
+  "variant_of": "03-ai-therapy-chat",
+  "title": "AI chat therapist subscription (paraphrase)",
+  "category": "AI Product",
+  "locale": "en",
+  "fragile_hint": "true",
+  "idea": "A paid phone app, nineteen dollars every month, where people who feel persistently worried or low can type to an automated conversational partner at any hour of any day. The bottom of the screen carries a line in small grey type saying the service supports rather than substitutes for a qualified professional. Underneath, every message goes to one large language model vendor, steered by a lengthy standing instruction and by retrieved passages from a library of cognitive-behavioural exercise sheets. If certain alarming words appear, the app replies with a fixed block of text listing an emergency number. Nobody with a clinical qualification ever reads any conversation. It opens in two countries at once: the United States and Indonesia.",
+  "focus_notes": [
+    "Quality ceiling / harmful advice / hallucination in clinical-adjacent domain",
+    "Liability & regulatory (medical device / counseling rules)",
+    "Trust collapse after one viral failure story",
+    "Provider cost and single-vendor lock-in"
+  ],
+  "expected_spof_themes": ["liability", "trust", "hallucination", "regulation", "provider lock-in"]
+}

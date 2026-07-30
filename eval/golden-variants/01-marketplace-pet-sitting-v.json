@@ -1,0 +1,16 @@
+{
+  "id": "01-marketplace-pet-sitting-v",
+  "variant_of": "01-marketplace-pet-sitting",
+  "title": "Neighborhood pet-sitting marketplace (paraphrase)",
+  "category": "Marketplace",
+  "locale": "en",
+  "fragile_hint": "true",
+  "idea": "An Android and iOS app that lets residents of a single residential tower hire each other on short notice to walk a dog or look after a cat while they are away. Whoever does the job keeps four fifths of what the customer pays; the app retains the remaining fifth. Confidence in a caretaker comes from three things: a scan of their national identity card, a short self-recorded video, and the fact that their first three jobs carry no fee at all. Nothing has been arranged with an underwriter, so before a booking is confirmed the animal's owner taps a screen accepting that any harm is on them. Only tall buildings in Jakarta are served at launch.",
+  "focus_notes": [
+    "Chicken-egg supply/demand inside buildings",
+    "Trust & safety / liability without insurance",
+    "Take-rate vs neighbor disintermediation (go off-app after intro)",
+    "Cold-start density per building"
+  ],
+  "expected_spof_themes": ["trust", "liability", "cold-start", "density", "disintermediation"]
+}

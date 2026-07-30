@@ -1,0 +1,16 @@
+{
+  "id": "04-saas-team-wiki-v",
+  "variant_of": "04-saas-team-wiki",
+  "title": "AI-first team wiki SaaS (paraphrase)",
+  "category": "SaaS",
+  "locale": "en",
+  "fragile_hint": "false",
+  "idea": "A subscription tool for companies that turns chat history and recorded call transcripts into internal reference pages, then keeps rewriting those pages on its own. Every member of staff who needs access costs twelve dollars a month and no account may be opened for fewer than ten of them. The pitch is that the pages never go out of date, because a scheduled job re-reads the week's conversations and edits them. It plugs into the company chat tool, the video-call product from the same search giant, and can pull in existing pages from the incumbent document app. It is sold to freshly funded startups that are already paying for both that document app and that chat tool. The founder's argument: the incumbent merely holds what you wrote, while this one keeps it true.",
+  "focus_notes": [
+    "Churn if AI summaries are wrong or noisy",
+    "Seat-min friction vs Notion free habit",
+    "Integration dependency / API policy changes",
+    "Whether 'auto-update' creates trust issues with wrong edits"
+  ],
+  "expected_spof_themes": ["churn", "accuracy", "integration", "positioning", "seat economics"]
+}

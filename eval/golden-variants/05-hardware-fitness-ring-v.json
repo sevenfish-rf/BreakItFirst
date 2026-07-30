@@ -1,0 +1,16 @@
+{
+  "id": "05-hardware-fitness-ring-v",
+  "variant_of": "05-hardware-fitness-ring",
+  "title": "Budget sleep-tracking fitness ring (paraphrase)",
+  "category": "Hardware",
+  "locale": "en",
+  "fragile_hint": "true",
+  "idea": "A finger-worn device costing forty-nine dollars that records how someone sleeps and how variable their heartbeat is, priced far under the category leader and aimed at buyers across Southeast Asia. One contract factory in southern China builds every unit, and it is paid sixty days after shipment. The software on the device is a rebadged build supplied by that same factory, paired with a cross-platform companion application; three dollars a month unlocks an automated sleep-advice feature that nobody has to buy. Five thousand units were paid for in advance through posts on a photo-sharing network. No health regulator has cleared it, and it is marketed as a lifestyle item. The packaging says the charge lasts five days. When something arrives broken, two people in Jakarta post a replacement out of a spare room.",
+  "focus_notes": [
+    "OEM single-source / quality defect cascade",
+    "Margin vs returns and logistics at $49",
+    "Certification / wellness claims risk",
+    "Support ops cannot scale with viral demand"
+  ],
+  "expected_spof_themes": ["supply chain", "margins", "defects", "ops", "claims"]
+}

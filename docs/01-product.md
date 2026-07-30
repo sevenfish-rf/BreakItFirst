@@ -197,6 +197,31 @@ Domain buckets for the **same spine** — not a second risk list. Prefer empty d
 
 `self_consistency?`: `runs`, `spof_agreement`, `reason`, `candidate_spofs[]`.
 
+Note the asymmetry, because it is a known product gap and not an oversight: the
+rejected candidates are only recorded here, so **Standard mode keeps no trace of
+why the winning hinge won**. Dogfood K3 asked for `spof_candidates` at top level;
+that requires prompt + schema changes and is blocked by the engine freeze (Q11).
+The shipped substitute is the opt-in raw pass trace (`BIF_TRACE=1`) plus
+`npm run eval:traces`, which recovers drift between drafts but cannot recover a
+runner-up the model never wrote down.
+
+### 4.10 Run provenance (`meta.run`)
+
+| Field | Meaning |
+|-------|---------|
+| `mode` | `standard` \| `deep` |
+| `locale` | `en` \| `id` |
+| `pass1_model` / `pass2_model` | Model ids actually used |
+| `provider_host` | **Host only** — never the full base URL (a path can carry ids), never the key |
+| `pass1_runs` | 1, or 2 in Deep |
+
+Written by the pipeline, not the model, so it cannot be hallucinated. Rendered as
+a chip on the report and exported as a "Run provenance" block in Markdown.
+
+Why it is a report block and not a debug detail: the five dogfood exports pin no
+model id, so **none of them can be compared to each other**. Two reports without
+this stamp are not two data points — they are two anecdotes.
+
 ---
 
 ## 5. Qualitative bands

@@ -1,0 +1,16 @@
+{
+  "id": "02-api-usage-billing-v",
+  "variant_of": "02-api-usage-billing",
+  "title": "Usage-based public developer API (paraphrase)",
+  "category": "API",
+  "locale": "en",
+  "fragile_hint": "mixed",
+  "idea": "An openly available HTTP endpoint set: send it a company web address, get back headcount ranges, what investment round the company is on, and guesses about the software it runs. Customers are billed strictly by what they consume — two cents each time a request returns something, with the first five hundred requests each month costing nothing. Callers identify themselves with a static token; nothing token-delegation-based has been built yet. The underlying records come partly from automated collection off the open web and partly from purchased feeds, and the marketing page promises the records are no more than seven days old. The buyers are sales-automation vendors who push their customers' contact databases through it in large overnight jobs.",
+  "focus_notes": [
+    "Abuse / key leakage and unbounded batch jobs",
+    "Data licensing & accuracy liability",
+    "Versioning / breaking changes for CRM integrators",
+    "Unit economics when free tier + scrapers dominate cost"
+  ],
+  "expected_spof_themes": ["abuse", "data quality", "licensing", "pricing", "sla"]
+}

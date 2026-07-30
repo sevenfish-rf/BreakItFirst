@@ -2,7 +2,7 @@
 
 Product semantics → [01-product.md](./01-product.md) · Index → [00-index.md](./00-index.md)
 
-*Aligned with `src/` as of 2026-07-21.*
+*Aligned with `src/` as of 2026-07-30 (drift audit: [05-doc-audit.md](./05-doc-audit.md)).*
 
 ---
 
@@ -38,8 +38,11 @@ Refresh mid-run **reconnects** (unless Cancel). Draft persists in the browser.
 | Async jobs + poll + cancel + single-flight | Shipped |
 | Draft / report restore / history (localStorage, max 10) | Shipped |
 | BYOK | Dev/owner; prod may use fixed provider |
-| Themes · i18n EN/ID | Shipped |
+| Run provenance on report + MD export (`meta.run`) | Shipped 2026-07-30 (Q8) |
+| Opt-in raw pass trace (`BIF_TRACE=1`) + trace reader | Shipped 2026-07-30 (Q9 / Q12) |
+| Theme mode (light/dark) · i18n EN/ID | Shipped |
 | Eval harness | Shipped (`eval/`) |
+| SPOF stability run (original ↔ paraphrase) | Harness shipped; **run blocked** on provider credentials (Q10) |
 | Redis / multi-instance / server DB | Deferred |
 
 ## A2. Setup
@@ -63,9 +66,14 @@ npm run lint
 | `npm run eval:baseline` | Golden set via `BIF_*` |
 | `npm run eval:compare` | Diff scores |
 | `npm run eval:baseline:ps1` | PowerShell helper |
+| `npm run eval:stability` | Q10 — original ↔ paraphrase pair per fixture, compares **SPOF labels** not the 34-pt score |
+| `npm run eval:traces` | Q12 — read `.breakitfirst-traces/` dumps (`BIF_TRACE=1`): hinge per draft + label drift |
 
 **Env:** not required for UI. Keys via browser BYOK, not stored server-side.  
-Eval only: `BIF_BASE_URL`, `BIF_API_KEY`, `BIF_PASS1_MODEL`, `BIF_PASS2_MODEL` — see `eval/env.example`.
+Eval only — required: `BIF_BASE_URL`, `BIF_API_KEY`, `BIF_PASS1_MODEL`,
+`BIF_PASS2_MODEL`. Optional: `BIF_LOCALE`, `BIF_ONLY`, `BIF_DEEP=1`,
+`BIF_CALL_TIMEOUT_MS`, `BIF_TRACE=1`, `BIF_TRACE_DIR`, `BIF_REF=<baseline run_id>`
+(stability only). Canonical list: `eval/env.example` + `eval/README.md`.
 
 **Provider UI:** base URL, API key, Pass 1 / Pass 2 model. Presets: OpenAI, OpenRouter, Ollama (`http://127.0.0.1:11434/v1`), custom. Test → `POST /api/models`. SSRF guard on base URL.
 
@@ -76,7 +84,7 @@ Eval only: `BIF_BASE_URL`, `BIF_API_KEY`, `BIF_PASS1_MODEL`, `BIF_PASS2_MODEL` �
 | `breakitfirst.provider` | BYOK settings |
 | `breakitfirst.sessionId` | Rate-limit session |
 | `breakitfirst.locale` | `en` \| `id` |
-| `breakitfirst.theme` | Theme id |
+| `breakitfirst.theme` | Theme mode (`light` \| `dark`) |
 | `breakitfirst.draft.v1` | Form draft |
 | `breakitfirst.activeJob.v1` | Job reconnect |
 | `breakitfirst.report.v1` | Last report |
@@ -89,13 +97,13 @@ Eval only: `BIF_BASE_URL`, `BIF_API_KEY`, `BIF_PASS1_MODEL`, `BIF_PASS2_MODEL` �
 **Stack:** Next.js 16 · React 19 · TypeScript · Tailwind v4 · Zod · Framer Motion · React Flow · Recharts · three.js
 
 ```
-src/app/           pages + api/analyze (+ status, cancel) + api/models
-src/components/    shell, form, report, overlay, history, visuals
-src/lib/           pipeline, jobs, prompts, schema, provider, i18n
+src/app/           pages + api/analyze (+ status, cancel) + api/models + type-lab (dev-only type playground)
+src/components/    shell, header, landing (page/faq/metrics/spine/footer + scroll choreography), form, report, overlay, history, visuals/effects
+src/lib/           pipeline, jobs, prompts, schema, provider, i18n, analysis-trace
 src/types/         FailureAnalysis
-eval/              golden, rubric, baselines
+eval/              golden, golden-variants, rubric, assertions, run-baseline, compare-baseline, stability, read-traces, baselines/, stability/
 scripts/           smoke-session, eval-baseline.ps1
-docs/              00-index · 01-product · 02-develop · 90/91 archive
+docs/              00-index · 01-product · 02-develop · 03-quality-gap · 04-refine-backlog · 05-doc-audit · Scoring/ · dogfood/ · 90/91 archive
 ```
 
 ### Analyze lifecycle
@@ -119,12 +127,22 @@ Pass 1 (+ archetypes)  [Deep: ×2]
   → Zod + soft-checks
 ```
 
-**Rate limits (in-memory):** analyze 8 slots / 15 min (Deep cost **2**); models 40 / min.  
-`maxDuration` 300s.
+**Rate limits (in-memory, `lib/rate-limit.ts`):**
 
-## A4. Themes & i18n
+| Bucket | Limit | Window |
+|--------|------:|--------|
+| `analyze` | 8 (Deep costs **2**) | 15 min |
+| `analyzeStrict` | 2 | 15 min — entered after **3×** `not_analyzable` inside a **1 h** abuse-strike window |
+| `models` | 40 | 1 min |
 
-Themes: `ember` (default), `violet`, `ocean`, `forest`, `gold`.  
+`maxDuration`: **300s** on `api/analyze` and `api/analyze/status`; **30s** on
+`api/models`.
+
+## A4. Theme mode & i18n
+
+Theme: **light / dark mode only** — no named palettes. `lib/themes.ts` exports
+`ThemeMode = "light" | "dark"` and `applyThemeToDocument`, which toggles
+`html.dark`; colours come from the CSS variables in `app/globals.css`.  
 Locale: `en` / `id` for UI + report prose; schema field names and band enums stay English.
 
 ```ts
@@ -199,7 +217,7 @@ Single-flight **before** rate limit. Deep cost = 2 slots.
 // → { ok, tested, modelCount, models: string[] }
 ```
 
-40 / min. Ollama fallback: `/api/tags`.
+40 / min. Ollama fallback: `/api/tags`. `maxDuration` on this route is **30s**, not 300s.
 
 ---
 
@@ -209,7 +227,12 @@ Types: `src/types/analysis.ts` · Zod: `src/lib/schema.ts`.
 
 ```ts
 FailureAnalysis {
-  meta: { idea_input, category, generated_at }
+  meta: {
+    idea_input, category, generated_at
+    run?: RunProvenance   // K1/Q8 — written by the pipeline, not the model:
+                          // mode, locale, pass1_model, pass2_model,
+                          // provider_host, pass1_runs
+  }
   summary: string
   assumptions: string[]            // 5–10
   single_point_of_failure: {
@@ -236,9 +259,9 @@ FailureAnalysis {
 
 Error: `{ error: "not_analyzable", message }`.
 
-### Soft-checks (warn only)
+### Soft-checks (warn only) — 17
 
-`cascade_connected` · `spof_in_failure_modes` · `resilience_sane` · `stress_test_useful` · `stress_test_not_all_yes` · `stress_test_not_all_maybe` · `failure_modes_coverage` · `signals_observational` · `spof_label_short` · `cascade_depth_preferred` · `spof_label_mechanistic` · `resilience_matches_spof` · `critical_assumptions_overlap` · `critical_assumptions_present` · `failure_modes_track_cascade` · `ponr_in_range_ok`  
+`cascade_connected` · `spof_in_failure_modes` · `resilience_sane` · `stress_test_useful` · `stress_test_not_all_yes` · `stress_test_not_all_maybe` · `failure_modes_coverage` · `signals_observational` · `spof_label_short` · `cascade_depth_preferred` · `spof_label_mechanistic` · `resilience_matches_spof` · `critical_assumptions_overlap` · `critical_assumptions_present` · `failure_modes_track_cascade` · `ponr_in_range_ok` · `security_legal_when_data_path`  
 + `pass2NovelClaimWarnings` (grounding).
 
 ---
@@ -261,22 +284,38 @@ LLM:    Pass1 → Pass1.5 → Pass2 → Zod
 | Jobs | `src/lib/analyze-jobs.ts` |
 | Client poll | `src/lib/analyze-client.ts` |
 | Schema | `src/lib/schema.ts` |
-| Provider | `src/lib/provider-client.ts` |
+| Provider | `src/lib/provider-client.ts`, `provider-errors.ts` |
 | Rate limit | `src/lib/rate-limit.ts` |
-| Draft / report | `src/lib/draft.ts`, `report-storage.ts` |
-| i18n / themes | `src/lib/i18n/*`, `themes.ts` |
+| Input gate | `src/lib/input-validation.ts` |
+| Draft / report | `src/lib/draft.ts`, `report-storage.ts`, `report-markdown.ts` |
+| Trace (opt-in) | `src/lib/analysis-trace.ts` — `BIF_TRACE=1` → `.breakitfirst-traces/` |
+| Session / warnings | `src/lib/session.ts`, `user-warnings.ts` |
+| Streaming | `src/lib/ndjson-stream.ts` |
+| Landing copy | `src/lib/landing-copy.ts` |
+| i18n / theme mode | `src/lib/i18n/*`, `themes.ts` |
 
 ### UI components
 
 | Component | Role |
 |-----------|------|
 | `app-shell.tsx` | form ↔ analyzing ↔ report |
+| `header.tsx` | dynamic-island header, theme + locale switch |
+| `landing-page.tsx` + `landing-{faq,metrics,spine,footer}.tsx` | editorial landing sections |
+| `scroll-choreography.tsx`, `smooth-scroller.tsx`, `scroll-highlight.tsx` | scroll behaviour for the landing |
 | `landing-form.tsx` | idea, deep, resume, history |
 | `analyzing-overlay.tsx` | poll progress |
-| `analysis-report.tsx` | report panels |
+| `analysis-report.tsx` | report panels + run-provenance chip |
 | `report-history.tsx` | open/delete history |
-| `provider-settings.tsx` | BYOK |
-| `visuals/*` | cascade, radar, modes, stress |
+| `provider-settings.tsx` | BYOK (dev only — not a marketed feature) |
+| `visuals/*`, `effects/*` | cascade, radar, modes, stress, background effects |
+
+### Report provenance (Q8, shipped 2026-07-30)
+
+`meta.run` is stamped by the pipeline on **every** report and rendered as a chip
+in `analysis-report.tsx`; `report-markdown.ts` exports it as a "Run provenance"
+block. It records mode, locale, Pass 1 / Pass 2 model, provider **host** and draft
+count — never the API key and never the full base URL, because a path can carry
+ids. Two reports without this stamp cannot be compared, which is why it exists.
 
 ### Eval commands
 
@@ -284,7 +323,9 @@ LLM:    Pass1 → Pass1.5 → Pass2 → Zod
 |---------|--|
 | `npm run eval:assert-sample` | No provider |
 | `npm run eval:baseline` | Needs `BIF_*` |
-| `npm run eval:compare` | Diff scores |
+| `npm run eval:compare` | Diff scores (⚠ the 34-pt rubric is saturated — see `eval/README.md`) |
+| `npm run eval:stability` | Original ↔ paraphrase SPOF-label diff (Q10) |
+| `npm run eval:traces` | Read `BIF_TRACE=1` dumps (Q12) |
 | `npm run smoke:session` | Jobs + history |
 
 Details: `eval/README.md`.

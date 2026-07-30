@@ -1,18 +1,18 @@
 ﻿# 04 â€” Refine backlog (all quality-gap trials)
 
 **Single place** for todos / improvements that come out of side-by-side premortem tests.  
-Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action items live here.**
+Per-idea write-ups stay in `docs/Scoring/N.md` (verdict + evidence). **Action items live here.**
 
 | | |
 |--|--|
 | Protocol | [03-quality-gap.md](./03-quality-gap.md) |
-| Trial files | [scoring/](./scoring/) |
+| Trial files | [scoring/](./Scoring/) |
 | Product semantics | [01-product.md](./01-product.md) |
 
 **How to use**
 
-1. After each idea test, update `scoring/N.md` (summary + verdict).  
-2. **Append or update rows in this file** (do not only leave todos in `scoring/N.md`).  
+1. After each idea test, update `Scoring/N.md` (summary + verdict).  
+2. **Append or update rows in this file** (do not only leave todos in `Scoring/N.md`).  
 3. When 5 ideas are done, use **Â§1 Master board** + **Â§2 By priority** to batch implement.  
 4. Mark `Status` here as work completes.
 
@@ -31,7 +31,7 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | E2 | Engine | Self-check: â€œWould founder already fear this as #1?â€ â†’ search deeper structural hinge | P0 | **done** | A | `prompts.ts` refine + Pass 1.5 attack | Core of Idea A win vs Claude |
 | E3 | Engine | Geo/culture density when idea names place (e.g. Indonesia WA RT) | P2 | **done** | A | Pass 1 cover | Claude was strong; only tighten if BIF weak on Bâ€“E |
 | E4 | Engine | Resilience scores must match **chosen path** (not generic app health) | P1 | **done** | A | Pass 2 + `schema.ts` soft-checks | ChatGPT trial had Technical 82 mismatch pattern |
-| E5 | Engine | SaaS litmus: BIF must not land generic competition/trust/retention | P0 | **done** (pass) | A, **B** | scoring/2 | Idea B: SPOF = auto-overwrite+noise, not generic AI distrust |
+| E5 | Engine | SaaS litmus: BIF must not land generic competition/trust/retention | P0 | **done** (pass) | A, **B** | Scoring/2.md | Idea B: SPOF = auto-overwrite+noise, not generic AI distrust |
 | E6 | Engine | When differentiator is a pipeline, force **stacked sub-problem** SPOF (routing / what-to-change / safe write) | P0 | **done** | **B** | `prompts.ts` Pass 1 / 1.5 | From GLM win mode on Idea B |
 | E7 | Engine | Prefer **quantified cascade thresholds** + explicit PONR in prose | P1 | **done** | **B** | Pass 1 cover + Pass 2 | BIF C strength - keep/amplify |
 | E8 | Engine | Do not empty **security/legal** when path has transcripts, multi-reader docs, consent | P0 | **done** | **B** | Pass 1 domains + soft-check coverage | BIF weakness vs GLM on Idea B |
@@ -55,7 +55,7 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | P4 | Position | Test tagline: *Claude found what you already feared; BIF found the earlier link* | P1 | **done** | A | copy test | Owner wording |
 | P5 | Position | Competitive bar = **Claude + GLM**; do not claim â€œalways #1 vs every modelâ€ | P0 | **done** | B, **C** | landing / case studies | Idea C: Claude beat BIF |
 | P6 | Position | Own **false specificity / quality-gap** as known product risk (dogfood confirmed) | P0 | **done** | A dogfood + **C** | landing / 01-product | Claude camouflage hinge |
-| Q1 | Process | Always pin platform + model ids on each `scoring/N.md` | P0 | **done** | A, B, C | scoring template | BIF = Mimo 2.5 Pro |
+| Q1 | Process | Always pin platform + model ids on each `Scoring/N.md` | P0 | **done** | A, B, C | scoring template | BIF = Mimo 2.5 Pro |
 | Q6 | Process | High-variance fixtures (dogfood/meta): require **â‰¥3 judges**; do not sole-trust one scorer | P1 | **done** | **C** | scoring protocol | C ranged 17-25 |
 | Q2 | Process | Prefer â‰¥1 judge outside platform family; footnote self-scores | P1 | **done** | A | protocol | GPT-as-judge inflated B on Idea A |
 | Q3 | Process | Complete full A-E suite | P0 | **done** | Aâ€“E | suite | 5/5 scoring files complete |
@@ -64,10 +64,11 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | Q7 | Process | Run **implement batch** from P0 board (prompt + UI + docs) | P0 | **done** | suite | shipped 2026-07-21 |
 | Q8 | Process | Stamp **run provenance** (mode, locale, Pass 1/2 model, provider host, draft count) on every report + Markdown export | P0 | **done** | dogfood | `types/analysis.ts` `meta.run`, `pipeline.ts`, `report-markdown.ts`, report chip | Closes the Q1 hole on the product side: the 5 dogfood exports pin no model id, so none of them can be compared. Shipped 2026-07-30 |
 | Q9 | Process | Opt-in **raw pass trace** (`BIF_TRACE=1`) so discarded SPOF candidates stay recoverable | P0 | **done** | dogfood | `lib/analysis-trace.ts`, `pipeline.ts`, `eval/env.example` | Pass 1 makes 3 candidates and Standard mode keeps 1 with no record. Trace writes Pass 1/1.5/2 prose to gitignored `.breakitfirst-traces/`. Local dev only — contains idea text. Shipped 2026-07-30 |
-| Q10 | Process | Re-run baseline + paraphrase-variant run; compare **SPOF labels**, not the 34-pt score | P0 | **todo** | dogfood | `eval/run-baseline.ts`, new `eval/stability.ts` | Blocked on owner provider credentials. Rubric is saturated (3 runs of 2026-07-16 all 33–34/34, own summary: "ceiling already high at 33.8"), so the score cannot detect the instability the dogfood runs describe — the label diff can |
+| Q10 | Process | Re-run baseline + paraphrase-variant run; compare **SPOF labels**, not the 34-pt score | P0 | **blocked** | dogfood | `eval/stability.ts`, `eval/golden-variants/*`, `npm run eval:stability` | Harness shipped 2026-07-30: 5 paraphrase fixtures (same mechanism, no distinctive wording reused) + pair runner that emits a side-by-side label table with a **human**-filled `Same hinge?` column, plus `BIF_REF=<baseline run_id>` to diff against 2026-07-16 labels. Only the run itself is blocked, on owner provider credentials. Rubric is saturated (3 runs of 2026-07-16 all 33–34/34, own summary: "ceiling already high at 33.8"), so the score cannot detect the instability the dogfood runs describe — the label diff can |
+| Q12 | Process | Trace reader over `.breakitfirst-traces/` — hinge per draft + label drift across runs of one idea | P1 | **done** | dogfood | `eval/read-traces.ts`, `npm run eval:traces` | Shipped 2026-07-30. Prints final SPOF, `candidate_spofs` (deep only), heuristic hinge sentence per `pass1_a`/`pass1_b`/`pass1_5`, and groups repeat runs of one idea with a distinct-label count. **Honest limit recorded in the tool:** Pass 1 writes only the winning candidate, so the two runners-up usually are not in the prose and cannot be recovered — surfacing them would need the frozen `prompts.ts`, so it was not done |
 | Q11 | Process | Engine/prompt work **frozen** until measurement infra lands | P0 | **doing** | dogfood | `prompts.ts`, `schema.ts` checks | Owner directive 2026-07-30: prompt + rule engine are the core; do not touch while infra has no measurement floor. Q8/Q9 land under the freeze because they add provenance and capture only — no prompt, schema rule or soft check changed |
 
-**Counts:** todo **1** (Q10) · doing **1** (Q11 freeze) · **done (suite + implement batch + Q8/Q9 provenance & trace)** · see master board
+**Counts:** todo **0** · doing **1** (Q11 freeze) · blocked **1** (Q10 — harness ready, needs owner credentials) · **done (suite + implement batch + Q8/Q9 provenance & trace + Q12 trace reader)** · see master board
 
 ---
 
@@ -139,7 +140,7 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 
 | | |
 |--|--|
-| **File** | [scoring/1.md](./scoring/1.md) |
+| **File** | [scoring/1.md](./Scoring/1.md) |
 | **Date** | 2026-07-21 |
 | **Winner** | BIF (provisional) |
 | **BIF SPOF** | Demand sporadis vs threshold retensi sitter |
@@ -155,7 +156,7 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 
 | | |
 |--|--|
-| **File** | [scoring/2.md](./scoring/2.md) |
+| **File** | [scoring/2.md](./Scoring/2.md) |
 | **Date** | 2026-07-21 |
 | **Candidates** | Claude + GPT + BIF + **GLM 5.2** (GPT last candidate run) |
 | **Winner** | **BIF + GLM tie** (~25); Claude ~22; GPT ~16 |
@@ -168,7 +169,7 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 
 | | |
 |--|--|
-| **File** | [scoring/3.md](./scoring/3.md) |
+| **File** | [scoring/3.md](./Scoring/3.md) |
 | **Date** | 2026-07-21 |
 | **Candidates** | Claude + GLM + BIF |
 | **Winner** | **Claude** (majority); BIF mid (~22 mean); GLM often 3rd |
@@ -181,7 +182,7 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 
 | | |
 |--|--|
-| **File** | [scoring/4.md](./scoring/4.md) |
+| **File** | [scoring/4.md](./Scoring/4.md) |
 | **Date** | 2026-07-21 |
 | **Candidates** | Claude + GLM + BIF |
 | **Winner** | **Thin top** - GLM slight edge; BIF close #2 (~23.5 mean) |
@@ -193,7 +194,7 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 
 | | |
 |--|--|
-| **File** | [scoring/5.md](./scoring/5.md) |
+| **File** | [scoring/5.md](./Scoring/5.md) |
 | **Date** | 2026-07-21 |
 | **Candidates** | Claude + GLM + BIF |
 | **Winner** | **GLM** (majority); Claude close 2nd; **BIF 3rd / low** (~19 mean) |
@@ -232,5 +233,11 @@ Per-idea write-ups stay in `docs/scoring/N.md` (verdict + evidence). **Action it
 | 2026-07-21 | Idea E complete: BIF low / GLM win; suite 5/5; E16-E18 + Q7; rollup Â§5 |
 
 | 2026-07-21 | **Implement batch:** SUITE_REFINE + lenses + soft-check + S3 UI + mark backlog done |
-| 2026-07-21 | Post-refine spot-check formalized: [scoring/6.md](./scoring/6.md) (BreakPath; BIF 25 co-lead) |
+| 2026-07-21 | Post-refine spot-check formalized: [scoring/6.md](./Scoring/6.md) (BreakPath; BIF 25 co-lead) |
+| 2026-07-30 | Q8/Q9 shipped: run provenance on every report + export, opt-in `BIF_TRACE=1` raw pass dump |
+| 2026-07-30 | Q10 harness shipped (`eval/stability.ts` + `eval/golden-variants/`); run itself blocked on owner credentials |
+| 2026-07-30 | Q12 shipped: `eval/read-traces.ts` |
+| 2026-07-30 | Q11 freeze recorded: `prompts.ts` + schema rule engine off-limits until a measurement floor exists |
+| 2026-07-30 | Doc/code drift audit opened: [05-doc-audit.md](./05-doc-audit.md) |
+| 2026-07-30 | Doc audit **selesai**: 10 SPEC doc diaudit klaim-per-klaim, fix pass diterapkan (theme 5→light/dark di 3 doc, path mati, tabel/tree tertinggal, `maxDuration` per route, soft check 17, ID map dogfood). `BreakItFirst.md` direklasifikasi RECORD + banner superseded. Tidak ada yang menyentuh `prompts.ts`/rule engine — lihat §4 di `05-doc-audit.md` |
 

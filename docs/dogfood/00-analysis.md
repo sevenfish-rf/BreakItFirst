@@ -9,8 +9,28 @@ berikutnya?
 | **Sumber utama** | `1test.md`, `1test-deepanalyst.md`, `2test.md`, `2test-deepanalyst.md`, `3test-deepanalyst.md` (5 run, 1150 baris) |
 | **Sumber triangulasi** | [`../03-quality-gap.md`](../03-quality-gap.md) suite A–E · [`../04-refine-backlog.md`](../04-refine-backlog.md) · [`../01-product.md`](../01-product.md) · `eval/` · `src/lib/{schema,input-validation,prompts}.ts` |
 | **Ditulis** | 2026-07-30 |
-| **Status** | analisa selesai · belum ada baris backlog · belum ada implementasi |
+| **Status** | analisa selesai · sebagian sudah jadi baris backlog dan sebagian sudah shipped — lihat kotak di bawah |
 | **Sifat bukti** | self-referential (produk menilai dirinya), n=5, tanpa juri eksternal. Lihat §11 sebelum memakai ini sebagai justifikasi keputusan besar. |
+
+> ### Status implementasi per 2026-07-30 (baca sebelum §6/§7)
+>
+> §6 dan §7 ditulis **sebelum** ada implementasi apa pun, dan penomoran ID yang
+> diusulkan di §7 **tidak** sama dengan yang akhirnya dipakai di board. Peta yang
+> benar:
+>
+> | Usulan di file ini | ID sebenarnya di `04-refine-backlog.md` | Status |
+> |---|---|---|
+> | N1 (`Q8` diusulkan) suite stabilitas | **Q10** | Harness shipped (`eval/stability.ts` + `eval/golden-variants/`, `npm run eval:stability`); **run blocked** — butuh kredensial provider owner. Hanya varian `para` yang dibangun; `strip` dan `flip` tidak |
+> | N2 (`Q9` diusulkan) collision check | belum ada ID | `todo` — belum dibangun |
+> | N3 (`E19` diusulkan) `spof_candidates` top-level | — | **Frozen** oleh Q11: butuh ubah `prompts.ts` + `schema.ts`. Gantinya: **Q9** raw pass trace (`BIF_TRACE=1`) + **Q12** `npm run eval:traces` |
+> | N4 (`Q10` diusulkan) baseline ulang + re-score | **Q10** (bagian run) | Blocked; **lihat catatan saturasi di N4** — `eval:compare` atas skor 34 tidak bisa menjawab pertanyaan N4 |
+> | N5/N6/N7/N8 | belum ada ID | belum dibangun; N6 masih butuh keputusan owner |
+> | "utang abuse" (`Q11` diusulkan) | **bukan Q11** | `Q11` sudah dipakai untuk **engine freeze** (arahan owner 2026-07-30). Utang abuse belum punya ID |
+>
+> Yang benar-benar shipped 2026-07-30: **Q8** run provenance di tiap report +
+> export Markdown, **Q9** raw pass trace opt-in, **Q12** trace reader. Ketiganya
+> lolos di bawah freeze karena hanya menambah provenance dan penangkapan data —
+> tidak satu pun mengubah prompt, aturan schema, atau soft check.
 
 Semua angka di file ini diambil langsung dari kelima laporan, bukan dari ingatan.
 Nomor baris dicantumkan supaya tiap klaim bisa dicek ulang.
@@ -296,7 +316,7 @@ yang tidak punya alat ukur. Tanpa itu, tidak ada cara membedakan "E11 bekerja" d
 **Klaim.** Kandidat yang ditolak hanya ada di mode Deep. Di Standard, dua kandidat
 yang kalah dibuang tanpa jejak.
 
-**Bukti.** `src/lib/schema.ts:111–118` — `candidate_spofs` bersarang di dalam
+**Bukti.** `src/lib/schema.ts:125–132` — `candidate_spofs` bersarang di dalam
 `self_consistency`, yang `.optional()` dan hanya diisi oleh jalur Deep.
 `src/lib/prompts.ts:90` dan `:398` — prompt tetap menyusun 3 kandidat secara
 internal di kedua mode, lalu me-ranking, lalu menulis hanya pemenang.
@@ -314,6 +334,16 @@ menjadi klaim produk.
 
 **Verifikasi.** N3. Setelah `spof_candidates` naik ke top-level, margin seleksi
 bisa dicatat dan dilacak antar run.
+
+> **Update 2026-07-30 — apa yang sebenarnya dikerjakan.** N3 menyentuh
+> `prompts.ts` dan `schema.ts`, jadi ia **frozen** oleh Q11 dan tidak dibangun.
+> Yang shipped sebagai pengganti: **Q9** menulis prose mentah tiap pass ke
+> `.breakitfirst-traces/` (`BIF_TRACE=1`, lokal saja) dan **Q12**
+> `npm run eval:traces` membacanya. Batas penggantinya harus dinyatakan jujur:
+> Pass 1 hanya menuliskan pemenang, jadi dua runner-up biasanya **tidak ada** di
+> prose dan tidak bisa dipulihkan oleh tool apa pun. Yang bisa dipulihkan adalah
+> drift antar draft (`pass1_a` vs `pass1_b` vs `pass1_5`) dan antar run atas ide
+> yang sama. Klaim K3 sendiri tetap berlaku dan belum tertutup.
 
 ### K4 — Kualitas input tidak digating, padahal seluruh SPOF menyalahkan input · P1
 
@@ -350,14 +380,14 @@ perubahan terbesarnya.
 |---------|-----------|
 | 2026-07-16 | Baseline eval terakhir dijalankan (`eval/baselines/2026-07-16_043835`, `_051625`, `_230859`) |
 | 2026-07-21 | Suite A–E selesai; **batch prompt E9–E18 shipped** (Q7) |
-| 2026-07-21/23 | Spot-check `scoring/6.md`, `7.md`, `8.md` — **fixture baru**, bukan re-score C/E |
+| 2026-07-21/23 | Spot-check `Scoring/6.md`, `7.md`, `8.md` — **fixture baru**, bukan re-score C/E |
 | 2026-07-27/29 | 5 run dogfood |
-| 2026-07-30 | `04-refine-backlog.md`: **todo 0 · doing 0 · 32 baris `done`** |
+| 2026-07-30 | `04-refine-backlog.md`: **todo 0 · doing 0 · 32 baris `done`** (snapshot pagi itu; sore hari sudah `todo 0 · doing 1 (Q11) · blocked 1 (Q10)`) |
 
 **Dampak.** (a) Tidak ada satu pun baseline yang dijalankan setelah perubahan
 prompt terbesar proyek ini, jadi delta E9–E18 tidak diketahui. (b) Rekomendasi
 `03-quality-gap.md` §5.2 sendiri — *"then optional re-score C+E"* — tidak pernah
-dieksekusi; `scoring/6–8.md` memakai fixture berbeda sehingga tidak bisa mengukur
+dieksekusi; `Scoring/6–8.md` memakai fixture berbeda sehingga tidak bisa mengukur
 delta. (c) Lima temuan dogfood berumur 3 hari belum menjadi baris backlog apa pun,
 padahal §6 protokol mewajibkan itu setelah tiap trial.
 
@@ -482,6 +512,17 @@ pernah bergantung pada ide tersebut.
 `run-baseline.ts`, `golden/*.json`, `compare-baseline.ts`. Varian `para`/`strip`
 disimpan sebagai fixture turunan di `eval/golden/variants/`.
 
+> **Update 2026-07-30 — yang benar-benar shipped (ID sebenarnya: Q10).**
+> Path fixture adalah **`eval/golden-variants/`**, bukan `eval/golden/variants/`.
+> Hanya varian **`para`** yang dibangun (5 pasangan, satu per fixture golden);
+> **`strip` dan `flip` tidak ada**, jadi kriteria lulus "≥4/5 bergeser pada
+> `strip`" belum bisa dievaluasi sama sekali. Runner sengaja **tidak** memutuskan
+> sama/beda: `REPORT.md` menulis kolom **`Same hinge?` = `TODO`** untuk diisi
+> manusia, karena `"OEM-owned firmware"` dan `"vendor firmware dependency"` adalah
+> hinge yang sama dengan kata berbeda dan tidak ada perbandingan string yang benar
+> untuk itu. Opsional `BIF_REF=<baseline run_id>` mendiff ke label baseline lama.
+> Run-nya sendiri **blocked** pada kredensial provider owner.
+
 **Effort.** ~1 hari + biaya provider 5 fixture × 4 varian.
 
 **Menutup.** K2, K7, sebagian K1 (syarat perlu), divergensi velocity/PONR §2.5.
@@ -507,7 +548,7 @@ langsung.
 **Tujuan.** Menutup cascade step 2; membuat margin seleksi terlihat dan terukur.
 
 **Definisi.** Pindahkan daftar kandidat keluar dari `self_consistency`
-(`schema.ts:111–118`) ke `single_point_of_failure.rejected_candidates`:
+(`schema.ts:125–132`) ke `single_point_of_failure.rejected_candidates`:
 `{ label, rejection_reason }[]`, 2 item, wajib di kedua mode. `self_consistency`
 tetap ada untuk kalibrasi Deep.
 
@@ -534,7 +575,7 @@ fixture C dan E dengan protokol `03-quality-gap.md` (Claude + GLM + BIF, ≥3 ju
 untuk C sesuai Q6).
 
 **Pertanyaan yang dijawab.** Apakah E9–E18 memperbaiki C dan E, atau sekadar
-menghasilkan fixture baru yang lebih ramah? `scoring/6–8.md` tidak bisa menjawab
+menghasilkan fixture baru yang lebih ramah? `Scoring/6–8.md` tidak bisa menjawab
 ini karena fixture-nya berbeda.
 
 **Kriteria lulus.** C dan E naik dari ~22 dan ~19 ke ≥23. Kalau tidak naik, batch
@@ -542,6 +583,18 @@ E9–E18 harus ditinjau ulang sebelum aturan ke-19 ditulis.
 
 **Effort.** ~1 hari termasuk penjurian. Termurah dan menetapkan garis dasar untuk
 semua item lain.
+
+> **Koreksi 2026-07-30 — N4 seperti ditulis tidak bisa menjawab pertanyaannya.**
+> Rencana ini bertumpu pada `eval:compare` atas total 34 poin. Tapi tiga run
+> `eval/baselines/2026-07-16_*` semuanya **33–34/34** dengan nol hard/soft fail,
+> dan summary run itu sendiri menulis *"ceiling already high at 33.8"*. Rubriknya
+> **saturasi**: batas atasnya sudah tersentuh, jadi delta E9–E18 tidak akan muncul
+> di angka itu apa pun hasilnya, dan kriteria lulus "C dan E naik ke ≥23" memakai
+> rubrik manusia 25 poin yang berbeda lagi. Instrumen yang benar untuk pertanyaan
+> "apakah hinge-nya bergerak" adalah **diff label SPOF** (`npm run eval:stability`),
+> bukan skor. Baseline ulang tetap berguna sebagai arsip provenance — bukan sebagai
+> pengukur kualitas. Caveat ini juga sudah ditulis di `eval/rubric.md` dan
+> `eval/README.md`.
 
 **Menutup.** K5.
 
@@ -634,9 +687,16 @@ tidak terverifikasi.
 
 ## 7. Baris backlog siap paste ke `04-refine-backlog.md` §1
 
-Board saat ini kosong (todo 0) sementara §6 di file ini memuat 9 item. Baris berikut
-mengikuti skema ID yang sudah ada (`E` engine · `S` surface · `Q` process) dan
-melanjutkan penomoran dari E18 / S4 / Q7.
+> **Sudah tidak "siap paste" — sudah lewat.** Baris di bawah adalah usulan
+> **2026-07-30 pagi**, sebelum board diperbarui, dan **penomorannya bertabrakan**
+> dengan ID yang akhirnya dipakai (`Q8` = provenance, `Q9` = raw trace, `Q11` =
+> engine freeze, `Q12` = trace reader). Board yang berlaku ada di
+> `04-refine-backlog.md`; tabel ini disimpan sebagai catatan usulan awal, bukan
+> instruksi. Peta ID yang benar ada di kotak status dekat kepala file ini.
+
+Board saat itu `todo 0`, sementara §6 di file ini memuat 9 item. Baris berikut
+mengikuti skema ID yang ada (`E` engine · `S` surface · `Q` process) dan
+melanjutkan penomoran dari E18 / S4 / Q7 **seperti yang diusulkan saat itu**.
 
 | ID | Area | Title | Priority | Status | Seen on | Where | Notes |
 |----|------|-------|----------|--------|---------|-------|-------|
@@ -678,7 +738,8 @@ dipasarkan sebagai fitur**, produksi akan memakai provider yang lebih stabil, da
 **pricing belum ditentukan**. Dogfood menambahkan satu konsekuensi teknis yang
 sebelumnya tidak tercatat: verdict `abuse_fraud_spiral` = **No** pada run 2–5
 **bergantung** pada BYOK dev-only. Begitu ada endpoint termeter atau free tier di
-produksi, verdict itu balik. Dicatat sebagai Q11 sekarang, bukan saat migrasi.
+produksi, verdict itu balik. **Dicatat sekarang, bukan saat migrasi** — tapi **bukan** sebagai `Q11`: ID itu
+sudah dipakai untuk engine freeze. Utang ini masih menunggu ID baru di board.
 
 ---
 
@@ -711,12 +772,13 @@ Alasan urutannya:
 
 **Definition of done untuk gelombang ini:**
 
-- [ ] `npm run eval:stability` ada dan lulus kriteria §6 N1
-- [ ] 0 tabrakan hinge lintas 5 fixture (N2)
-- [ ] `rejected_candidates` terisi di 5/5 fixture, kedua mode (N3)
-- [ ] delta C dan E pasca E9–E18 terukur dan tercatat di `scoring/` (N4)
-- [ ] `04-refine-backlog.md` §1 memuat 11 baris §7, dengan status akurat
-- [ ] `01-product.md` memuat P7 (moat) dan Q11 (utang abuse)
+- [x] `npm run eval:stability` **ada** (Q10 harness, varian `para` saja)
+- [ ] `npm run eval:stability` **lulus** kriteria §6 N1 — masih blocked dua kali: butuh kredensial provider, dan varian `strip`/`flip` belum dibangun
+- [ ] 0 tabrakan hinge lintas 5 fixture (N2) — belum dibangun
+- [ ] `rejected_candidates` terisi di 5/5 fixture, kedua mode (N3) — **frozen** (Q11); pengganti Q9/Q12 sudah ada
+- [ ] delta C dan E pasca E9–E18 terukur dan tercatat di `Scoring/` (N4) — lihat koreksi saturasi di N4: pengukurnya harus diff label, bukan skor
+- [x] `04-refine-backlog.md` §1 memuat baris untuk temuan dogfood, dengan status akurat (Q8, Q9, Q10, Q11, Q12)
+- [ ] `01-product.md` memuat P7 (moat) dan utang abuse (butuh ID baru — `Q11` sudah dipakai untuk freeze)
 
 ---
 
