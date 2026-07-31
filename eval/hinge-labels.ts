@@ -85,7 +85,7 @@ export function tokenOverlap(a: string, b: string): number {
   return shared / (sa.size + sb.size - shared);
 }
 
-export type HingeVerdict = "same" | "partial" | "shift" | "unmatched";
+export type HingeVerdict = "same" | "partial" | "swap" | "shift" | "unmatched";
 
 export type HingeSide = {
   /** SPOF component plus its explanation — the explanation carries the mechanism. */
@@ -124,7 +124,18 @@ export type HingeComparison = {
 /**
  * `same`      — both sides land on the same strongest theme.
  * `partial`   — strongest themes differ but the theme sets still intersect.
- * `shift`     — theme sets are disjoint. This is the drift signal.
+ * `swap`      — theme sets are disjoint, but BOTH primaries are still inside the
+ *               fixture's own `expected_spof_themes`. The hinge moved to a
+ *               *different mechanism the fixture author declared load-bearing*,
+ *               not off the map. This is co-valid oscillation on a deliberately
+ *               multi-fragile idea (e.g. a marketplace that is genuinely exposed
+ *               to both cold-start AND disintermediation) — worth tracking as
+ *               run-to-run noise, but NOT frame escape. Distinguished from
+ *               `shift` so a single-run gate can tell a regression from an idea
+ *               that simply has more than one real SPOF.
+ * `shift`     — theme sets are disjoint AND at least one primary escaped the
+ *               fixture's expected set. The hinge left the space of mechanisms
+ *               the idea is even about. This is the drift signal.
  * `unmatched` — one side matched no theme at all; the screen abstains.
  */
 export function compareHinge(base: HingeSide, variant: HingeSide): HingeComparison {
@@ -160,9 +171,21 @@ export function compareHinge(base: HingeSide, variant: HingeSide): HingeComparis
       reason: `strongest theme moved \`${base.primary}\` → \`${variant.primary}\`, sets still share ${shared.map((t) => `\`${t}\``).join(", ")}`,
     };
   }
+  // Disjoint sets. Split frame-escape (`shift`) from co-valid oscillation
+  // (`swap`): if both strongest themes are ones the fixture itself declared
+  // expected, the hinge moved between the idea's own SPOFs, not off the map.
+  if (base.primary_expected && variant.primary_expected) {
+    return {
+      ...comparison,
+      verdict: "swap",
+      reason: `disjoint, but both \`${base.primary}\` and \`${variant.primary}\` are fixture-declared SPOF themes — co-valid oscillation, not frame escape`,
+    };
+  }
   return {
     ...comparison,
     verdict: "shift",
-    reason: `disjoint themes: \`${base.primary}\` → \`${variant.primary}\``,
+    reason: `disjoint themes: \`${base.primary}\` → \`${variant.primary}\`${
+      variant.primary_expected ? "" : ` (\`${variant.primary}\` is off the fixture's expected set)`
+    }`,
   };
 }

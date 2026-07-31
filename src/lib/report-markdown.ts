@@ -151,6 +151,28 @@ export function analysisToMarkdown(
     lines.push("");
   }
 
+  // K3 — SPOF selection margin (both modes): winner vs runners-up
+  if (a.spof_candidates && a.spof_candidates.some((c) => c.verdict === "rejected")) {
+    lines.push(h(3, id ? "Kenapa hinge ini menang" : "Why this hinge won"));
+    lines.push("");
+    for (const c of a.spof_candidates) {
+      const tag =
+        c.verdict === "winner"
+          ? id
+            ? "pemenang"
+            : "winner"
+          : id
+            ? "ditolak"
+            : "rejected";
+      let line = `- **${esc(c.label)}** _(${tag})_ — ${esc(c.mechanism)}`;
+      if (c.verdict === "rejected" && c.reject_reason) {
+        line += ` ${id ? "· ditolak:" : "· rejected:"} ${esc(c.reject_reason)}`;
+      }
+      lines.push(line);
+    }
+    lines.push("");
+  }
+
   if (a.self_consistency) {
     const sc = a.self_consistency;
     lines.push(h(3, id ? "Kalibrasi SPOF (Deep)" : "SPOF calibration (Deep)"));

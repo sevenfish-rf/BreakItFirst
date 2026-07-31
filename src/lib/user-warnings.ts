@@ -22,6 +22,12 @@ const TECH_PATTERNS: RegExp[] = [
   /pass 1\.5 critique returned empty/i,
   /self_consistency was filled/i,
   /pipeline fallback/i,
+  // E21 — the idea_input restamp is a regression signal for us, not for the
+  // reader: the report already shows the corrected text.
+  /idea_input/i,
+  // E22 — the derived-vs-claimed agreement note is calibration telemetry; the
+  // reader already sees the derived level and its reason in the report.
+  /spof_agreement/i,
 ];
 
 /** Keep only notes that are meaningful (and safe) for product UI. */

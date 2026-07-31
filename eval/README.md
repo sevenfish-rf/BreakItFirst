@@ -16,6 +16,9 @@ Fondasi masterplan **B.1** — ukur kualitas report sebelum/sesudah ubahan promp
 | `stability.ts` | Runner original vs tiap tulisan-ulang; verdict otomatis atas **tema SPOF**, bukan skor |
 | `hinge-labels.ts` | Pemetaan SPOF → tema + pembanding verdict |
 | `hinge-check.ts` | Preflight offline: bentuk fixture + screen tidak degenerate |
+| `locale-flip.ts` | Ide sama dijalankan `en` vs `id`; diff tiga band enum (K7) |
+| `collision-check.ts` | Offline: 5 ide berbeda → 5 hinge berbeda? (diskriminasi, N2) |
+| `input-integrity.ts` | Offline: `meta.idea_input` byte-identik dengan teks yang dikirim? (N7/E21) |
 | `read-traces.ts` | Baca dump `.breakitfirst-traces/` (`BIF_TRACE=1`) → hinge per draft + drift antar run |
 | `baselines/<run_id>/` | Output tiap run baseline (auto-created) |
 | `stability/<run_id>/` | Output tiap run stabilitas (auto-created) |
@@ -139,6 +142,130 @@ default yang boleh ditimpa — untuk pasangan yang menentukan keputusan, tetap b
 prose SPOF di `raw/`, timpa verdict-nya, lalu update Q10 di
 `docs/04-refine-backlog.md` bersama model id-nya (angka stabilitas tanpa model id
 tidak bisa dibandingkan dengan run berikutnya).
+
+## Uji drift locale (K7)
+
+Keluhan dogfood K7 ("Bahasa menggeser hasil"): ide yang **sama** bisa keluar
+band berbeda tergantung locale output — `id` pernah lebih alarmis dari `en` pada
+ide identik, dan itu **belum pernah diukur**. Harness ini instrumen N1-nya:
+untuk tiap golden ia menjalankan teks ide yang identik dua kali — sekali `en`,
+sekali `id` — mode dijaga konstan (standard, atau deep kalau `BIF_DEEP=1`).
+Hanya arahan bahasa yang berubah, jadi pasangannya mengisolasi efek locale.
+
+Yang dibandingkan: tiga **band enum** yang model wajib keluarkan dalam bahasa
+Inggris di **kedua** locale (`languageDirective` menjaga enum tetap Inggris,
+hanya prose yang diterjemahkan) → langsung dapat dibandingkan lintas locale:
+
+- `single_point_of_failure.confidence`
+- `likelihood.band`
+- `failure_velocity.band`
+
+```bash
+npm run eval:locale-flip
+# satu fixture saja (mulai dari sini untuk hemat kredit):
+BIF_ONLY=01-marketplace-pet-sitting npm run eval:locale-flip
+# mode deep di kedua sisi:
+BIF_DEEP=1 npm run eval:locale-flip
+# gate CI — exit 1 kalau ada fixture yang band-drift:
+BIF_LOCALE_GATE=1 npm run eval:locale-flip
+```
+
+Verdict: `stable` (ketiga band sama lintas locale) atau `band-drift` (satu+
+berbeda; tiap pergeseran dinamai, mis. `likelihood: High → Very High`). SPOF
+`component`/`explanation` adalah prose dan beda per bahasa — ditampilkan
+berdampingan untuk dibaca manusia, **bukan** verdict.
+
+**Yang tidak bisa diukurnya:** satu pasang en/id tidak bisa memisahkan drift
+locale dari noise run-to-run biasa (confound yang sama seperti kerja stabilitas
+SPOF). Baca `band-drift` sebagai **layar untuk diselidiki** — di samping noise
+same-locale yang sudah diukur — bukan bukti. Ulangi pasangannya untuk yakin, dan
+**jangan** edit `prompts.ts` dari satu run. Catat count + model id di Q16
+(`docs/04-refine-backlog.md`). Fix produk K7 (arahan locale-invariance di
+`prompts.ts`) ditunda ke Phase B, digerbang oleh angka-angka run ini.
+
+Hasil: `eval/locale-flip/<timestamp>/` — `raw/<id>.<locale>.json` (lokal saja,
+gitignored), `summary.json`, `REPORT.md`.
+
+## Uji diskriminasi lintas-ide (N2)
+
+Stabilitas dan diskriminasi adalah **dua sumbu yang berbeda**, dan sampai N2 kita
+hanya mengukur satu. Harness stabilitas bertanya *"hinge tetap di tempat kalau
+cuma kata-katanya diubah?"*. Ini bertanya kebalikannya: *"lima ide yang
+benar-benar berbeda menghasilkan lima hinge berbeda, atau engine terus meraih
+kegagalan familiar yang sama?"* Engine yang menjawab "flat pricing tanpa cost
+guard" untuk produk API **dan** untuk SaaS wiki bukan menganalisis ide — ia
+mencocokkan template, dan **setiap angka stabilitas yang kita punya akan menilai
+itu sebagai sempurna stabil.**
+
+Membaca run baseline yang **sudah ada** di disk. Tidak ada panggilan provider,
+tidak ada kredit terpakai.
+
+```bash
+npm run eval:collision-check
+# run tertentu (default: run terbaru):
+BIF_BASELINE=2026-07-31_134152 npm run eval:collision-check
+# gate CI — exit 1 kalau ada pasangan yang collision:
+BIF_COLLISION_GATE=1 npm run eval:collision-check
+```
+
+Default-nya run **terbaru**, jadi kalau run terbaru dijalankan dengan `BIF_ONLY`
+(satu fixture) harness ini **gagal keras** — *"Need at least 2 usable fixtures"* —
+dan itu memang yang diinginkan: "0 collision atas 0 pasangan" akan terbaca
+seperti lulus padahal tak mengukur apa pun. Sebut `BIF_BASELINE=<run_id>` run
+5-fixture terakhir kalau run terbaru cuma satu fixture.
+
+Dua sinyal independen, karena masing-masing menutup blind spot yang lain: **tema
+primer sama** (kelas kegagalan yang sama walau kata-katanya beda) dan **overlap
+token tinggi** (prose yang sama walau temanya beda). Verdict per pasangan:
+`collision` (kedua sinyal menyala — ini yang digerbang, kriteria lulus N2 = 0),
+`echo` (satu sinyal saja; dibaca, tidak menggerbang), `distinct`.
+
+**Batasnya:** overlap token itu leksikal, tema lebih kasar daripada hinge, dan
+fixture 01 & 03 memang **sengaja** berbagi `trust`/`liability` di expected set-nya
+— jadi tema yang sama di antara keduanya jauh lebih tidak mengejutkan daripada
+antara 02 & 04. Baca `collision` sebagai *"pergi baca dua SPOF ini
+berdampingan"*, dan baca 0 collision sebagai *"tidak terdeteksi template"*,
+**bukan** *"lima analisis independen terkonfirmasi"*. Catat count + baseline id di
+Q17 (`docs/04-refine-backlog.md`).
+
+## Invarian integritas input (N7/E21)
+
+K8 melaporkan **ide yang korup di dalam report yang sudah dikirim** — spasi hilang
+di sambungan, kata terpotong di tengah token (`"masihenyambungkan"`,
+`"kongevaluasi"`, `"keounder"`). Ide korup yang dianalisis dengan badge High
+adalah cacat yang lebih buruk daripada ide tipis yang dianalisis dengan High, dan
+sebelum ini **tidak ada apa pun yang memeriksanya**.
+
+K8 sendiri memerintahkan *"reproduksi dulu, jangan tebak"*, jadi harness ini
+mengubah setiap run baseline yang sudah ada di disk menjadi bukti: untuk tiap
+fixture ia membandingkan `analysis.meta.idea_input` dengan `idea` di fixture
+golden karakter per karakter, dan pada mismatch mencetak divergensi **pertama**
+beserta jendela di kedua sisinya — bentuk dari apa yang hilang, bukan cuma fakta
+bahwa ada yang hilang.
+
+Offline. Tanpa panggilan provider.
+
+```bash
+npm run eval:input-integrity
+# run tertentu (default: semua run di eval/baselines/):
+BIF_BASELINE=2026-07-31_134152 npm run eval:input-integrity
+```
+
+Exit code non-nol pada mismatch apa pun — ini **invarian, bukan screen**.
+Pasangannya di runtime adalah restamp di `pipeline.ts`: kalau `meta.idea_input`
+ternyata tidak byte-identik dengan input tervalidasi, pipeline menimpanya
+kembali dari input (slip metadata tidak boleh membuang satu analisis berbayar)
+lalu mencatat warning dev supaya regresinya terlihat, bukan senyap.
+
+**Cakupannya, dibaca sebelum memercayai run yang hijau:** ini membuktikan jalur
+**server** (body POST → `validateAnalyzeInput` → pipeline → `meta.idea_input`)
+lossless atas teks fixture. Ia **tidak bisa melihat jalur input browser**, yang
+justru tempat paling mungkin korupsi K8 masuk — harness memposting string
+fixture langsung dan tidak pernah menyentuh textarea. Baseline saja: run
+stability dan locale-flip memakai varian yang sengaja ditulis ulang, jadi diff di
+sana adalah rewrite-nya, bukan korupsi. Dan fixture terpanjang kita jauh lebih
+pendek dari paste ~6000 karakter tempat K8 muncul, jadi run hijau **tidak**
+membebaskan regime input panjang.
 
 ## Baca trace mentah (Q9)
 

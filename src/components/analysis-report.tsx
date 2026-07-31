@@ -58,6 +58,11 @@ const STR = {
     trust: "Trust",
     agreement: "SPOF agreement",
     reason: "Reason",
+    marginTitle: "Why this hinge won",
+    marginAside: "the runners-up, and why the winner beat them",
+    winnerTag: "winner",
+    rejectedTag: "rejected",
+    rejectBecause: "rejected —",
     axesNote:
       "Hairline at 50 marks the neutral resilience threshold. Axes below it are drawn in the signal colour.",
     axisDesc: {
@@ -97,6 +102,11 @@ const STR = {
     trust: "Kepercayaan",
     agreement: "Kesepakatan SPOF",
     reason: "Alasan",
+    marginTitle: "Kenapa hinge ini menang",
+    marginAside: "para runner-up, dan kenapa pemenang mengalahkannya",
+    winnerTag: "pemenang",
+    rejectedTag: "ditolak",
+    rejectBecause: "ditolak —",
     axesNote:
       "Garis di 50 menandai ambang ketahanan netral. Sumbu di bawahnya digambar dengan warna sinyal.",
     axisDesc: {
@@ -396,6 +406,9 @@ export function AnalysisReport({
   const likelihood = analysis.likelihood;
   const calibration = analysis.self_consistency;
   const isDeep = Boolean(calibration);
+  // K3 — selection margin: only meaningful when a loser was actually recorded
+  const candidates = analysis.spof_candidates ?? [];
+  const hasMargin = candidates.some((c) => c.verdict === "rejected");
 
   /** Never surface claim-guard / soft-check jargon to end users */
   const softWarnings = toUserFacingWarnings(warnings, locale === "id" ? "id" : "en");
@@ -642,6 +655,44 @@ export function AnalysisReport({
               </div>
             </div>
           </article>
+          {hasMargin ? (
+            <div className="spof-margin">
+              <SecHead
+                no="03b"
+                title={S.marginTitle}
+                aside={S.marginAside}
+              />
+              <ul className="margin-list">
+                {candidates.map((c, i) => (
+                  <li
+                    key={`${c.label}-${i}`}
+                    className={
+                      c.verdict === "winner" ? "cand-row cand-row--won" : "cand-row"
+                    }
+                  >
+                    <div className="cand-head">
+                      <span className="cand-label">{c.label}</span>
+                      <span
+                        className={
+                          c.verdict === "winner"
+                            ? "cand-tag cand-tag--won"
+                            : "cand-tag"
+                        }
+                      >
+                        {c.verdict === "winner" ? S.winnerTag : S.rejectedTag}
+                      </span>
+                    </div>
+                    <p className="cand-mech">{c.mechanism}</p>
+                    {c.verdict === "rejected" && c.reject_reason ? (
+                      <p className="cand-reject">
+                        {S.rejectBecause} {c.reject_reason}
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
 
         {/* 04 cascade */}

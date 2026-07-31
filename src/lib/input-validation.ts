@@ -169,6 +169,107 @@ export function validateAnalyzeInput(
   return { ok: true, idea, category };
 }
 
+/**
+ * K4 / E19 — input adequacy (ADVISORY, never gating).
+ *
+ * Assumption #1 in every golden analysis is "the idea carries enough
+ * discriminating context to support a load-bearing hinge", yet nothing measured
+ * it. A thin, generic idea still yields a confident single-point-of-failure, and
+ * the wobble that produces is exactly the fixture-01-class bistability the
+ * stability harness now labels `swap`. This scorer measures that context and
+ * lets the pipeline *disclose* thinness — it does NOT reject (the length /
+ * repetition / injection gates in `validateAnalyzeInput` keep their reject power).
+ *
+ * The score is deliberately coarse: a heuristic keyword/regex signal can mislabel
+ * an oddly-phrased rich idea as thin, or a number-dropping vague idea as rich.
+ * Coarse bands + logged `dimensions` keep it honest and debuggable rather than
+ * pretending to a precision it does not have. Each dimension counts once; the
+ * stems are kept small on purpose — a stem that fires on everything makes the
+ * score meaningless.
+ */
+export type InputAdequacyBand = "thin" | "adequate" | "rich";
+
+export type InputAdequacy = {
+  /** 0–5 — count of distinct discriminating dimensions present. */
+  score: number;
+  /** Which of the 5 dimensions fired, for debugging / eval correlation. */
+  dimensions: string[];
+  /** <2 thin · 2–3 adequate · >=4 rich. */
+  band: InputAdequacyBand;
+};
+
+/** Each dimension: fires once if ANY of its signals is present in the idea. */
+const ADEQUACY_DIMENSIONS: { name: string; test: (raw: string, lower: string) => boolean }[] = [
+  {
+    // quantities: digits, %, currency, time spans, thresholds
+    name: "quantities",
+    test: (raw) =>
+      /\d/.test(raw) ||
+      /[%$]|\bRp\b|\brp\b/.test(raw) ||
+      /\b(net-?\d+|\d+\s*-?\s*(day|week|month|year|hari|minggu|bulan|tahun))\b/i.test(raw),
+  },
+  {
+    // pricing / revenue mechanism
+    name: "pricing",
+    test: (_raw, lower) =>
+      /\b(fee|commission|take[- ]?rate|subscription|subscribe|revenue|pricing|charge|markup|per\s+\w+)\b/.test(
+        lower,
+      ) ||
+      /\b(biaya|komisi|langganan|pendapatan|tarif|harga|potongan)\b/.test(lower),
+  },
+  {
+    // named actors / roles (EN + ID role nouns, or ≥2 mid-sentence proper nouns)
+    name: "actors",
+    test: (raw, lower) =>
+      /\b(owners?|sitters?|neighbou?rs?|providers?|admins?|hosts?|guests?|drivers?|riders?|sellers?|buyers?|merchants?|tenants?|landlords?|patients?|doctors?|students?|teachers?|vendors?|couriers?|customers?|users?|clients?)\b/.test(
+        lower,
+      ) ||
+      /\b(pemilik|penjual|pembeli|penyewa|pengguna|pelanggan|mitra|penyedia|pengemudi|pengelola|tetangga)\b/.test(
+        lower,
+      ) ||
+      ((raw.match(/(?<=\w[ ,])[A-Z][a-z]{2,}/g) ?? []).length >= 2),
+  },
+  {
+    // operational constraints / scope
+    name: "constraints",
+    test: (_raw, lower) =>
+      /\b(only|no\s+\w+|without|launch|requires?|must|waive[ds]?|limit(?:ed|s)?|cap(?:ped|s)?|excludes?|geograph|region|city|market|beta|mvp)\b/.test(
+        lower,
+      ) ||
+      /\b(hanya|belum|tanpa|wajib|harus|batas|kecuali|khusus|wilayah|kota|pasar)\b/.test(lower),
+  },
+  {
+    // positioning / competitor
+    name: "positioning",
+    test: (_raw, lower) =>
+      /\b(vs\.?|versus|unlike|instead\s+of|compared?\s+to|competitors?|incumbents?|rival|alternative\s+to)\b/.test(
+        lower,
+      ) ||
+      /\b(dibanding(?:kan)?|alih-?alih|pesaing|kompetitor|ketimbang|saingan)\b/.test(lower),
+  },
+];
+
+/**
+ * Score discriminating context in an idea. Pure, no I/O — exported for reuse by
+ * the eval harness. `locale` is accepted for symmetry with the rest of the
+ * pipeline but the signal sets are already bilingual, so it is not currently
+ * needed to compute the score.
+ */
+export function scoreInputAdequacy(
+  idea: string,
+  _locale?: "en" | "id",
+): InputAdequacy {
+  void _locale; // accepted for pipeline symmetry; signals are already bilingual
+  const raw = idea ?? "";
+  const lower = raw.toLowerCase();
+  const dimensions = ADEQUACY_DIMENSIONS.filter((d) => d.test(raw, lower)).map(
+    (d) => d.name,
+  );
+  const score = dimensions.length;
+  const band: InputAdequacyBand = score < 2 ? "thin" : score < 4 ? "adequate" : "rich";
+  return { score, dimensions, band };
+}
+
 export function validateProviderFields(params: {
   baseUrl: unknown;
   pass1Model: unknown;

@@ -51,6 +51,8 @@ eval/baselines/*
 !eval/baselines/.gitkeep
 eval/stability/*
 !eval/stability/.gitkeep
+eval/locale-flip/*
+!eval/locale-flip/.gitkeep
 
 # Python caches & virtual environments
 __pycache__/

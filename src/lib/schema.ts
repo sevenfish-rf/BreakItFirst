@@ -62,10 +62,22 @@ const runProvenanceSchema = z.object({
 /** Zod schema for Pass 2 structured output. */
 export const failureAnalysisSchema = z.object({
   meta: z.object({
-    idea_input: z.string(),
+    // E21 — Pass 2 is told to emit "" here and the pipeline stamps the real
+    // input. Defaulted (not required) so an omitted/blank field can never cost
+    // a paid analysis a validation retry.
+    idea_input: z.string().default(""),
     category: z.string(),
     generated_at: z.string(),
     run: runProvenanceSchema.optional(),
+    // E19 — pipeline-authored input adequacy (advisory). Optional for
+    // back-compat: reports saved before E19 have no adequacy block.
+    input_adequacy: z
+      .object({
+        score: z.number(),
+        dimensions: z.array(z.string()),
+        band: z.enum(["thin", "adequate", "rich"]),
+      })
+      .optional(),
   }),
   summary: nonEmptyString,
   assumptions: z
@@ -84,6 +96,25 @@ export const failureAnalysisSchema = z.object({
       .max(3)
       .optional(),
   }),
+  /**
+   * Ranked SPOF candidates + why the winner beat the runners-up. Surfaced in
+   * BOTH modes (standard and deep) to show the selection margin, not just the
+   * winner's identity. Exactly one entry should be the "winner" (matching
+   * single_point_of_failure); losers carry a one-line reject_reason.
+   * Optional + min(1) so an under-producing model degrades gracefully rather
+   * than hard-failing validation; a soft check flags a lonely winner.
+   */
+  spof_candidates: z
+    .array(
+      z.object({
+        label: nonEmptyString,
+        mechanism: nonEmptyString,
+        verdict: z.enum(["winner", "rejected"]),
+        reject_reason: optionalTrimmedString,
+      }),
+    )
+    .max(4)
+    .optional(),
   cascade: z.object({
     nodes: z
       .array(cascadeNodeSchema)

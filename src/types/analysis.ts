@@ -62,6 +62,12 @@ export interface FailureAnalysis {
     generated_at: string;
     /** Optional: reports saved before K1 shipped have no provenance. */
     run?: RunProvenance;
+    /** E19 — advisory input-adequacy band. Optional: absent on pre-E19 reports. */
+    input_adequacy?: {
+      score: number;
+      dimensions: string[];
+      band: "thin" | "adequate" | "rich";
+    };
   };
   summary: string;
   assumptions: string[];
@@ -76,6 +82,18 @@ export interface FailureAnalysis {
      */
     critical_assumption_indices?: number[];
   };
+  /**
+   * K3 — ranked SPOF candidates + why the winner beat the runners-up.
+   * Surfaced in BOTH modes to show the selection margin. Exactly one entry is
+   * the "winner" (matching single_point_of_failure); losers carry a
+   * reject_reason. Optional so older/under-producing output degrades gracefully.
+   */
+  spof_candidates?: {
+    label: string;
+    mechanism: string;
+    verdict: "winner" | "rejected";
+    reject_reason?: string;
+  }[];
   cascade: {
     nodes: CascadeNode[];
     /**

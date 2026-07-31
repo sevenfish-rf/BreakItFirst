@@ -121,11 +121,42 @@ async function main() {
     `screen probe: two different mechanisms both scored "same" (${different.reason}) — stems are too broad`,
   );
 
+  // 5. swap vs shift. A move between two themes the fixture DECLARED expected is
+  //    co-valid oscillation (`swap`), not drift; a move to a theme off the
+  //    expected set is frame escape (`shift`). Guards the distinction that keeps
+  //    a single-run gate from reading a multi-fragile idea as a regression.
+  const marketThemes = ["cold-start", "disintermediation", "density"];
+  const coldStart = describeSide(
+    "Cold-start density fails inside a single building: with no supply seeded, the marketplace is empty at launch.",
+    marketThemes,
+    keywords,
+  );
+  const offApp = describeSide(
+    "Neighbors take repeat bookings off-app, circumventing the platform entirely.",
+    marketThemes,
+    keywords,
+  );
+  const escaped = describeSide(
+    "The assistant gives harmful advice during a crisis — a clinical error no filter catches.",
+    marketThemes,
+    keywords,
+  );
+  const coValid = compareHinge(coldStart, offApp);
+  const frameEscape = compareHinge(coldStart, escaped);
+  check(
+    coValid.verdict === "swap",
+    `swap probe: two fixture-declared themes scored "${coValid.verdict}" (${coValid.reason}) — expected "swap"`,
+  );
+  check(
+    frameEscape.verdict === "shift",
+    `shift probe: a hinge off the expected set scored "${frameEscape.verdict}" (${frameEscape.reason}) — expected "shift"`,
+  );
+
   console.log(
     `\nPreflight: ${originals.length} base fixtures · ${variants.length} variants · ${Object.keys(keywords).length} themes`,
   );
   console.log(
-    `Screen probes: rephrased → ${rephrased.verdict}, different → ${different.verdict}`,
+    `Screen probes: rephrased → ${rephrased.verdict}, different → ${different.verdict}, co-valid → ${coValid.verdict}, escaped → ${frameEscape.verdict}`,
   );
   for (const n of notes) console.log(`  note: ${n}`);
 

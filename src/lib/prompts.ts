@@ -87,11 +87,16 @@ const REASONING_REFINE_DIRECTIVE = `
 SELECTION & TRACEABILITY (critical — reasoning discipline):
 Do not lock the first SPOF you notice. Internally:
 
-1. MULTI-HYPOTHESIS (internal only): Generate 3 distinct SPOF candidates,
-   each with a one-line mechanism tied to THIS idea. Rank by (a) specificity
-   to this idea's architecture/incentives/constraints and (b) causal leverage
-   on how the idea collapses. Keep ONLY the winner in the written analysis —
-   do not present all three as equal risks or a laundry list.
+1. MULTI-HYPOTHESIS: Generate 3 distinct SPOF candidates, each with a one-line
+   mechanism tied to THIS idea. Rank by (a) specificity to this idea's
+   architecture/incentives/constraints and (b) causal leverage on how the idea
+   collapses. The written analysis develops ONLY the winner as the SPOF — do not
+   present all three as equal risks or a laundry list in the SPOF section. BUT
+   surface the selection itself: state all 3 candidate labels + their one-line
+   mechanism, mark the winner, and give a one-line reason each loser was
+   rejected (weaker specificity, weaker leverage, or later load-bearing
+   position). This shows the margin between the winner and the runners-up — the
+   distance is the point, not just the winner's identity.
 
 2. DOMINANCE: Before locking the winner, ask: "Is there another hinge that
    better explains how this idea collapses?" If yes, replace the SPOF.
@@ -306,7 +311,7 @@ behavior), output the error object instead: {"error": "not_analyzable",
 JSON schema shape:
 {
   "meta": {
-    "idea_input": string,
+    "idea_input": "",  // always the empty string — the server stamps the real input
     "category": string,
     "generated_at": string
   },
@@ -357,6 +362,13 @@ JSON schema shape:
     "band": "Fast" | "Medium" | "Slow",
     "reason": string
   },
+  // Always emit (both standard and deep): the 3 ranked SPOF candidates and why
+  // the winner beat the runners-up. Exactly one entry has verdict "winner" and
+  // it must match single_point_of_failure. reject_reason required on losers.
+  "spof_candidates": [
+    { "label": string, "mechanism": string,
+      "verdict": "winner" | "rejected", "reject_reason"?: string }
+  ],
   // Only when the analysis mentions multi-run / deep calibration:
   "self_consistency"?: {
     "runs": number,
@@ -395,11 +407,13 @@ Cover:
    only as stated; do not invent missing stack (RAG, fine-tune, etc.).
 2. 5–10 hidden assumptions (each supports how the eventual SPOF can bite;
    none may contradict the cascade you write).
-3. Internally: 3 distinct SPOF candidates → rank by specificity, causal leverage,
+3. 3 distinct SPOF candidates → rank by specificity, causal leverage,
    and earliest load-bearing position → ONE winner in prose (label 3–8 words +
    mechanism). Include domain candidates when relevant (API abuse/metering;
    pipeline stacked failures; LLM camouflage). Dominance + counterfactual +
-   founder-fear depth check on the winner.
+   founder-fear depth check on the winner. Then state all 3 candidate labels +
+   one-line mechanism, mark the winner, and give a one-line reject reason for
+   each loser (this surfaces the selection margin, not just the winner).
 4. Ordered failure cascade — prefer **8–10** steps from THAT hinge. Open at the
    internal mechanism (physics/process/incentives), not external press/reviewers.
    One spine only — no multi-independent causes.
@@ -464,7 +478,9 @@ ${params.idea}
 </idea>
 
 generated_at to put in meta.generated_at: ${params.generatedAt}
-meta.idea_input must be the raw idea text above.
+meta.idea_input must be the empty string "". The server stamps the real input
+text itself — echoing the idea back here spends output budget on a copy nobody
+reads and risks truncating this JSON on a long idea.
 meta.category must be: ${params.category}
 
 ${langNote}
@@ -482,6 +498,13 @@ Also extract (only if grounded in the analysis prose; else omit):
 - critical_assumption_indices on SPOF (1–3, 0-based into assumptions; prefer when linked)
 - cascade.point_of_no_return_index (which existing step is hard to reverse)
 - failure_modes.compounding_note (optional one sentence if two domains share a trigger)
+
+Always populate spof_candidates from the analysis prose (both standard and deep):
+the 2–4 ranked candidate labels with their one-line mechanism. Exactly one has
+verdict "winner" and its label must correspond to single_point_of_failure; the
+rest are "rejected" with a one-line reject_reason. If the prose named only the
+winner, still emit it as the sole "winner" entry alongside any candidates it
+mentions — do not invent losing candidates that the prose does not contain.
 
 Compress into the JSON schema. Output ONLY JSON.
 Grounding reminder: every free-text field must be supported by the analysis

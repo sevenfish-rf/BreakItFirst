@@ -87,6 +87,8 @@ type Labels = {
   assumptions: number;
   critical_assumption_indices: number[] | null;
   spof_agreement: string | null;
+  /** E19 — advisory input-adequacy band + score, to correlate thin input with swap/shift. */
+  adequacy: string;
   empty_domains: string[];
   hard_fail: number;
   soft_fail: number;
@@ -173,6 +175,9 @@ function toLabels(
     critical_assumption_indices:
       analysis.single_point_of_failure.critical_assumption_indices ?? null,
     spof_agreement: analysis.self_consistency?.spof_agreement ?? null,
+    adequacy: analysis.meta.input_adequacy
+      ? `${analysis.meta.input_adequacy.band} (${analysis.meta.input_adequacy.score})`
+      : "—",
     empty_domains: emptyDomains,
     hard_fail: assertionSummary.hard_fail,
     soft_fail: assertionSummary.soft_fail,
@@ -293,7 +298,7 @@ function cell(v: string | number | null | undefined): string {
 
 function labelRow(side: string, l: Labels | { error: string }): string {
   if ("error" in l)
-    return `| ${side} | **failed** | ${cell(l.error)} | — | — | — | — | — | — |`;
+    return `| ${side} | **failed** | ${cell(l.error)} | — | — | — | — | — | — | — |`;
   return [
     `| ${side}`,
     cell(l.spof),
@@ -303,6 +308,7 @@ function labelRow(side: string, l: Labels | { error: string }): string {
     cell(l.cascade_steps),
     cell(l.ponr_step),
     cell(l.empty_domains.length ? l.empty_domains.join(", ") : "none"),
+    cell(l.adequacy),
     `${l.hard_fail}/${l.soft_fail} |`,
   ].join(" | ");
 }
@@ -310,6 +316,7 @@ function labelRow(side: string, l: Labels | { error: string }): string {
 const VERDICT_MARK: Record<string, string> = {
   same: "✓ same",
   partial: "~ partial",
+  swap: "⇄ swap",
   shift: "✗ shift",
   unmatched: "? unmatched",
   failed: "! failed",
@@ -353,8 +360,12 @@ function buildReport(
       "(`eval/hinge-labels.ts` + `eval/theme-keywords.json`), so two phrasings " +
       "of one hinge score `same`. A theme is coarser than a hinge, so treat " +
       "`same` as *no drift detected* rather than *identical*, and overwrite the " +
-      "verdict inline when a read of `raw/*.json` disagrees. `unmatched` means " +
-      "the screen abstained and the pair needs a human.",
+      "verdict inline when a read of `raw/*.json` disagrees. `swap` means the " +
+      "hinge moved to a *different* mechanism the fixture itself declared " +
+      "load-bearing (co-valid oscillation on a multi-fragile idea) — tracked, but " +
+      "not frame escape; only `shift` (a hinge that left the fixture's expected " +
+      "set) is drift. `unmatched` means the screen abstained and the pair needs a " +
+      "human.",
   );
   lines.push("");
 
@@ -364,15 +375,15 @@ function buildReport(
     lines.push(`Expected themes: ${g.expected_spof_themes.join(", ") || "—"}`);
     lines.push("");
     lines.push(
-      "| Side | SPOF | Conf | Likelihood | Velocity | Steps | PONR step | Empty domains | hard/soft |",
+      "| Side | SPOF | Conf | Likelihood | Velocity | Steps | PONR step | Empty domains | Adequacy | hard/soft |",
     );
-    lines.push("|---|---|---|---|---|---|---|---|---|");
+    lines.push("|---|---|---|---|---|---|---|---|---|---|");
     lines.push(labelRow("original", g.original));
     for (const v of g.variants) lines.push(labelRow(v.kind, v.labels));
     if (reference) {
       const ref = reference.get(g.base_id);
       lines.push(
-        `| ref ${referenceId ?? ""} | ${cell(ref?.spof)} | — | ${cell(ref?.likelihood)} | — | — | — | — | — |`,
+        `| ref ${referenceId ?? ""} | ${cell(ref?.spof)} | — | ${cell(ref?.likelihood)} | — | — | — | — | — | — |`,
       );
     }
     lines.push("");
@@ -411,31 +422,35 @@ function buildReport(
   lines.push(`| Variant runs | ${flat.length} |`);
   lines.push(`| ✓ same | ${count("same")} |`);
   lines.push(`| ~ partial | ${count("partial")} |`);
+  lines.push(`| ⇄ swap | ${count("swap")} |`);
   lines.push(`| ✗ shift | ${shift} |`);
   lines.push(`| ? unmatched | ${count("unmatched")} |`);
   lines.push(`| ! failed side | ${count("failed")} |`);
   lines.push("");
   lines.push("Per rewrite kind — this is the column that says *why* a hinge moved:");
   lines.push("");
-  lines.push("| Kind | same | partial | shift | unmatched | failed |");
-  lines.push("|---|---|---|---|---|---|");
+  lines.push("| Kind | same | partial | swap | shift | unmatched | failed |");
+  lines.push("|---|---|---|---|---|---|---|");
   const kinds = [...new Set(flat.map((v) => v.kind))];
   for (const kind of kinds) {
     const inKind = flat.filter((v) => v.kind === kind);
     const c = (verdict: string) =>
       inKind.filter((v) => verdictOf(v) === verdict).length;
     lines.push(
-      `| ${kind} | ${c("same")} | ${c("partial")} | ${c("shift")} | ${c("unmatched")} | ${c("failed")} |`,
+      `| ${kind} | ${c("same")} | ${c("partial")} | ${c("swap")} | ${c("shift")} | ${c("unmatched")} | ${c("failed")} |`,
     );
   }
   lines.push("");
   lines.push(
     "A `shift` is evidence for the dogfood complaint that SPOF selection is " +
-      "unstable; a `same` is evidence against it. Which kind carries the shifts " +
-      "narrows the cause: `para` implicates vocabulary, `strip` implicates brand " +
-      "and place recognition, `flip` implicates position in the prompt. Record " +
-      "the counts in backlog Q10 together with the model ids above — a stability " +
-      "number without a model id is not comparable to the next run.",
+      "unstable; a `same` is evidence against it. A `swap` is neither — the idea " +
+      "genuinely has more than one load-bearing hinge, so which one wins is " +
+      "ambiguous by construction; read the prose before calling it drift. Which " +
+      "kind carries the shifts narrows the cause: `para` implicates vocabulary, " +
+      "`strip` implicates brand and place recognition, `flip` implicates position " +
+      "in the prompt. Record the counts in backlog Q10 together with the model " +
+      "ids above — a stability number without a model id is not comparable to the " +
+      "next run.",
   );
   lines.push("");
   return lines.join("\n");
@@ -624,6 +639,7 @@ async function main() {
   console.log(
     `Verdicts: ${allVariants.filter((v) => verdictOf(v) === "same").length} same · ` +
       `${allVariants.filter((v) => verdictOf(v) === "partial").length} partial · ` +
+      `${allVariants.filter((v) => verdictOf(v) === "swap").length} swap · ` +
       `${shifted.length} shift · ${unmatched.length} unmatched · ` +
       `${allVariants.filter((v) => verdictOf(v) === "failed").length} failed`,
   );

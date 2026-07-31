@@ -20,6 +20,12 @@ import {
   validateFailureAnalysis,
 } from "@/lib/schema";
 import type { Category } from "@/lib/categories";
+import { deriveSpofAgreement } from "@/lib/agreement";
+import {
+  ceilingDisclosure,
+  decideConfidenceCeiling,
+} from "@/lib/confidence-ceiling";
+import { scoreInputAdequacy } from "@/lib/input-validation";
 import type { Locale } from "@/lib/i18n/types";
 import type {
   PipelineLiveStage,
@@ -583,6 +589,8 @@ export async function runFailureAnalysisPipeline(params: {
       continue;
     }
 
+    const inputAdequacy = scoreInputAdequacy(idea, locale);
+
     const analysis: FailureAnalysis = {
       ...validation.data,
       meta: {
@@ -591,8 +599,75 @@ export async function runFailureAnalysisPipeline(params: {
         generated_at: generatedAt,
         // K1 — pipeline-authored, never taken from model output
         run: buildRun(),
+        // E19 — advisory input adequacy, pipeline-authored (never from model)
+        input_adequacy: inputAdequacy,
       },
     };
+
+    // E19 — disclose thin input. Advisory only (no reject); plain-language so it
+    // survives filterUserFacingWarnings (must not match any TECH_PATTERNS).
+    if (inputAdequacy.band === "thin") {
+      warnings.push(
+        locale === "id"
+          ? "Ide ini memberi mesin sedikit detail pembeda (harga, angka, aktor, batasan); titik kegagalan tunggal di bawah bisa kurang stabil — tambahkan spesifik untuk analisis yang lebih tajam."
+          : "This idea gave the engine limited distinguishing detail (pricing, numbers, named actors, constraints); the single point of failure below may be less stable — add specifics for a sharper read.",
+      );
+    }
+
+    // E20/N5 — measured input adequacy caps the confidence the report may claim.
+    // Post-processing, not a prompt rule: the model still argues its own
+    // confidence and we lower it, so the cap appends its reasoning rather than
+    // overwriting the model's. Closes the dogfood anomaly where a Standard run
+    // claimed Very High on an idea that never named a revenue mechanism.
+    {
+      const spof = analysis.single_point_of_failure;
+      const decision = decideConfidenceCeiling({
+        confidence: spof.confidence,
+        spofText: `${spof.component}. ${spof.explanation}`,
+        adequacy: inputAdequacy,
+      });
+      if (decision.applied) {
+        const disclosure = ceilingDisclosure(decision, locale);
+        analysis.single_point_of_failure = {
+          ...spof,
+          confidence: decision.to,
+          confidence_reason: `${spof.confidence_reason} ${disclosure}`.trim(),
+        };
+        warnings.push(disclosure);
+        console.info("[pipeline] confidence ceiling applied", {
+          from: decision.from,
+          to: decision.to,
+          rule: decision.rule,
+          adequacy: inputAdequacy.band,
+        });
+      }
+    }
+
+    // K3 — spof_candidates surfaces in BOTH modes (passed through from Pass 2
+    // via ...validation.data). Guarantee a coherent winner so the UI always has
+    // the selection margin; never fabricate losing candidates the model omitted.
+    {
+      const cands = analysis.spof_candidates ?? [];
+      const hasWinner = cands.some((c) => c.verdict === "winner");
+      if (cands.length === 0) {
+        analysis.spof_candidates = [
+          {
+            label: analysis.single_point_of_failure.component,
+            mechanism: analysis.single_point_of_failure.explanation,
+            verdict: "winner",
+          },
+        ];
+        warnings.push(
+          "spof_candidates omitted by Pass 2 — winner-only fallback from single_point_of_failure (selection margin unavailable)",
+        );
+      } else if (!hasWinner) {
+        // Model listed candidates but marked none the winner: promote the first.
+        cands[0] = { ...cands[0], verdict: "winner" };
+        warnings.push(
+          "spof_candidates had no winner — promoted first candidate to winner",
+        );
+      }
+    }
 
     // Deep mode: ensure self_consistency is present even if Pass 2 omitted it
     if (deepAnalysis && !analysis.self_consistency) {
@@ -613,6 +688,41 @@ export async function runFailureAnalysisPipeline(params: {
       delete analysis.self_consistency;
     }
 
+    // E22/N8 — derive spof_agreement from the candidate evidence instead of
+    // trusting Pass 2's self-rating. The gate that matters: High now requires at
+    // least two DISTINCT candidate hinges, so "High agreement" over one claim
+    // worded twice — the dogfood tautology — is no longer reachable. `runs` and
+    // `candidate_spofs` stay as Pass 2 reported them; only the judgement and its
+    // reason become pipeline-authored. See agreement.ts for what it can't see.
+    if (analysis.self_consistency) {
+      const sc = analysis.self_consistency;
+      const derived = deriveSpofAgreement({
+        candidateSpofs: sc.candidate_spofs ?? [],
+        spofCandidateLabels: (analysis.spof_candidates ?? []).map((c) => c.label),
+        winnerComponent: analysis.single_point_of_failure.component,
+        runs: sc.runs,
+        modelClaim: sc.spof_agreement,
+      });
+      analysis.self_consistency = {
+        ...sc,
+        spof_agreement: derived.level,
+        reason: `${derived.reason} Limits: ${derived.limits.join("; ")}.`,
+      };
+      if (derived.level !== sc.spof_agreement) {
+        warnings.push(
+          `spof_agreement derived as ${derived.level} from ${derived.distinctCandidates} distinct candidate(s); Pass 2 had claimed ${sc.spof_agreement}`,
+        );
+      }
+      console.info("[pipeline] spof_agreement derived", {
+        modelClaim: sc.spof_agreement,
+        derived: derived.level,
+        distinctCandidates: derived.distinctCandidates,
+        rawCandidates: derived.rawCandidates,
+        paraphraseGroups: derived.paraphraseGroups.length,
+        winnerTraceable: derived.winnerTraceable,
+      });
+    }
+
     if (attempt > 0) {
       warnings.push("Pass 2 succeeded after 1 validation retry");
     }
@@ -630,6 +740,24 @@ export async function runFailureAnalysisPipeline(params: {
     for (const w of pass2NovelClaimWarnings(reasoning, analysis)) {
       warnings.push(w);
       console.warn("[pipeline] claim guard", w);
+    }
+
+    // N7/E21 — permanent byte-identity invariant, checked after every mutation
+    // above. `meta.idea_input` must be the exact validated input and never the
+    // model's copy: Pass 2 cannot reproduce a long idea losslessly, and a
+    // silently truncated idea shown beside a High confidence badge is the K8
+    // failure. Restamp rather than fail — a metadata slip must never cost a
+    // paid analysis — but record it so a regression is visible, not silent.
+    if (analysis.meta.idea_input !== idea) {
+      const seen = analysis.meta.idea_input;
+      analysis.meta = { ...analysis.meta, idea_input: idea };
+      warnings.push(
+        `meta.idea_input was not byte-identical to the submitted input (${seen.length} vs ${idea.length} chars) — restamped from the validated input`,
+      );
+      console.warn("[pipeline] idea_input mismatch restamped", {
+        submittedChars: idea.length,
+        seenChars: seen.length,
+      });
     }
 
     const meta = buildMeta();
