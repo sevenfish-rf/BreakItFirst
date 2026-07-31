@@ -337,13 +337,7 @@ function buildReport(
   lines.push(`# SPOF stability run — ${runId}`);
   lines.push("");
   lines.push(
-    `Pass 1 \`${cfg.pass1Model}\` · Pass 2 \`${cfg.pass2Model}\` · ${cfg.deepAnalysis ? "deep" : "standard"} · host \`${(() => {
-      try {
-        return new URL(cfg.baseUrl).host;
-      } catch {
-        return "unknown";
-      }
-    })()}\``,
+    `Pass 1 \`${cfg.pass1Model}\` · Pass 2 \`${cfg.pass2Model}\` · ${cfg.deepAnalysis ? "deep" : "standard"} · host \`${hostOf(cfg.baseUrl)}\``,
   );
   lines.push("");
   lines.push(
