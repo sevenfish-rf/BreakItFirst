@@ -1,7 +1,7 @@
 /**
  * Offline preflight for the Q10 stability harness — no provider, no credentials.
  *
- * Two failure modes this catches before a paid run burns calls:
+ * Three failure modes this catches before a paid run burns calls:
  *
  *  1. Fixture set out of shape — a base with a missing rewrite kind, a variant
  *     pointing at a base that does not exist, a theme with no keyword stems
@@ -10,6 +10,13 @@
  *     reports zero drift no matter what the model does, which looks like success.
  *     The probes below assert the screen still separates a rephrased hinge from
  *     a genuinely different one.
+ *  3. A *lying* screen (added Q20) — a stem that fires inside an unrelated word,
+ *     so a theme wins on prose that never mentioned it. `rma` matched inside
+ *     "info**rma**tion" and decided a real recorded primary; `bot` matched inside
+ *     "**bot**h". §6 pins the stem grammar against every misfire found on disk,
+ *     §7 pins the tie behaviour that replaced the alphabetical tie-break, and §8
+ *     pins the narrowed `likelihood_not_percent` assertion against both a real
+ *     probability claim and a business percentage the analysis is merely quoting.
  *
  * Usage: npm run eval:hinge-check
  */
@@ -18,7 +25,15 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { compareHinge, describeSide, loadThemeKeywords } from "./hinge-labels";
+import { likelihoodStatedAsPercent } from "./assertions";
+import {
+  compareHinge,
+  describeSide,
+  loadThemeKeywords,
+  matchThemes,
+  primaryTheme,
+  topGroup,
+} from "./hinge-labels";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GOLDEN_DIR = path.join(__dirname, "golden");
@@ -152,11 +167,118 @@ async function main() {
     `shift probe: a hinge off the expected set scored "${frameEscape.verdict}" (${frameEscape.reason}) — expected "shift"`,
   );
 
+  // 6. Stem grammar (Q20). Each case below is a misfire that actually occurred in
+  //    stored raw under plain substring matching, or a vocabulary hole that
+  //    produced a false `shift`. A regression here silently returns the screen to
+  //    deciding hinges on syllables.
+  const themesOf = (t: string) => matchThemes(t, keywords).map((m) => m.theme);
+  const grammar: [boolean, string][] = [
+    [
+      !themesOf("The information layer normalizes performance data").includes("defects"),
+      "`rma` fires inside information/normalizes/performance",
+    ],
+    [!themesOf("Both sides of the market stall").includes("abuse"), "`bot` fires inside 'both'"],
+    [themesOf("Scripted bots drain the free tier").includes("abuse"), "`bot` no longer fires on 'bots'"],
+    [!themesOf("A slack-native app with slang").includes("sla"), "`sla` fires inside slack/slang"],
+    [themesOf("The weekly SLA is unenforceable").includes("sla"), "`sla` no longer fires as a word"],
+    [
+      !themesOf("The proposition is unclear").includes("positioning"),
+      "`position*` fires inside 'proposition'",
+    ],
+    [
+      themesOf("Positioning against the incumbent").includes("positioning"),
+      "`position*` no longer fires as a prefix",
+    ],
+    [
+      themesOf("Identity verification is theatre").includes("trust"),
+      "`verif*` prefix no longer fires",
+    ],
+    [
+      themesOf("Repeat bookings move off-platform after the intro").includes("disintermediation"),
+      "`off platform` stem missing — this hole produced a false shift",
+    ],
+    [
+      themesOf("White-label firmware the company cannot patch").includes("supply chain"),
+      "`white label` stem missing — this hole produced a false shift",
+    ],
+    [
+      !themesOf("White-label firmware the company cannot patch").includes("claims"),
+      "`label` drags white-label into claims",
+    ],
+    [
+      themesOf("A single provider with no self-hosted fallback").includes("provider lock-in"),
+      "`single provider`/`no fallback` stems missing — this hole produced a false shift",
+    ],
+  ];
+  for (const [pass, why] of grammar) check(pass, `stem grammar: ${why}`);
+
+  // 7. Tie behaviour (Q20). Before, a tie was settled by the theme name's first
+  //    letter — 49 of 109 recorded primaries were decided that way. Now a tie is
+  //    reported as a group and compared as a group: `primary` abstains, but the
+  //    verdict does not.
+  const tied = matchThemes("Cold-start liquidity per building has no density floor", keywords);
+  check(
+    topGroup(tied).length >= 2,
+    `tie probe: a two-mechanism SPOF collapsed to one theme (${topGroup(tied).join("/")}) — the group is gone`,
+  );
+  check(
+    primaryTheme(tied) === null,
+    `tie probe: \`primary\` picked "${primaryTheme(tied)}" out of a tie instead of abstaining`,
+  );
+  const groupA = describeSide(
+    "Cold-start liquidity per building has no density floor",
+    marketThemes,
+    keywords,
+  );
+  const groupB = describeSide(
+    "Density per building never reaches a usable floor",
+    marketThemes,
+    keywords,
+  );
+  const intersecting = compareHinge(groupA, groupB);
+  check(
+    intersecting.verdict === "same",
+    `tie probe: groups sharing a theme scored "${intersecting.verdict}" (${intersecting.reason}) — expected "same"`,
+  );
+  const noStem = describeSide("zzz qqq", marketThemes, keywords);
+  const abstained = compareHinge(groupA, noStem);
+  check(
+    abstained.verdict === "unmatched",
+    `tie probe: a side matching no stem scored "${abstained.verdict}" — expected "unmatched", the screen must abstain rather than guess`,
+  );
+
+  // 8. `likelihood_not_percent` (Q20). The rule is "don't dress a judgement up as
+  //    a probability", not "don't mention a percentage" — the first version failed
+  //    a real fixture on the *idea's own take rate*, which is the analysis quoting
+  //    its input. Both directions are pinned because narrowing it too far would
+  //    let a genuine "70% chance" through.
+  for (const s of [
+    "Likelihood is roughly 70% within the first year.",
+    "There is a 70% chance the take rate collapses.",
+    "We estimate an 80 percent probability of failure inside 6 months.",
+    "45% risk that supply never forms.",
+  ]) {
+    check(likelihoodStatedAsPercent(s), `percent probe: missed a probability claim — "${s}"`);
+  }
+  for (const s of [
+    "Sitters keep 80% of the fee and the 20% take purchases no ongoing service.",
+    "The only retention hook after three free bookings is a 20% fee with zero risk absorption.",
+    "We expect 30% of sitters to churn monthly, which starves the tower.",
+  ]) {
+    check(
+      !likelihoodStatedAsPercent(s),
+      `percent probe: flagged a business percentage the analysis is quoting — "${s}"`,
+    );
+  }
+
   console.log(
     `\nPreflight: ${originals.length} base fixtures · ${variants.length} variants · ${Object.keys(keywords).length} themes`,
   );
   console.log(
     `Screen probes: rephrased → ${rephrased.verdict}, different → ${different.verdict}, co-valid → ${coValid.verdict}, escaped → ${frameEscape.verdict}`,
+  );
+  console.log(
+    `Grammar probes: ${grammar.length} stem cases · tie group → ${topGroup(tied).join("/")} (primary abstains) · percent assertion pinned both ways`,
   );
   for (const n of notes) console.log(`  note: ${n}`);
 

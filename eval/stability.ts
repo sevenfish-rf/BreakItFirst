@@ -118,6 +118,8 @@ type GroupResult = {
   expected_spof_themes: string[];
   original: Labels | { error: string };
   original_primary_theme: string | null;
+  /** Themes tied at the top score, when `original_primary_theme` is null (Q20). */
+  original_primary_group?: string[];
   variants: VariantResult[];
 };
 
@@ -383,7 +385,13 @@ function buildReport(
     }
     lines.push("");
     lines.push(
-      `Original primary theme: ${g.original_primary_theme ? `\`${g.original_primary_theme}\`` : "— (no stem matched)"}`,
+      `Original strongest theme: ${
+        g.original_primary_theme
+          ? `\`${g.original_primary_theme}\``
+          : g.original_primary_group?.length
+            ? `${g.original_primary_group.map((t) => `\`${t}\``).join(" / ")} (tied — compared as a group)`
+            : "— (no stem matched)"
+      }`,
     );
     lines.push("");
     lines.push("| Variant | Verdict | Why | Variant themes | Token overlap |");
@@ -599,6 +607,7 @@ async function main() {
       expected_spof_themes: expected,
       original,
       original_primary_theme: originalSide?.primary ?? null,
+      original_primary_group: originalSide?.primary_group ?? [],
       variants: variantResults,
     });
 

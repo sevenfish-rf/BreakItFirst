@@ -106,6 +106,17 @@ semua hinge memetakan ke satu tema dan drift-nya selalu nol, yang **terlihat
 seperti sukses**. Dua probe di dalamnya memastikan screen masih memisahkan hinge
 yang cuma diparafrase dari hinge yang benar-benar beda.
 
+Sejak Q20 (2026-08-01) preflight juga menjaga hal ketiga: screen yang **bohong**.
+Dulu stem dicocokkan sebagai substring biasa, jadi `rma` menyala di dalam
+"info*rma*tion" dan `bot` di dalam "*bot*h" — satu tema bisa menang atas prosa
+yang tidak pernah menyebutnya. Sekarang stem punya batas kata (`bot` = kata utuh,
+`verif*` = awalan), stem panjang berbobot lebih besar, dan seri **dilaporkan
+sebagai grup**, bukan dipilih menurut alfabet. Probe permanen: 12 kasus tata-bahasa
+stem (tiap satu adalah misfire nyata yang pernah ditemukan di `raw/` on disk),
+4 kasus perilaku seri, dan 7 kasus assertion `likelihood_not_percent` — dipatok
+**dua arah**, supaya menyempitkan aturan itu tidak diam-diam melewatkan klaim
+"70% chance" yang asli.
+
 ```bash
 npm run eval:stability
 # satu fixture saja:
@@ -131,14 +142,25 @@ Hasil:
 **Verdict otomatis, tapi hanya screen.** Runner memetakan SPOF ke tema
 (`hinge-labels.ts` + `theme-keywords.json`) lalu membandingkan tema, bukan
 string — jadi `"OEM-owned firmware"` dan `"vendor firmware dependency"` keluar
-`same`, yang tidak mungkin didapat dari diff string. Empat nilai:
+`same`, yang tidak mungkin didapat dari diff string. Lima nilai:
 
 | Verdict | Arti |
 |---------|------|
-| `same` | Tema terkuat kedua sisi sama → **tidak ada drift terdeteksi** |
-| `partial` | Tema terkuat bergeser tapi himpunan tema masih beririsan |
-| `shift` | Himpunan tema disjoint → ini sinyal drift-nya |
+| `same` | Grup tema terkuat kedua sisi beririsan → **tidak ada drift terdeteksi** |
+| `partial` | Grup terkuat disjoint tapi himpunan tema lengkap masih beririsan |
+| `swap` | Grup disjoint, tapi **dua-duanya** berisi tema yang fixture-nya sendiri deklarasikan → osilasi co-valid pada ide yang memang rapuh di beberapa sisi, bukan frame escape (Q15). Dihitung dan ditampilkan, **tidak** di-gate |
+| `shift` | Grup disjoint **dan** ada sisi yang keluar dari expected set fixture → ini sinyal drift-nya, satu-satunya yang di-gate |
 | `unmatched` | Ada sisi yang tidak match stem apa pun; screen abstain, wajib dibaca manusia |
+
+Yang dibandingkan adalah **grup tema dengan skor tertinggi**, bukan satu
+pemenang: kalau bukti seri, `primary` mengaku seri (`null`) dan grupnya yang
+dibandingkan. Sebelum Q20 seri diputus menurut alfabet — 49 dari 109 primary yang
+pernah tercatat diputus begitu — yang membuat `partial` menggelembung dan `swap`
+vs `shift` tidak bisa dipercaya. Konsekuensinya untuk pembacaan: aturan grup
+membuat screen **lebih kecil** kemungkinannya mengarang drift, dan karenanya
+**lebih besar** kemungkinannya melewatkan drift halus. Arah itu dipilih sengaja —
+`shift` palsu berujung revert engine, `shift` yang terlewat cuma berujung baca
+prosa lebih teliti.
 
 Batasnya harus dinyatakan: **tema lebih kasar daripada hinge.** Dua mekanisme
 yang benar-benar berbeda tapi masih di satu tema (biaya retur vs biaya komponen,

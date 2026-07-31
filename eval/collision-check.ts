@@ -46,7 +46,7 @@ import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { loadThemeKeywords, matchThemes, tokenOverlap } from "./hinge-labels";
+import { loadThemeKeywords, matchThemes, primaryTheme, topGroup, tokenOverlap } from "./hinge-labels";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASELINE_ROOT = path.join(__dirname, "baselines");
@@ -62,6 +62,12 @@ export type PairVerdict = "distinct" | "echo" | "collision";
 export type PairSide = {
   id: string;
   primary: string | null;
+  /**
+   * Every theme tied at the top score (Q20). The collision test compares groups,
+   * because `primary` is null whenever the evidence ties and a null-vs-null pair
+   * would silently read `distinct`.
+   */
+  primary_group?: string[];
   text: string;
   cascade: string[];
   candidates: string[];
@@ -103,7 +109,12 @@ function candidateEchoes(a: string[], b: string[]): string[] {
 /** Pure pair comparison — exported so the offline check can exercise it. */
 export function classifyPair(a: PairSide, b: PairSide): PairResult {
   const overlap = Number(tokenOverlap(a.text, b.text).toFixed(3));
-  const sameTheme = a.primary !== null && a.primary === b.primary;
+  const groupA = a.primary_group ?? (a.primary ? [a.primary] : []);
+  const groupB = b.primary_group ?? (b.primary ? [b.primary] : []);
+  const sharedThemes = groupA.filter((t) => groupB.includes(t));
+  const sameTheme = sharedThemes.length > 0;
+  const themeLabel = sharedThemes.map((t) => `\`${t}\``).join("/") || "—";
+  const sideLabel = (g: string[]) => (g.length ? g.map((t) => `\`${t}\``).join("/") : "no theme");
   const base = {
     a: a.id,
     b: b.id,
@@ -118,27 +129,27 @@ export function classifyPair(a: PairSide, b: PairSide): PairResult {
     return {
       ...base,
       verdict: "collision",
-      reason: `both hinge on \`${a.primary}\` and the prose overlaps ${overlap.toFixed(2)} — same failure on two different ideas`,
+      reason: `both hinge on ${themeLabel} and the prose overlaps ${overlap.toFixed(2)} — same failure on two different ideas`,
     };
   }
   if (sameTheme) {
     return {
       ...base,
       verdict: "echo",
-      reason: `both land on \`${a.primary}\` but the prose differs (${overlap.toFixed(2)}) — same class, plausibly different mechanism; read both`,
+      reason: `both land on ${themeLabel} but the prose differs (${overlap.toFixed(2)}) — same class, plausibly different mechanism; read both`,
     };
   }
   if (overlap >= ECHO_MIN_OVERLAP) {
     return {
       ...base,
       verdict: "echo",
-      reason: `themes differ (\`${a.primary}\` vs \`${b.primary}\`) but the prose overlaps ${overlap.toFixed(2)} — one template in two buckets?`,
+      reason: `themes differ (${sideLabel(groupA)} vs ${sideLabel(groupB)}) but the prose overlaps ${overlap.toFixed(2)} — one template in two buckets?`,
     };
   }
   return {
     ...base,
     verdict: "distinct",
-    reason: `\`${a.primary}\` vs \`${b.primary}\`, prose overlap ${overlap.toFixed(2)}`,
+    reason: `${sideLabel(groupA)} vs ${sideLabel(groupB)}, prose overlap ${overlap.toFixed(2)}`,
   };
 }
 
@@ -188,7 +199,8 @@ async function loadEntries(
       spof: spof.component,
       text,
       themes: matches.map((m) => m.theme),
-      primary: matches[0]?.theme ?? null,
+      primary: primaryTheme(matches),
+      primary_group: topGroup(matches),
       cascade: (raw.analysis?.cascade?.nodes ?? []).map((n) => n.step),
       candidates: (raw.analysis?.spof_candidates ?? []).map((c) => c.label),
     });
@@ -222,10 +234,12 @@ function buildReport(runId: string, entries: Entry[], pairs: PairResult[]): stri
   lines.push("");
   lines.push("## Hinge per fixture");
   lines.push("");
-  lines.push("| Fixture | Category | Primary theme | SPOF |");
+  lines.push("| Fixture | Category | Strongest theme(s) | SPOF |");
   lines.push("|---|---|---|---|");
   for (const e of entries) {
-    lines.push(`| ${e.id} | ${cell(e.category)} | ${cell(e.primary)} | ${cell(e.spof)} |`);
+    lines.push(
+      `| ${e.id} | ${cell(e.category)} | ${cell((e.primary_group ?? []).join(" / "))} | ${cell(e.spof)} |`,
+    );
   }
   lines.push("");
   lines.push("## Pairs");
@@ -267,7 +281,9 @@ function buildReport(runId: string, entries: Entry[], pairs: PairResult[]): stri
   lines.push(`| ✗ collision | ${collisions.length} |`);
   lines.push(`| ~ echo | ${echoPairs.length} |`);
   lines.push(`| ✓ distinct | ${pairs.filter((p) => p.verdict === "distinct").length} |`);
-  lines.push(`| Distinct primary themes | ${new Set(entries.map((e) => e.primary)).size} / ${entries.length} |`);
+  lines.push(
+    `| Distinct strongest-theme sets | ${new Set(entries.map((e) => (e.primary_group ?? []).join("/"))).size} / ${entries.length} |`,
+  );
   lines.push("");
   lines.push(
     `**N2 pass criterion: 0 collisions.** This run: **${collisions.length}**. ` +
@@ -297,7 +313,10 @@ async function main() {
   console.log(`\nBreakItFirst collision check (N2) — baseline ${runId}`);
   console.log(`Fixtures: ${entries.length} · offline (no provider calls)\n`);
   for (const e of entries) {
-    console.log(`  ${e.id} [${e.primary ?? "no theme"}] ${e.spof}`);
+    // The GROUP, not `primary` — `primary` is null on every tie, and printing
+    // "no theme" for a side the pair lines then compare by theme reads as a bug.
+    const group = e.primary_group ?? (e.primary ? [e.primary] : []);
+    console.log(`  ${e.id} [${group.length ? group.join(" / ") : "no theme"}] ${e.spof}`);
   }
 
   const pairs: PairResult[] = [];

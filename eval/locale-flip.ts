@@ -210,7 +210,13 @@ async function runSide(
   console.log(
     `    OK (${elapsedMs}ms) ${bands.confidence}/${bands.likelihood}/${bands.velocity} — ${spof.component}`,
   );
-  return { ok: true, bands, spof: spof.component, primary_theme: side.primary, elapsed_ms: elapsedMs };
+  return {
+    ok: true,
+    bands,
+    spof: spof.component,
+    primary_theme: side.primary ?? (side.primary_group.length ? side.primary_group.join(" / ") : null),
+    elapsed_ms: elapsedMs,
+  };
 }
 
 // PLACEHOLDER_REPORT

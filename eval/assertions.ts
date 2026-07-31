@@ -241,12 +241,31 @@ export function runRegressionAssertions(
 
   push(
     "likelihood_not_percent",
-    !/%|percent/i.test(analysis.likelihood.reason) &&
+    !likelihoodStatedAsPercent(analysis.likelihood.reason) &&
       !/^\d+(\.\d+)?$/.test(analysis.likelihood.band),
     "Likelihood not presented as raw percent",
   );
 
   return results;
+}
+
+/**
+ * The rule is "don't dress a judgement up as a probability", not "don't mention a
+ * percentage". The first version tested for `%` anywhere in the reason and so
+ * failed fixture 01 on *the idea's own take rate* — "the 20% take purchases no
+ * ongoing service" — which is the analysis quoting the input, exactly what a good
+ * reason does. It now fails only when a percentage sits next to a likelihood
+ * word: the word may lead by a clause, but a trailing word has to be adjacent,
+ * because "a 20% fee with zero risk absorption" is a fee and "45% risk" is a
+ * probability claim.
+ */
+export function likelihoodStatedAsPercent(reason: string): boolean {
+  const NUM = String.raw`\d{1,3}(?:\.\d+)?\s*(?:%|percent)`;
+  const WORD = String.raw`likel|probab|chance|odds|certain|confiden`;
+  return (
+    new RegExp(String.raw`(?:${WORD})\w*[^\d]{0,24}${NUM}`, "i").test(reason) ||
+    new RegExp(String.raw`${NUM}[^\d]{0,6}(?:${WORD}|fail|risk)`, "i").test(reason)
+  );
 }
 
 export function summarizeAssertions(results: AssertionResult[]): {
