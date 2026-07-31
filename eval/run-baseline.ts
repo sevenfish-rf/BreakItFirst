@@ -27,6 +27,7 @@ import {
   runRegressionAssertions,
   summarizeAssertions,
 } from "./assertions";
+import { hostOf } from "./provider-host";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GOLDEN_DIR = path.join(__dirname, "golden");
@@ -119,11 +120,12 @@ async function main() {
 
   const summary: {
     run_id: string;
-    models: { pass1: string; pass2: string; baseUrl: string };
+    models: { pass1: string; pass2: string; host: string };
     results: Array<Record<string, unknown>>;
   } = {
     run_id: runId,
-    models: { pass1: pass1Model, pass2: pass2Model, baseUrl },
+    // Host only, never the full base URL — see eval/provider-host.ts.
+    models: { pass1: pass1Model, pass2: pass2Model, host: hostOf(baseUrl) },
     results: [],
   };
 

@@ -53,6 +53,9 @@ eval/stability/*
 !eval/stability/.gitkeep
 eval/locale-flip/*
 !eval/locale-flip/.gitkeep
+# K8 repro output holds the generated idea text + captured POST bodies — local only
+eval/input-repro/*
+!eval/input-repro/.gitkeep
 
 # Python caches & virtual environments
 __pycache__/

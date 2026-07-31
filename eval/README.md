@@ -19,9 +19,11 @@ Fondasi masterplan **B.1** — ukur kualitas report sebelum/sesudah ubahan promp
 | `locale-flip.ts` | Ide sama dijalankan `en` vs `id`; diff tiga band enum (K7) |
 | `collision-check.ts` | Offline: 5 ide berbeda → 5 hinge berbeda? (diskriminasi, N2) |
 | `input-integrity.ts` | Offline: `meta.idea_input` byte-identik dengan teks yang dikirim? (N7/E21) |
+| `input-repro.ts` | Chromium sungguhan → `/app`: textarea + state React + body POST byte-identik? (K8/Q18) |
 | `read-traces.ts` | Baca dump `.breakitfirst-traces/` (`BIF_TRACE=1`) → hinge per draft + drift antar run |
 | `baselines/<run_id>/` | Output tiap run baseline (auto-created) |
 | `stability/<run_id>/` | Output tiap run stabilitas (auto-created) |
+| `input-repro/<run_id>/` | Output repro browser — berisi teks ide + body POST, **gitignored, lokal saja** |
 
 ## Setup env
 
@@ -266,6 +268,67 @@ stability dan locale-flip memakai varian yang sengaja ditulis ulang, jadi diff d
 sana adalah rewrite-nya, bukan korupsi. Dan fixture terpanjang kita jauh lebih
 pendek dari paste ~6000 karakter tempat K8 muncul, jadi run hijau **tidak**
 membebaskan regime input panjang.
+
+## Repro input browser (K8)
+
+Bagian yang **tidak bisa** dilihat harness di atas: jalur input **browser**.
+Harness ini menjalankan Chromium sungguhan ke route `/app`, mengetik/menempel
+satu string sumber **6000 karakter** (panjang yang sama dengan paste tempat K8
+muncul), lalu membandingkan byte per byte tiga hal: isi `<textarea>`, **jumlah
+karakter yang dirender React** (state, bukan DOM), dan field `idea` di body POST
+yang benar-benar dikirim.
+
+`POST /api/analyze` dicegat lalu di-abort, jadi **0 panggilan provider, $0** —
+tidak mungkin memakai waktu GPU Modal.
+
+Butuh server yang **kamu kendalikan** (bukan port yang dipegang dev server lain):
+
+```bash
+npm run build && npx next start -p 3010
+BIF_APP_URL=http://127.0.0.1:3010/app npm run eval:input-repro
+# satu skenario saja:
+BIF_REPRO_SCENARIOS=paste npm run eval:input-repro
+# panjang lain / gate CI:
+BIF_REPRO_CHARS=8000 BIF_REPRO_GATE=1 npm run eval:input-repro
+```
+
+Env lain: `BIF_REPRO_WRAP` (kolom hard-wrap, default 72),
+`BIF_REPRO_TYPE_TIMEOUT_MS` (plafon satu `pressSequentially`; default 30s
+Playwright bukan anggaran untuk ribuan keystroke).
+
+Tiga skenario: `paste` (clipboard nyata + `Ctrl+V`), `type` (6000 key event
+sungguhan), `type-loaded` (sama, tapi main thread disibukkan ~10ms tiap frame —
+kontensi yang dibutuhkan hipotesis K8). Sumbernya deterministik dan bertanda
+posisi (`[m0000]…`), jadi potongan yang hilang **menyebut sendiri** offset-nya.
+
+**Pelajaran yang lebih penting dari hasilnya: perbandingan berbasis DOM bisa lulus
+melawan halaman mati.** Halaman yang ter-render tapi **belum pernah hydrate** tetap
+menerima teks ke DOM dan mengembalikan 6000 karakter penuh dari `inputValue()`,
+padahal state React kosong dan tidak ada POST yang pernah terbang. Di artifact
+`eval/input-repro/2026-07-31_15_34_21` (`:3000`) kolom textarea-nya benar-benar
+menulis `identical (6000 chars)` — run itu lolos dari verdict `clean` **hanya
+karena tidak ada POST yang tertangkap**, kebetulan, bukan karena ada pemeriksaan
+yang dirancang. Sekarang ada
+`assertHydrated()` (membalik `button.switch`, menuntut `aria-checked` berubah,
+kalau tidak: error dengan diagnosis "kemungkinan ada server lain memegang port
+ini"), plus cross-check `reactCharCount` vs `expectedCharCount` masuk ke verdict,
+dan run yang **seluruh** skenarionya inconclusive keluar dengan exit code non-nol
+— tidak ada yang terukur adalah kegagalan alat, **bukan** hasil negatif.
+
+Hasil run `eval/input-repro/2026-07-31_152244` (build produksi di `:3010`):
+**3 clean · 0 lossy · 0 inconclusive** — textarea identik (6000), counter React
+6000 sesuai harapan, body POST identik, di ketiga mode termasuk di bawah kontensi
+main thread.
+
+**Cakupannya, dibaca sebelum memercayai run hijau:** ini membuktikan jalur
+browser → state React → body POST lossless **pada panjang ini, di mode ini, di
+build Chromium ini**. Yang **tidak** tercakup: ritme mengetik manusia nyata, IME,
+autocorrect, keyboard mobile; browser/perangkat lain di bawah tekanan memori;
+textarea di bawah wrapper smooth-scroll (`ScrollSmoother` hanya dipasang di route
+`/`, bukan `/app`); dan yang terpenting — **korupsi yang datang bersama teks yang
+di-paste tidak terlihat di sini.** Kalau sumbernya sudah rusak saat dicopy, semua
+lapisan meneruskan kerusakan itu dengan setia, dan hard-wrap yang hanya ada di
+region korup laporan K8 justru konsisten dengan tepat skenario itu.
 
 ## Baca trace mentah (Q9)
 

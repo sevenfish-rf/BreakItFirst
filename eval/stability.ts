@@ -614,7 +614,8 @@ async function main() {
       JSON.stringify(
         {
           run_id: runId,
-          models: { pass1: pass1Model, pass2: pass2Model, baseUrl },
+          // Host only, never the full base URL — see eval/provider-host.ts.
+          models: { pass1: pass1Model, pass2: pass2Model, host: hostOf(baseUrl) },
           deep: cfg.deepAnalysis,
           reference_run_id: referenceId ?? null,
           groups,
