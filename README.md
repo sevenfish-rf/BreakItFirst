@@ -157,7 +157,7 @@ docs/              00-index · 01-product · 02-develop · 03-quality-gap · 04-
 - [x] Session jobs / poll / cancel / single-flight / client history  
 - [x] Reasoning refine (selection + pathway semantics)  
 - [x] Run provenance on every report + opt-in raw pass trace  
-- [ ] **Run the stability measurement — required, currently blocked on provider credentials only.** The instrument is complete: 5 fixtures × 3 rewrites (`para`/`strip`/`flip`), an automatic SPOF-theme verdict, an offline preflight (`eval:hinge-check`, passing), and an opt-in CI gate. The old 34-pt rubric was saturated (3 runs at 33–34/34) and now covers all 10 report blocks at 48/52, but score is still the wrong instrument for hinge stability. Prompt and rule-engine work stays frozen until the run happens — see `docs/04-refine-backlog.md` Q10 / Q11  
+- [x] **Stability measurement — first full run done 2026-07-31** (model `moonshotai/Kimi-K3`, standard). 5 fixtures × 3 rewrites (`para`/`strip`/`flip`) → **0 `shift`** (4 same · 11 partial), paired with a same-model baseline; the `partial`s are mostly the coarse theme label bouncing while the hinge prose holds. One gap stays open — run-to-run noise is unquantified (fixture 01 flipped hinge across two same-model runs). Prompt and rule-engine work is no longer blocked; lifting the freeze is now an owner call — see `docs/04-refine-backlog.md` Q10 / Q11  
 - [ ] Production fixed provider UX  
 - [ ] Redis multi-instance  
 - [ ] Export PDF / server-side history (if needed)  

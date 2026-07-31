@@ -458,6 +458,7 @@ export async function callProvider(
   const baseBody: Record<string, unknown> = {
     model: options.model,
     messages: options.messages,
+    reasoning_effort: "low",
   };
 
   // Prefer temperature only when not forced json extraction on picky models
