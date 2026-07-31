@@ -1,11 +1,39 @@
-async function main() {
-  const baseUrl = "https://blitzbrigade925--ep-kimi-k3-server.us-west.modal.direct/v1";
-  const modalKey = process.env.MODAL_KEY || "wk-i5xIxGsYXy23FwImBWnKCR";
-  const modalSecret = process.env.MODAL_SECRET || "ws-s87ylE92ETopULnNEXrYTv";
-  const model = "moonshotai/Kimi-K3";
+/**
+ * One-shot transport + cost probe against a Modal-hosted OpenAI-compatible
+ * endpoint. Superseded for suite preflight by `eval/provider-check.ts`; kept
+ * because it is the only thing that prints a **measured** cost per call.
+ *
+ * Every value comes from the environment and nothing is defaulted: an endpoint
+ * or a credential written into a source file is written into every clone of it.
+ * Only the provider **host** is ever logged, never the base URL and never the
+ * key or secret.
+ */
+import { hostOf } from "./provider-host";
 
-  console.log(`=== STEP 2: SMOKE TEST (Modal Kimi K3 Managed Shared API) ===`);
-  console.log(`Base URL: ${baseUrl}`);
+function required(name: string): string {
+  const v = process.env[name]?.trim();
+  if (!v) {
+    console.error(
+      [
+        `Missing env: ${name}`,
+        "",
+        "Needs BIF_BASE_URL, MODAL_KEY, MODAL_SECRET (and optionally",
+        "BIF_PASS1_MODEL for the model id). See eval/env.example.",
+      ].join("\n"),
+    );
+    process.exit(2);
+  }
+  return v;
+}
+
+async function main() {
+  const baseUrl = required("BIF_BASE_URL");
+  const modalKey = required("MODAL_KEY");
+  const modalSecret = required("MODAL_SECRET");
+  const model = process.env.BIF_PASS1_MODEL?.trim() || "moonshotai/Kimi-K3";
+
+  console.log(`=== SMOKE TEST (Modal managed shared API) ===`);
+  console.log(`Host: ${hostOf(baseUrl)}`);
   console.log(`Model: ${model}`);
 
   const payload = {
@@ -61,7 +89,7 @@ async function main() {
     }
 
     const data = (await res.json()) as Record<string, unknown>;
-    console.log(`\n✅ STEP 2 SMOKE TEST SUCCEEDED in ${elapsed}ms!`);
+    console.log(`\n✅ SMOKE TEST SUCCEEDED in ${elapsed}ms!`);
 
     const choices = data.choices as Array<{ message?: { content?: string } }>;
     console.log(`Response Output:\n${choices?.[0]?.message?.content}`);
@@ -74,7 +102,7 @@ async function main() {
     } | undefined;
 
     if (usage) {
-      console.log("\n--- STEP 5: TOKEN USAGE & MEASURED BILLING REPORT ---");
+      console.log("\n--- TOKEN USAGE & MEASURED BILLING REPORT ---");
       console.log(`Total Prompt Tokens: ${usage.prompt_tokens}`);
       console.log(`Total Completion Tokens: ${usage.completion_tokens}`);
 

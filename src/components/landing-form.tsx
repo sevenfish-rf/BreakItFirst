@@ -34,6 +34,7 @@ import {
   saveFormDraft,
 } from "@/lib/draft";
 import { validateAnalyzeInput } from "@/lib/input-validation";
+import { detectInputDamage } from "@/lib/input-damage";
 import type { ProviderSettings } from "@/lib/provider-settings";
 import { useLanguage } from "@/lib/i18n/context";
 import type { PipelineLiveStage } from "@/lib/pipeline-stages";
@@ -74,6 +75,8 @@ export function LandingForm({
   const [activeChip, setActiveChip] = useState<string | null>(null);
   const [loadedHint, setLoadedHint] = useState<string | null>(null);
   const [draftHydrated, setDraftHydrated] = useState(false);
+  /** Review note is advisory — once dismissed it stays dismissed for this draft. */
+  const [reviewDismissed, setReviewDismissed] = useState(false);
 
   const ideaRef = useRef<HTMLTextAreaElement | null>(null);
   /** Aborts only the status poll loop — never cancels the server job. */
@@ -273,6 +276,14 @@ export function LandingForm({
   const charCount = idea.trim().length;
   const tooShort = charCount > 0 && charCount < MIN_IDEA_LENGTH;
 
+  /**
+   * K8 mitigation — advisory only. Recomputed on edit (pure regex scan over at
+   * most 8000 chars), shown below the textarea, and it never gates submit.
+   */
+  const damage = useMemo(() => detectInputDamage(idea), [idea]);
+  const showReview =
+    !reviewDismissed && !loading && !tooShort && damage.suspect;
+
   const helper = useMemo(() => {
     if (tooShort) {
       return t.form.tooShort(MIN_IDEA_LENGTH - charCount);
@@ -287,6 +298,7 @@ export function LandingForm({
     setActiveChip(null);
     setLoadedHint(null);
     setError(null);
+    setReviewDismissed(false);
     clearFormDraft();
   }
 
@@ -450,6 +462,40 @@ export function LandingForm({
             </span>
           </div>
         )}
+
+        {showReview ? (
+          <div className="input-review" role="status">
+            <div className="input-review-head">
+              <strong>{t.form.review.title}</strong>
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => setReviewDismissed(true)}
+              >
+                {t.form.review.dismiss}
+              </button>
+            </div>
+            <p className="input-review-lead">{t.form.review.lead}</p>
+            <ul className="input-review-list">
+              {damage.findings.map((f) => (
+                <li key={f.kind} className={f.severity}>
+                  <span className="what">{t.form.review.kinds[f.kind]}</span>{" "}
+                  <span className="where">
+                    ({t.form.review.times(f.count)}
+                    {f.samples[0]
+                      ? `, ${t.form.review.at(f.samples[0].line)}`
+                      : ""}
+                    )
+                  </span>
+                  {f.samples.length ? (
+                    <code>{f.samples[0].excerpt}</code>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+            <p className="input-review-limit">{t.form.review.limit}</p>
+          </div>
+        ) : null}
 
         <div className="console-foot">
           <div className="field">

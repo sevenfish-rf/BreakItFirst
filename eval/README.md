@@ -21,6 +21,8 @@ Fondasi masterplan **B.1** — ukur kualitas report sebelum/sesudah ubahan promp
 | `input-integrity.ts` | Offline: `meta.idea_input` byte-identik dengan teks yang dikirim? (N7/E21) |
 | `input-repro.ts` | Chromium sungguhan → `/app`: textarea + state React + body POST byte-identik? (K8/Q18) |
 | `read-traces.ts` | Baca dump `.breakitfirst-traces/` (`BIF_TRACE=1`) → hinge per draft + drift antar run |
+| `provider-host.ts` | `hostOf()` — satu-satunya tempat yang memutuskan bagaimana endpoint provider boleh dicatat (host saja, tanpa scheme/path/kredensial) |
+| `provider-check.ts` | Preflight provider ~2 call: /models + 1 chat + 1 JSON-mode sebelum run mahal |
 | `baselines/<run_id>/` | Output tiap run baseline (auto-created) |
 | `stability/<run_id>/` | Output tiap run stabilitas (auto-created) |
 | `input-repro/<run_id>/` | Output repro browser — berisi teks ide + body POST, **gitignored, lokal saja** |
@@ -52,7 +54,9 @@ npm run eval:baseline
 .\scripts\eval-baseline.ps1 -Only "01-marketplace-pet-sitting"
 ```
 
-Env template: `eval/env.example`
+Env template: `eval/env.example` (file ini **ikut ter-commit** — isinya placeholder saja, jangan pernah endpoint atau key sungguhan).
+
+Semua run artifact hanya mencatat **host** provider (`models.host`), bukan base URL penuh, dan tidak pernah API key — satu-satunya tempat yang memutuskan ini: `eval/provider-host.ts` (`hostOf()`). Summary lama masih menyimpan field `baseUrl`; `compare-baseline.ts` menerima keduanya supaya run lama tetap bisa dibandingkan.
 
 Hasil:
 

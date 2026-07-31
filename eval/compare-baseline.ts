@@ -22,7 +22,12 @@ type ScoreFile = {
 
 type Summary = {
   run_id: string;
-  models?: { pass1: string; pass2: string; baseUrl: string };
+  /**
+   * `host` is what runs written after the provider-host hygiene pass record;
+   * `baseUrl` is what older summaries on disk carry. Both optional so an old
+   * run stays comparable — only pass1/pass2 are ever read.
+   */
+  models?: { pass1: string; pass2: string; host?: string; baseUrl?: string };
   results: Array<{
     id: string;
     ok: boolean;

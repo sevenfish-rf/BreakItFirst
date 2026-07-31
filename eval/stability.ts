@@ -52,6 +52,7 @@ import type { FailureAnalysis } from "../src/types/analysis";
 import { runRegressionAssertions, summarizeAssertions } from "./assertions";
 import type { HingeComparison, HingeSide, ThemeKeywords } from "./hinge-labels";
 import { compareHinge, describeSide, loadThemeKeywords } from "./hinge-labels";
+import { hostOf } from "./provider-host";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GOLDEN_DIR = path.join(__dirname, "golden");

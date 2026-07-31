@@ -22,6 +22,7 @@ import {
   callProvider,
   ProviderError,
 } from "../src/lib/provider-client";
+import { hostOf } from "./provider-host";
 
 type Env = { baseUrl: string; apiKey: string; pass1: string; pass2: string };
 
@@ -42,14 +43,6 @@ function readEnv(): Env | null {
     return null;
   }
   return { baseUrl, apiKey, pass1, pass2 };
-}
-
-function hostOf(u: string): string {
-  try {
-    return new URL(u).host;
-  } catch {
-    return "(unparseable base URL)";
-  }
 }
 
 async function tinyCall(

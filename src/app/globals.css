@@ -726,6 +726,74 @@ html.dark .analyze-btn {
   color: var(--ink-2);
 }
 
+/* pre-submit input review (K8) — advisory, never blocks the submit button */
+.input-review {
+  margin: 0 22px 16px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--amber) 38%, transparent);
+  border-left-width: 2px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--amber) 6%, transparent);
+}
+
+.input-review-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.input-review-head strong {
+  font-size: 12.5px;
+  color: var(--amber);
+  font-weight: 500;
+}
+
+.input-review-lead {
+  margin: 6px 0 8px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.input-review-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-review-list li {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.input-review-list li.worth_checking .what {
+  color: var(--ink-3);
+}
+
+.input-review-list .where {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.input-review-list code {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+
+.input-review-limit {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
 /* ============================================================
    PIPELINE STRIP
    ============================================================ */

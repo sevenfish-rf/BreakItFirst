@@ -47,6 +47,7 @@ import { CATEGORIES } from "../src/lib/categories";
 import { runFailureAnalysisPipeline } from "../src/lib/pipeline";
 import type { FailureAnalysis } from "../src/types/analysis";
 import { describeSide, loadThemeKeywords } from "./hinge-labels";
+import { hostOf } from "./provider-host";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GOLDEN_DIR = path.join(__dirname, "golden");
@@ -243,7 +244,7 @@ function buildReport(runId: string, cfg: RunCfg, results: FixtureResult[]): stri
   lines.push(`# Locale-flip run — ${runId}`);
   lines.push("");
   lines.push(
-    `Pass 1 \`${cfg.pass1Model}\` · Pass 2 \`${cfg.pass2Model}\` · ${cfg.deepAnalysis ? "deep" : "standard"} · same idea, \`en\` vs \`id\``,
+    `Pass 1 \`${cfg.pass1Model}\` · Pass 2 \`${cfg.pass2Model}\` · ${cfg.deepAnalysis ? "deep" : "standard"} · host \`${hostOf(cfg.baseUrl)}\` · same idea, \`en\` vs \`id\``,
   );
   lines.push("");
   lines.push(
@@ -373,7 +374,8 @@ async function main() {
     await writeFile(
       path.join(runDir, "summary.json"),
       JSON.stringify(
-        { run_id: runId, models: { pass1: pass1Model, pass2: pass2Model, baseUrl }, deep: cfg.deepAnalysis, results },
+        // Host only, never the full base URL — see eval/provider-host.ts.
+        { run_id: runId, models: { pass1: pass1Model, pass2: pass2Model, host: hostOf(baseUrl) }, deep: cfg.deepAnalysis, results },
         null,
         2,
       ),

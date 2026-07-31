@@ -1,3 +1,4 @@
+import type { InputDamageKind } from "@/lib/input-damage";
 import type { Locale } from "@/lib/i18n/types";
 
 export type Dictionary = {
@@ -35,6 +36,17 @@ export type Dictionary = {
     deepHint: string;
     draftRestored: string;
     clearDraft: string;
+    /** Pre-submit input review (K8) — advisory, never blocks submit. */
+    review: {
+      title: string;
+      lead: string;
+      /** Trailing honest limit: a clean review is not proof the text is intact. */
+      limit: string;
+      dismiss: string;
+      at: (line: number) => string;
+      times: (n: number) => string;
+      kinds: Record<InputDamageKind, string>;
+    };
     cancelled: string;
     recentReports: string;
     deleteReport: string;
@@ -173,6 +185,24 @@ const en: Dictionary = {
       "Runs Pass 1 twice and calibrates SPOF agreement. Slower, uses 2 rate-limit slots.",
     draftRestored: "Draft restored from this browser",
     clearDraft: "Clear draft",
+    review: {
+      title: "Check your idea text before analyzing",
+      lead: "These look like copy/paste damage, not something you typed:",
+      limit:
+        "This is only a quick shape check — it can miss missing spaces between ordinary words, so read the text itself. Nothing is blocked: you can analyze as-is.",
+      dismiss: "Dismiss",
+      at: (line) => `line ${line}`,
+      times: (n) => (n === 1 ? "1 spot" : `${n} spots`),
+      kinds: {
+        glued_words: "Words run together where a space is missing",
+        long_token: "An unbroken run of letters too long to be one word",
+        hyphen_break: "A word split by a hyphen at a line break",
+        invisible_chars: "Invisible characters (zero-width or soft hyphen)",
+        replacement_chars: "Broken characters from an encoding mismatch",
+        truncated_tail: "The text hits the 8000-character cap — the end may be cut",
+        hard_wrap: "Line breaks mid-sentence — text copied from a wrapped source",
+      },
+    },
     cancelled:
       "Analysis cancelled. Your idea is still here — you can run again anytime.",
     recentReports: "Recent reports",
@@ -368,6 +398,24 @@ const id: Dictionary = {
       "Tip: buka Provider → Test connection / Fetch models untuk cek base URL, key, dan model.",
     draftRestored: "Draf dipulihkan dari browser ini",
     clearDraft: "Hapus draf",
+    review: {
+      title: "Cek teks ide dulu sebelum analisis",
+      lead: "Ini terlihat seperti kerusakan copy/paste, bukan yang kamu tulis:",
+      limit:
+        "Ini cuma cek bentuk cepat — spasi hilang antar kata biasa bisa lolos, jadi tetap baca teksnya. Tidak ada yang diblokir: analisis tetap bisa jalan.",
+      dismiss: "Abaikan",
+      at: (line) => `baris ${line}`,
+      times: (n) => `${n} titik`,
+      kinds: {
+        glued_words: "Kata menempel karena spasi hilang",
+        long_token: "Rentetan huruf tanpa spasi, terlalu panjang untuk satu kata",
+        hyphen_break: "Kata terpotong tanda hubung di ujung baris",
+        invisible_chars: "Karakter tak terlihat (zero-width atau soft hyphen)",
+        replacement_chars: "Karakter rusak akibat salah encoding",
+        truncated_tail: "Teks menyentuh batas 8000 karakter — ujungnya mungkin terpotong",
+        hard_wrap: "Baris terputus di tengah kalimat — teks disalin dari sumber ter-wrap",
+      },
+    },
     cancelled:
       "Analisis dibatalkan. Ide masih ada di form — bisa dijalankan lagi kapan saja.",
     recentReports: "Laporan terbaru",
