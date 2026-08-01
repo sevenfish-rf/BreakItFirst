@@ -11,11 +11,13 @@
  * damaged before it ever reached the form. No engine change fixes that. What can
  * help is showing the reader the damage *before* they pay for an analysis.
  *
- * WHAT THIS CANNOT DO — read this first. It cannot detect the exact K8
- * signature. "proposalsebelum" is a space dropped between two ordinary lowercase
- * words, and separating that from a legitimately long Indonesian word
- * ("mempertanggungjawabkan", 22 chars) needs a dictionary this module does not
- * have. **A clean review is therefore not evidence that the text is intact.**
+ * WHAT THIS CANNOT DO — read this first. It reaches only a narrow slice of the
+ * exact K8 signature. "proposalsebelum" is a space dropped between two ordinary
+ * lowercase words; `glued_known_words` below catches that one because both halves
+ * are in a small curated list, but "kongevaluasi" stays invisible — telling a
+ * glued fragment from a legitimately long Indonesian word
+ * ("mempertanggungjawabkan", 22 chars) needs a real dictionary this module does
+ * not have. **A clean review is therefore not evidence that the text is intact.**
  * What it does catch are the shapes a damaged copy/paste usually *also* leaves
  * behind: a capital-letter join, a punctuation join, a hyphen split across a line
  * break, invisible or replacement characters, the 8000-char draft cap, and
@@ -34,6 +36,7 @@ import { MAX_IDEA_LENGTH } from "@/lib/input-validation";
 
 export type InputDamageKind =
   | "glued_words"
+  | "glued_known_words"
   | "long_token"
   | "hyphen_break"
   | "invisible_chars"
@@ -49,7 +52,15 @@ export type InputDamageKind =
 export type InputDamageSeverity = "likely_damage" | "worth_checking";
 
 /** `line` is 1-based; `excerpt` is a whitespace-collapsed window of the idea. */
-export type InputDamageSample = { line: number; excerpt: string };
+export type InputDamageSample = {
+  line: number;
+  excerpt: string;
+  /**
+   * Language-neutral detail a detector can prove, shown next to the excerpt.
+   * Only `glued_known_words` sets it: the split it found (`proposal + sebelum`).
+   */
+  note?: string;
+};
 
 export type InputDamageFinding = {
   kind: InputDamageKind;
@@ -178,6 +189,163 @@ function looksLikeUrl(text: string, index: number): boolean {
 }
 
 /**
+ * K8's own signature, as far as a dictionary-free module can reach it.
+ *
+ * The header above says this file cannot see "proposalsebelum" — a space dropped
+ * between two ordinary lowercase words. That was true while every check was a
+ * pure shape regex. This detector buys back a *narrow slice* of it with the
+ * smallest dictionary that can carry a proof: a long all-lowercase token is
+ * reported only when it splits into exactly one pair of words that are BOTH in
+ * the curated list below. "proposalsebelum" → `proposal` + `sebelum`.
+ *
+ * WHAT IT STILL MISSES — the slice is genuinely narrow:
+ *   - Either half outside the list. K8's second example, "kongevaluasi", is NOT
+ *     caught: `kong` is a fragment of a word, not a word.
+ *   - Anything under MIN_GLUED_TOKEN chars ("dataproduk", 10) — the threshold
+ *     that keeps ordinary long Indonesian words out.
+ *   - Three or more words glued together, which usually leaves no half that is
+ *     itself a whole word.
+ *   - Two glued words where a second reading also splits cleanly; an ambiguous
+ *     token is dropped rather than guessed at.
+ * So a clean review is still not evidence the text is intact. The point of this
+ * detector is that when it DOES fire it can name the two words, which is a claim
+ * the user can check in one glance instead of re-reading 6000 characters.
+ */
+
+/**
+ * Common standalone words, ID and EN, that a product idea plausibly contains.
+ * Deliberately excludes affixes and bound fragments: every entry must be a word
+ * a writer would type alone. Indonesian derivation is what makes long single
+ * tokens legitimate ("mengembangkan", "pemeliharaan"), and its affixes are 2–3
+ * chars ("me-", "peng-", "-kan", "-an", "-nya") — all shorter than MIN_HALF, so
+ * an affixed word cannot split into two list entries.
+ */
+const KNOWN_WORDS = new Set(
+  (
+    // Indonesian
+    "untuk dengan yang tidak akan sudah belum sebelum setelah karena tetapi " +
+    "atau juga agar saja harus bisa dapat masih lebih kurang sangat hanya " +
+    "semua setiap antara dalam pada dari oleh kepada tanpa sampai hingga " +
+    "ketika kalau jika maka orang waktu hari bulan tahun biaya harga uang " +
+    "pasar produk layanan jasa aplikasi sistem pengguna pelanggan mitra " +
+    "kerja usaha bisnis modal laba rugi risiko masalah solusi tujuan hasil " +
+    "proses tahap rencana proposal laporan evaluasi catatan dokumen halaman " +
+    "fitur versi tampilan pesan kirim terima bayar langganan daftar akun " +
+    "keamanan kualitas jumlah tingkat ukuran pilihan kondisi mereka " +
+    "bagian contoh cukup pernah sering jarang mungkin memang bukan " +
+    "sendiri tempat pihak tenaga awal akhir baru lama cepat lambat " +
+    // English
+    "with that this from they will have been when then than into over more " +
+    "less most each some only also must need want user users team teams " +
+    "data page site time week month year cost costs price plan plans market " +
+    "service feature report system before after because without between " +
+    "within during about above under first next last sign login signup " +
+    "email phone order orders payment billing invoice account access admin " +
+    "owner buyer seller vendor client support request response review " +
+    "rating search filter upload export import delete update create build " +
+    "make send save share track check start stop close open free paid trial " +
+    "churn growth revenue profit budget risk issue problem solution goal " +
+    "result step stage phase note notes list form field label error message " +
+    "alert board card chat call meeting wiki docs file files folder image " +
+    "video audio model prompt token cache queue batch event events logs " +
+    "trace test tests idea ideas signal number names date week"
+  ).split(" "),
+);
+
+/**
+ * Legitimate words that DO split into two list entries. Every one of these was
+ * found by testing, not by guessing — "marketplaces" (`market` + `places`) and
+ * "accountability" (`account` + `ability`) are the kind of false positive that
+ * would make the whole review untrustworthy on this project's own fixtures.
+ */
+const SOLID_WORDS = new Set(
+  (
+    "breakthrough breakthroughs troubleshoot troubleshooting marketplace " +
+    "marketplaces stakeholder stakeholders spreadsheet spreadsheets " +
+    "placeholder placeholders whiteboard whiteboarding infrastructure " +
+    "understanding understandable accountability accountable " +
+    "tanggungjawab pertanggungjawaban keberlangsungan sepakbola " +
+    "nevertheless notwithstanding timeframes screenshots"
+  ).split(" "),
+);
+
+/**
+ * 12 is the floor that keeps ordinary long words out: "pembayaran" (10),
+ * "menggunakan" (11), "terimakasih" (11), "marketplace" (11). 23 is the ceiling
+ * because `long_token` already reports 24+ as damage on its own — without the
+ * cap the same token would appear twice in the review.
+ */
+const MIN_GLUED_TOKEN = 12;
+const MAX_GLUED_TOKEN = 23;
+/** Both halves must be this long; shorter than any real word, and shorter than
+ * every Indonesian affix, is where fragments and false splits live. */
+const MIN_HALF = 4;
+
+const GLUED_TOKEN = /\p{Ll}+/gu;
+
+/**
+ * The non-whitespace run containing offset `i` — a "chunk" is what a reader sees
+ * as one thing: a word, but also a URL, a path, an email, a `key=value`.
+ */
+function chunkAround(text: string, i: number): string {
+  let start = i;
+  while (start > 0 && !/\s/u.test(text[start - 1])) start--;
+  let end = i;
+  while (end < text.length && !/\s/u.test(text[end])) end++;
+  return text.slice(start, end);
+}
+
+/** A URL, path, email or query fragment — its "glued" words are just structure. */
+function insideAddress(text: string, i: number): boolean {
+  const chunk = chunkAround(text, i);
+  return /:\/\/|www\.|@|\/|=|\?|&|\\/u.test(chunk);
+}
+
+/** The one split into two known words, or null when there is none or many. */
+function splitIntoKnownPair(token: string): [string, string] | null {
+  if (KNOWN_WORDS.has(token) || SOLID_WORDS.has(token)) return null;
+  let found: [string, string] | null = null;
+  for (let k = MIN_HALF; k <= token.length - MIN_HALF; k++) {
+    const left = token.slice(0, k);
+    const right = token.slice(k);
+    if (!KNOWN_WORDS.has(left) || !KNOWN_WORDS.has(right)) continue;
+    // A second clean reading means the split is a guess, not a finding.
+    if (found) return null;
+    found = [left, right];
+  }
+  return found;
+}
+
+function gluedKnownWords(text: string): Hits {
+  const letter = /\p{L}/u;
+  const samples: InputDamageSample[] = [];
+  let count = 0;
+  let m: RegExpExecArray | null;
+  GLUED_TOKEN.lastIndex = 0;
+  while ((m = GLUED_TOKEN.exec(text)) !== null) {
+    const token = m[0];
+    if (token.length < MIN_GLUED_TOKEN || token.length > MAX_GLUED_TOKEN) continue;
+    // A letter on either side means this run is part of a longer token — a camel
+    // join, which `glued_words` already owns.
+    const before = m.index > 0 ? text[m.index - 1] : "";
+    const after = text[m.index + token.length] ?? "";
+    if ((before && letter.test(before)) || (after && letter.test(after))) continue;
+    if (looksLikeUrl(text, m.index) || insideAddress(text, m.index)) continue;
+    const pair = splitIntoKnownPair(token);
+    if (!pair) continue;
+    count++;
+    if (samples.length < MAX_SAMPLES) {
+      samples.push({
+        line: lineOf(text, m.index),
+        excerpt: excerptAt(text, m.index, m.index + token.length),
+        note: `${pair[0]} + ${pair[1]}`,
+      });
+    }
+  }
+  return { count, samples };
+}
+
+/**
  * `draft.ts` caps a stored idea with `idea.slice(0, MAX_IDEA_LENGTH)` — on the
  * RAW string, so compare raw length here: a cut that lands on a space would trim
  * back to 7999 and the cap would go unreported.
@@ -231,6 +399,7 @@ export function detectInputDamage(idea: string): InputDamageReport {
       collect(text, CLAUSE_JOIN, (m) => !looksLikeUrl(text, m.index)),
     ),
   );
+  add("glued_known_words", "likely_damage", gluedKnownWords(text));
   add("long_token", "likely_damage", collect(text, LONG_TOKEN));
   add("truncated_tail", "likely_damage", truncatedTail(text));
   add("hard_wrap", "worth_checking", collect(text, HARD_WRAP), HARD_WRAP_MIN);

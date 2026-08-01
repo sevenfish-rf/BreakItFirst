@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties, type ReactElement } from "react";
+import { SpofFeedback } from "@/components/spof-feedback";
 import { FAILURE_ARCHETYPES } from "@/lib/archetypes";
 import { useLanguage } from "@/lib/i18n/context";
 import {
@@ -693,6 +694,7 @@ export function AnalysisReport({
               </ul>
             </div>
           ) : null}
+          <SpofFeedback analysis={analysis} />
         </div>
 
         {/* 04 cascade */}

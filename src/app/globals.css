@@ -2080,6 +2080,269 @@ html.dark .btn-tool--primary {
   margin: 4px 0 0;
 }
 
+/* ============================================================
+   S6/N6 — hinge feedback (sits under 03/03b)
+   One question, three answers that are NOT equivalent. The panel
+   frames it as the report's one interactive ask; each answer says
+   what it records instead of being an unlabelled chip; the privacy
+   line is a footnote, not a peer of the question. Colour appears
+   only on hover/focus and maps to meaning: calm = landed,
+   signal = wrong hinge, amber = true but not new.
+   ============================================================ */
+.spof-feedback {
+  margin-top: 28px;
+  max-width: 820px;
+  background: var(--bg-raised);
+  border: 1px solid var(--hair-soft);
+  border-radius: 10px;
+  padding: 14px 16px 12px;
+}
+
+.fb-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+.fb-tag {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  border: 1px solid var(--hair);
+  border-radius: 5px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+.fb-q {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* Three answers, equal width — never a run-on row of chips. */
+.fb-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fb-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  font-family: inherit;
+  background: var(--bg-inset);
+  border: 1px solid var(--hair);
+  border-left: 2px solid var(--hair);
+  border-radius: 8px;
+  padding: 9px 12px;
+  min-height: 46px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s var(--ease);
+}
+
+.fb-btn-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.fb-btn-hint {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ink-3);
+}
+
+.fb-btn:hover:not(:disabled),
+.fb-btn:focus-visible {
+  outline: none;
+  background: var(--bg);
+  transform: translateY(-1px);
+}
+
+.fb-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* The three answers are not interchangeable, so the edge says which is which. */
+.fb-btn--confirmed:hover:not(:disabled),
+.fb-btn--confirmed:focus-visible {
+  border-left-color: var(--calm);
+}
+
+.fb-btn--wrong_hinge:hover:not(:disabled),
+.fb-btn--wrong_hinge:focus-visible {
+  border-left-color: var(--signal);
+}
+
+.fb-btn--already_knew:hover:not(:disabled),
+.fb-btn--already_knew:focus-visible {
+  border-left-color: var(--amber);
+}
+
+.fb-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Same height as the answer row, so voting never jumps the page. */
+.fb-ack {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 54px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.fb-ack-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--calm);
+}
+
+/* The dot repeats the colour of the answer that was given. */
+.fb-ack--wrong_hinge .fb-ack-dot {
+  background: var(--signal);
+}
+
+.fb-ack--already_knew .fb-ack-dot {
+  background: var(--amber);
+}
+
+.fb-ack--warn {
+  color: var(--amber);
+}
+
+.fb-ack--warn .fb-ack-dot {
+  background: var(--amber);
+}
+
+.fb-alt {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hair-soft);
+}
+
+.fb-alt-label {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.fb-alt-input {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--bg-inset);
+  border: 1px solid var(--hair);
+  border-radius: 7px;
+  padding: 8px 11px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.fb-alt-input:focus-visible {
+  outline: none;
+  border-color: var(--amber);
+}
+
+.fb-alt-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Matches .analyze-btn's ink-on-paper idiom, one size down. */
+.fb-send {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: #fcf9f3;
+  background: var(--ink);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+html.dark .fb-send {
+  color: #171310;
+}
+
+.fb-send:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.fb-send:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.fb-alt-count {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+
+/* Footnote — quieter than the question it sits under. */
+.fb-foot {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair-soft);
+  color: var(--ink-3);
+}
+
+.fb-foot svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.fb-note {
+  flex: 1 1 auto;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .spof-feedback {
+    padding: 13px 13px 11px;
+  }
+
+  .fb-row {
+    grid-template-columns: 1fr;
+  }
+
+  .fb-btn {
+    min-height: 0;
+  }
+}
+
 /* warnings callout (app extension) */
 .callout {
   display: flex;

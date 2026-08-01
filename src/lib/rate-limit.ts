@@ -40,6 +40,15 @@ export const LIMITS = {
     limit: 40,
     windowMs: 60 * 1000, // 40 model-list calls / min
   },
+  /**
+   * S6 — one-click SPOF feedback. Costs us nothing to serve (no provider call),
+   * but the endpoint is unauthenticated and appends to disk, so it is capped.
+   * 20/min is far above one human clicking one button and far below a flood.
+   */
+  feedback: {
+    limit: 20,
+    windowMs: 60 * 1000,
+  },
   abuseStrikeWindowMs: 60 * 60 * 1000, // 1 hour
   abuseStrikeThreshold: 3, // 3× not_analyzable → strict mode
 } as const;
@@ -61,7 +70,7 @@ function getClientKey(parts: {
 export function checkRateLimit(params: {
   ip: string;
   sessionId?: string | null;
-  route: "analyze" | "models";
+  route: "analyze" | "models" | "feedback";
   strict?: boolean;
   /**
    * How many slots this request consumes (Deep analysis = 2).
@@ -74,9 +83,11 @@ export function checkRateLimit(params: {
   const cfg =
     params.route === "models"
       ? LIMITS.models
-      : params.strict
-        ? LIMITS.analyzeStrict
-        : LIMITS.analyze;
+      : params.route === "feedback"
+        ? LIMITS.feedback
+        : params.strict
+          ? LIMITS.analyzeStrict
+          : LIMITS.analyze;
 
   const key = getClientKey({
     ip: params.ip,

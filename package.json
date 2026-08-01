@@ -19,6 +19,7 @@
     "eval:hinge-check": "tsx --tsconfig tsconfig.json eval/hinge-check.ts",
     "eval:provider-check": "tsx --tsconfig tsconfig.json eval/provider-check.ts",
     "eval:traces": "tsx --tsconfig tsconfig.json eval/read-traces.ts",
+    "eval:feedback": "tsx --tsconfig tsconfig.json eval/read-feedback.ts",
     "smoke:session": "tsx --tsconfig tsconfig.json scripts/smoke-session-resilience.ts"
   },
   "dependencies": {

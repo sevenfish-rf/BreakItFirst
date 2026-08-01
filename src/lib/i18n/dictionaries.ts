@@ -131,6 +131,20 @@ export type Dictionary = {
     systemReading: string;
     systemReadingHint: string;
     restoredFromBrowser: string;
+    /** S6/N6 — one-click verdict on the hinge. */
+    feedback: {
+      tag: string;
+      question: string;
+      verdicts: { confirmed: string; wrong_hinge: string; already_knew: string };
+      hints: { confirmed: string; wrong_hinge: string; already_knew: string };
+      thanks: { confirmed: string; wrong_hinge: string; already_knew: string };
+      failed: string;
+      altLabel: string;
+      altPlaceholder: string;
+      altSend: string;
+      altThanks: string;
+      privacy: string;
+    };
   };
   modes: {
     technical: string;
@@ -195,6 +209,8 @@ const en: Dictionary = {
       times: (n) => (n === 1 ? "1 spot" : `${n} spots`),
       kinds: {
         glued_words: "Words run together where a space is missing",
+        glued_known_words:
+          "Two whole words joined with no space between them (the split is shown)",
         long_token: "An unbroken run of letters too long to be one word",
         hyphen_break: "A word split by a hyphen at a line break",
         invisible_chars: "Invisible characters (zero-width or soft hyphen)",
@@ -297,6 +313,32 @@ const en: Dictionary = {
       "How the model restated the idea before critiquing it (analysis contract)",
     restoredFromBrowser:
       "Restored last report from this browser (local storage)",
+    feedback: {
+      tag: "Hinge check",
+      question: "Is this the hinge?",
+      verdicts: {
+        confirmed: "Yes",
+        wrong_hinge: "Not this one",
+        already_knew: "I already knew this",
+      },
+      hints: {
+        confirmed: "Load-bearing, and new to me",
+        wrong_hinge: "The real hinge is elsewhere",
+        already_knew: "True, but not news",
+      },
+      thanks: {
+        confirmed: "Recorded — this hinge counted as new.",
+        wrong_hinge: "Recorded as a miss. That is the more useful answer.",
+        already_knew: "Recorded — true but not new. Noted as a miss on novelty.",
+      },
+      failed: "Could not record that. Nothing was saved.",
+      altLabel: "Which hinge would you have named? (optional)",
+      altPlaceholder: "e.g. suppliers can go direct once volume is proven",
+      altSend: "Send",
+      altThanks: "Correction recorded.",
+      privacy:
+        "Anonymous: your idea text is never sent — only a one-way fingerprint of it, the verdict, language and mode.",
+    },
   },
   modes: {
     technical: "Technical",
@@ -408,6 +450,8 @@ const id: Dictionary = {
       times: (n) => `${n} titik`,
       kinds: {
         glued_words: "Kata menempel karena spasi hilang",
+        glued_known_words:
+          "Dua kata utuh menempel tanpa spasi (pemisahannya ditunjukkan)",
         long_token: "Rentetan huruf tanpa spasi, terlalu panjang untuk satu kata",
         hyphen_break: "Kata terpotong tanda hubung di ujung baris",
         invisible_chars: "Karakter tak terlihat (zero-width atau soft hyphen)",
@@ -510,6 +554,32 @@ const id: Dictionary = {
       "Bagaimana model merumuskan ulang ide sebelum mengkritik (kontrak pemahaman)",
     restoredFromBrowser:
       "Laporan terakhir dipulihkan dari browser ini (local storage)",
+    feedback: {
+      tag: "Cek hinge",
+      question: "Apakah ini hinge-nya?",
+      verdicts: {
+        confirmed: "Ya",
+        wrong_hinge: "Bukan yang ini",
+        already_knew: "Sudah saya tahu",
+      },
+      hints: {
+        confirmed: "Menentukan, dan baru bagi saya",
+        wrong_hinge: "Hinge sebenarnya ada di tempat lain",
+        already_knew: "Benar, tapi bukan hal baru",
+      },
+      thanks: {
+        confirmed: "Tercatat — hinge ini dihitung sebagai hal baru.",
+        wrong_hinge: "Tercatat sebagai salah sasaran. Ini jawaban yang lebih berguna.",
+        already_knew: "Tercatat — benar tapi bukan hal baru. Dihitung gagal di sisi kebaruan.",
+      },
+      failed: "Gagal mencatat. Tidak ada yang tersimpan.",
+      altLabel: "Menurut kamu hinge-nya apa? (opsional)",
+      altPlaceholder: "mis. supplier bisa jalan langsung begitu volumenya terbukti",
+      altSend: "Kirim",
+      altThanks: "Koreksi tercatat.",
+      privacy:
+        "Anonim: teks idemu tidak pernah dikirim — hanya sidik jari satu arah dari teks itu, verdict, bahasa, dan mode.",
+    },
   },
   modes: {
     technical: "Teknis",

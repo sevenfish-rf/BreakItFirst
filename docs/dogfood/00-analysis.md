@@ -741,10 +741,10 @@ melanjutkan penomoran dari E18 / S4 / Q7 **seperti yang diusulkan saat itu**.
 | E19 | Engine | `rejected_candidates` top-level (2 item + alasan), wajib di Standard | P0 | todo | dogfood 3–5 | `schema.ts:111`, `prompts.ts:90/398` | Tutup cascade step 2; render di `<details>`, jangan jadi risk list kedua (E18) |
 | E20 | Engine | Skor kecukupan input (aktor/revenue/constraint/kompetitor/angka) → ceiling confidence | P1 | todo | dogfood 1–5 | `input-validation.ts`, `schema.ts` meta | Asumsi #1 di 5/5 run tak pernah dicek; jangan blokir, cukup gating confidence |
 | S5 | Surface | Tampilkan konteks yang hilang sebelum submit | P1 | todo | K4 | surface input | Pasangan UI dari E20 |
-| S6 | Surface | Feedback SPOF 1-klik: Ya / Bukan-yang-ini / Sudah-saya-tahu | P1 | todo | K1 | report UI + endpoint | **Butuh keputusan owner** — event anonim, tanpa teks ide |
+| S6 | Surface | Feedback SPOF 1-klik: Ya / Bukan-yang-ini / Sudah-saya-tahu | P1 | **done** | K1 | `src/lib/feedback-event.ts`, `src/lib/feedback-store.ts`, `src/app/api/feedback/route.ts`, `src/components/spof-feedback.tsx`, `eval/read-feedback.ts` | Shipped 2026-08-01 — event anonim, tanpa teks ide, hash di browser, sink append-only lokal. Menutup **transport**-nya K1, bukan K1: hitungannya lantai (per-proses), endpoint tanpa auth, dan tanpa akun ini mengukur reaksi, bukan hasil. Detail: `04-refine-backlog.md` baris S6 |
 | E21 | Engine | Bug: `meta.idea_input` korup/terpotong pada paste panjang | P1 | todo | `2test.md` | path idea_input / streaming | Reproduksi dulu; assertion identitas byte |
 | E22 | Engine | Turunkan `spof_agreement` dari overlap+match+deviasi; batas keragaman kandidat | P2 | todo | dogfood 4,5 | `schema.ts`, Pass 1.5 | "High" atas 2 kandidat isomorfik = tautologi |
-| P7 | Position | Akui `distribution_moat_erosion`=Yes; moat = bukti perubahan keputusan, bukan format | P1 | todo | dogfood 5 | `01-product.md`, landing | Belum ada di dokumen mana pun |
+| P7 | Position | Akui `distribution_moat_erosion`=Yes; moat = bukti perubahan keputusan, bukan format | P1 | **done** | dogfood 5 | `01-product.md`, landing | Shipped 2026-08-01 di `01-product.md` §1 (blok Moat + utang abuse) dan §6.1 (trade-off penyimpanan / K6). Copy landing dicek: tidak ada overclaim yang perlu diubah. Caveat tetap: run 5 satu-satunya kategori Business, jadi bisa efek kategori |
 | Q11 | Process | Catat utang: `abuse_fraud_spiral` balik ke Maybe/Yes saat provider produksi dipilih | P2 | todo | dogfood 1 vs 2–5 | `01-product.md` §1 | Verdict No hari ini bergantung pada BYOK dev-only |
 
 ---
@@ -814,7 +814,7 @@ Alasan urutannya:
 - [ ] `rejected_candidates` terisi di 5/5 fixture, kedua mode (N3) — **frozen** (Q11); pengganti Q9/Q12 sudah ada
 - [ ] delta C dan E pasca E9–E18 terukur dan tercatat di `Scoring/` (N4) — lihat koreksi saturasi di N4: pengukurnya harus diff label, bukan skor
 - [x] `04-refine-backlog.md` §1 memuat baris untuk temuan dogfood, dengan status akurat (Q8, Q9, Q10, Q11, Q12, Q13, Q14, E19)
-- [ ] `01-product.md` memuat P7 (moat) dan utang abuse — ID-nya sekarang **`E19`** (`Q11` dipakai untuk freeze)
+- [x] `01-product.md` memuat P7 (moat) dan utang abuse — ID-nya sekarang **`E19`** (`Q11` dipakai untuk freeze). Ditutup 2026-08-01: §1 memuat blok **Moat — honest reading (P7)** dan **Known debt** (`abuse_fraud_spiral` No hanya karena BYOK dev-only), §6.1 memuat trade-off penyimpanan (K6). Copy landing dicek terhadap overclaim: tidak ada yang perlu diubah — `headline`/`subhead`/`footerNote` (en + id) tidak mengklaim superioritas atau jaminan.
 
 ---
 

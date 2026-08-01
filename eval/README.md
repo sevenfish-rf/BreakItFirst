@@ -21,6 +21,7 @@ Fondasi masterplan **B.1** — ukur kualitas report sebelum/sesudah ubahan promp
 | `input-integrity.ts` | Offline: `meta.idea_input` byte-identik dengan teks yang dikirim? (N7/E21) |
 | `input-repro.ts` | Chromium sungguhan → `/app`: textarea + state React + body POST byte-identik? (K8/Q18) |
 | `read-traces.ts` | Baca dump `.breakitfirst-traces/` (`BIF_TRACE=1`) → hinge per draft + drift antar run |
+| `read-feedback.ts` | Baca sink feedback hinge S6 (`.breakitfirst-feedback/`) → hitung verdict, **offline, tanpa call provider** |
 | `provider-host.ts` | `hostOf()` — satu-satunya tempat yang memutuskan bagaimana endpoint provider boleh dicatat (host saja, tanpa scheme/path/kredensial) |
 | `provider-check.ts` | Preflight provider ~2 call: /models + 1 chat + 1 JSON-mode sebelum run mahal |
 | `baselines/<run_id>/` | Output tiap run baseline (auto-created) |
@@ -377,3 +378,40 @@ pemenangnya, jadi dua runner-up biasanya tidak ada di prose sama sekali dan tool
 ini tidak bisa memunculkan yang tidak pernah ditulis. Yang bisa dipulihkan
 adalah drift nyata: draft A vs draft B vs yang lolos Pass 1.5. Semua baris `~`
 adalah hasil regex atas prose, bukan field skema.
+
+## Baca feedback hinge (S6 / K1)
+
+Satu-satunya sinyal di produk ini yang datang dari **penilaian pembaca**, bukan
+dari model menilai dirinya sendiri. Tiap klik di laporan menulis satu event
+anonim ke `.breakitfirst-feedback/events-YYYY-MM.ndjson` (append-only,
+gitignored, **lokal saja**). Reader-nya offline penuh — **0 call provider, $0.**
+
+```bash
+npm run eval:feedback
+# folder lain (mis. hasil verifikasi terpisah):
+BIF_FEEDBACK_DIR=.tmp-fb npm run eval:feedback
+```
+
+Yang dihitung: jumlah + persentase tiap verdict, rate `confirmed` per locale dan
+per mode, jumlah hinge berbeda yang dinilai, koreksi yang ditulis pembaca, dan
+`Golden-fixture votes: n/total` (hash `idea` tiap `golden/*.json` dicocokkan
+dengan `idea_hash` event — jadi kita tahu berapa vote yang datang dari ide tes,
+bukan dari ide sungguhan).
+
+**Yang diukur:** apakah hinge itu (a) tepat dan baru → `confirmed`, (b) salah →
+`wrong_hinge` (bukti K1 langsung), atau (c) benar tapi **sudah diketahui** →
+`already_knew`. Yang ketiga adalah angka yang paling penting: itu kegagalan
+**E2**, mode gagal yang paling mudah disembunyikan di balik "secara teknis benar".
+
+**Yang tidak bisa diukur — baca sebelum mengutip angkanya:**
+
+- **Tanpa autentikasi.** Endpoint-nya publik, hanya dijaga tiga dinding (20/menit
+  per ip+session, body 4 KB, file 4 MB). Ini sinyal, bukan kotak suara teraudit.
+- **Hitungannya lantai, bukan total.** Sink-nya per-proses, per-instance, dan
+  tidak selamat dari redeploy — itu harga keputusan tanpa DB (K6, lihat
+  `01-product.md` §6.1).
+- **Reaksi, bukan hasil.** Tanpa akun kita tidak bisa membedakan satu orang
+  memilih lima kali dari lima orang memilih sekali, dan tidak bisa menanyakan
+  apakah keputusannya benar-benar berubah.
+- **Nol vote bukan lulus.** Selalu tulis `n` bersama rasionya, atau rasio itu
+  tidak berarti apa-apa.

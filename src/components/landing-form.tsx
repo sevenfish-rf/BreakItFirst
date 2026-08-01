@@ -488,7 +488,10 @@ export function LandingForm({
                     )
                   </span>
                   {f.samples.length ? (
-                    <code>{f.samples[0].excerpt}</code>
+                    <code>
+                      {f.samples[0].excerpt}
+                      {f.samples[0].note ? ` → ${f.samples[0].note}` : ""}
+                    </code>
                   ) : null}
                 </li>
               ))}

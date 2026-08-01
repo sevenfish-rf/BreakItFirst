@@ -28,7 +28,11 @@ Setup / API / schema → [02-develop.md](./02-develop.md)
 
 **Known product risk (dogfood + suite):** **false specificity** — analysis that looks idea-specific but is structurally generic. Engine rules now hunt camouflage and ban invent-then-attack (e.g. inventing RAG then attacking it).
 
+**Moat — honest reading (P7, dogfood run 5: `distribution_moat_erosion` = Yes):** the moat is **not** the format and **not** the prompt rules. Fixture C/E showed a better hinge beats better formatting, and 18 prompt rules can be reproduced in one afternoon by anyone who reads an output report. General-purpose AI, an internal team, a mentor, or a checklist can imitate most of this workflow. **The only defensible asset is accumulated evidence that the hinge is right and changed a decision** — which is why the feedback loop (S6) and the stability/collision harnesses are product work, not QA. Until that evidence exists, treat "premortem engine" as a claim under test, not a position. Consistent with §2.2 of the dogfood analysis: technical resilience 20 vs business 15–20 — the engine runs, the story is unproven.
+
 **BYOK today:** owner/dev testing. Production direction: fixed mainstream provider(s) chosen by the product — not end-user key as the long-term model.
+
+**Known debt, identified before the migration starts (dogfood run 1 vs 2–5):** `abuse_fraud_spiral` reads **No** today *only because BYOK is development-only* — no public API key, no free tier, no metered public endpoint, no payment loop. Run 1, which assumed BYOK stayed, read **Maybe** (key sharing, someone else's session). The moment a production provider is chosen and there is a metered public endpoint, this verdict returns to **Maybe/Yes** and abuse control becomes real work, not a checklist item. Today's No is a consequence of a temporary posture, not a property of the design.
 
 ---
 
@@ -241,6 +245,16 @@ Exception: resilience 0–100 ints (still not success probability).
 | “AI multi-pass” as USP | Value = sharpness |
 | Server report DB | Client history max 10 |
 | Redis multi-instance | Deferred |
+
+### 6.1 The storage decision is a trade-off, not a free win (K6)
+
+"No server report DB, client history max 10" is a real privacy position and it stays. But it is **not** costless, and the cost was invisible until dogfood named it:
+
+- **What it buys.** No idea text at rest on our side, no account, nothing to leak, nothing to subpoena. A user can paste an unfiled idea and close the tab.
+- **What it costs.** It closes the only path to **K1 ground truth** — whether a chosen hinge was actually right and actually changed a decision. §1 says that accumulated evidence is the only possible moat (P7). The privacy decision and the moat pull in opposite directions. Both statements are true at once; that is what makes it a trade-off rather than an oversight.
+- **How S6 reopens it without reversing it.** The hinge feedback loop stores an **anonymous event, never the idea text**: `{v, verdict, spof_hash, idea_hash, locale, mode, category, alt_hinge?, ts}` — hashes computed in the browser, no identity, no session id, append-only NDJSON (`src/lib/feedback-store.ts`), gitignored, local. The hashes are a **fingerprint, not anonymisation against someone who already holds a candidate string**, and no UI copy may call them "encrypted".
+- **What it therefore cannot tell us.** The sink is per-process and per-instance and does not survive a redeploy, so counts are a **floor, never a total** (`eval/read-feedback.ts` says so in its own header). The endpoint is **unauthenticated**: 20/min per ip+session, 4 KB body, 4 MB file — three walls, not a ballot box. Any number quoted from it must carry its `n`.
+- **The honest limit of the whole approach.** Without an account we cannot tell one user voting five times from five users voting once, and we cannot follow up to learn whether a decision actually changed. S6 measures *reaction*, not *outcome*. Closing that last gap needs something this product has decided not to have.
 
 ---
 

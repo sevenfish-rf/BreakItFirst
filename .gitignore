@@ -30,6 +30,9 @@
 # BIF_TRACE=1 raw pass dumps (contain idea text + full model output; local only)
 .breakitfirst-traces/
 
+# S6 anonymous hinge feedback (no idea text, but still user input — local only)
+.breakitfirst-feedback/
+
 # third-party agent skills / tools (local only — do not push)
 .vendor/
 .agents/
