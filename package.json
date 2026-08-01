@@ -14,6 +14,7 @@
     "eval:stability": "tsx --tsconfig tsconfig.json eval/stability.ts",
     "eval:locale-flip": "tsx --tsconfig tsconfig.json eval/locale-flip.ts",
     "eval:collision-check": "tsx --tsconfig tsconfig.json eval/collision-check.ts",
+    "eval:specificity-check": "tsx --tsconfig tsconfig.json eval/specificity-check.ts",
     "eval:input-integrity": "tsx --tsconfig tsconfig.json eval/input-integrity.ts",
     "eval:input-repro": "tsx --tsconfig tsconfig.json eval/input-repro.ts",
     "eval:hinge-check": "tsx --tsconfig tsconfig.json eval/hinge-check.ts",

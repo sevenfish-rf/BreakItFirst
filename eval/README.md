@@ -18,6 +18,7 @@ Fondasi masterplan **B.1** — ukur kualitas report sebelum/sesudah ubahan promp
 | `hinge-check.ts` | Preflight offline: bentuk fixture + screen tidak degenerate |
 | `locale-flip.ts` | Ide sama dijalankan `en` vs `id`; diff tiga band enum (K7) |
 | `collision-check.ts` | Offline: 5 ide berbeda → 5 hinge berbeda? (diskriminasi, N2) |
+| `specificity-check.ts` | Offline: nama produk & kategori disensor, lalu laporan ditebak balik ke ide mana? (spesifisitas name-blind, N1b / K2) |
 | `input-integrity.ts` | Offline: `meta.idea_input` byte-identik dengan teks yang dikirim? (N7/E21) |
 | `input-repro.ts` | Chromium sungguhan → `/app`: textarea + state React + body POST byte-identik? (K8/Q18) |
 | `read-traces.ts` | Baca dump `.breakitfirst-traces/` (`BIF_TRACE=1`) → hinge per draft + drift antar run |
@@ -27,6 +28,7 @@ Fondasi masterplan **B.1** — ukur kualitas report sebelum/sesudah ubahan promp
 | `baselines/<run_id>/` | Output tiap run baseline (auto-created) |
 | `stability/<run_id>/` | Output tiap run stabilitas (auto-created) |
 | `input-repro/<run_id>/` | Output repro browser — berisi teks ide + body POST, **gitignored, lokal saja** |
+| `specificity/<run_id>/` | Laporan spesifisitas name-blind — mengutip prosa SPOF + anchor ide, **gitignored, lokal saja** |
 
 ## Setup env
 
@@ -256,6 +258,66 @@ antara 02 & 04. Baca `collision` sebagai *"pergi baca dua SPOF ini
 berdampingan"*, dan baca 0 collision sebagai *"tidak terdeteksi template"*,
 **bukan** *"lima analisis independen terkonfirmasi"*. Catat count + baseline id di
 Q17 (`docs/04-refine-backlog.md`).
+
+## Uji spesifisitas name-blind (N1b / K2)
+
+`rubric.md` menyebut tes ini tiga kali dengan kata-kata berbeda — *"ganti nama
+produk di kepala, apakah analisis ini masih terdengar benar?"*, G1 *"ganti nama
+produk → SPOF/assumptions **tidak** tetap valid"*, dan langkah 4 di `2test.md` —
+tapi sampai K2 tes itu **nol kali ada di kode**. Semuanya mental check manual,
+jadi tidak pernah dijalankan atas 100+ analisis yang sudah menumpuk di disk.
+
+Harness ini menjalankannya otomatis dan **offline**: nama produk, kategori, dan
+proper noun disensor dari analisis *dan* dari kelima ide sekaligus (mask
+seragam — bukan per-fixture, supaya fixture 01 tidak menyimpan kata `billing`
+yang sudah dibuang dari fixture 02). Sisa token dicocokkan ke **anchor** tiap
+ide (token yang muncul di ide itu dan **tidak** di ide lain), lalu ditanya:
+laporan ini paling menjelaskan ide yang mana?
+
+```bash
+npm run eval:specificity-check
+# satu run saja — piggyback di run Gate 2 yang baru dibayar:
+BIF_SPEC_RUN=2026-08-01_005921 npm run eval:specificity-check
+# batasi sumber / fixture:
+BIF_SPEC_SOURCE=stability npm run eval:specificity-check
+BIF_SPEC_ONLY=03-ai-therapy-chat npm run eval:specificity-check
+# gate CI — exit 1 kalau ada analisis yang `generic`:
+BIF_SPEC_GATE=1 npm run eval:specificity-check
+```
+
+Membaca `baselines/`, `stability/`, dan `locale-flip/` yang **sudah ada** di
+disk. Tidak ada panggilan provider, tidak ada kredit terpakai. Output ke
+`specificity/<run_id>/{REPORT.md,summary.json}` — gitignored.
+
+| Verdict | Arti |
+|---------|------|
+| `specific` | ide sendiri menang, grounding cukup, margin di atas ambang |
+| `weak` | ide sendiri **masih** menang tapi tipis (grounding rendah atau margin sempit) — dibaca, tidak menggerbang |
+| `generic` | `margin <= 0`: ide lain menjelaskan laporan ini **sama baiknya atau lebih baik** → ini yang digerbang, kriteria lulus = 0 |
+
+Yang digerbang **bebas konstanta**: `generic` menyala kalau `margin <= 0`, jadi
+tak ada angka yang bisa diperdebatkan setelah hasil keluar. `OWN_MIN` /
+`MARGIN_MIN` hanya membelah sisi yang lulus jadi `specific` vs `weak`.
+
+Tiga kontrol diskriminasi ikut dijalankan tiap run, dan **gagalnya kontrol
+selalu exit 1 walau gate mati** — instrumen yang tak bisa mendeteksi kegagalan
+buatan tak berhak melaporkan kelulusan:
+
+- **anchor floor** — tiap ide harus menyisakan ≥8 anchor setelah masking, kalau tidak mask-nya terlalu lebar.
+- **boilerplate probe** — paragraf 8 baris yang sengaja idea-agnostic harus tetap di bawah grounding floor untuk kelima ide, dan tak boleh pernah terbaca `specific`.
+- **swap control** — tiap analisis Inggris dilabel ulang sebagai keempat ide lainnya; semuanya harus `generic`.
+
+Dilaporkan tapi **tidak** digerbang: **skeleton similarity** — Jaccard prosa
+setelah anchor **semua** ide dibuang, jadi yang tersisa cuma kerangka
+pelaporannya. Angka absolutnya tak punya arti; yang bisa dibaca cuma kontras
+*ide sama* vs *ide beda*.
+
+**Batasnya, dan ini penting sebelum angka apa pun dikutip:**
+
+1. Lima fixture yang ada **sengaja dibuat sejauh mungkin** satu dari yang lain (marketplace, API billing, therapy chat, wiki SaaS, hardware ring). Menebak balik di antara lima domain tak berhubungan itu **mudah**, jadi "0 `generic`" adalah **lulus yang lemah** — tes yang sesungguhnya butuh fixture *bertetangga* (misal marketplace kedua). Menulis fixture-nya $0; menskornya butuh run berbayar.
+2. Anchor adalah **kata-kata ide itu sendiri**, jadi harness ini memberi nilai tinggi ke analisis yang mengutip input. Kegagalan sebaliknya — template yang slot-nya diisi kata benda si ide, jadi terdengar spesifik padahal kerangkanya sama — tidak tertangkap di sini; itu tugas `collision-check.ts`. Dua harness, dua sumbu: collision membandingkan **dua analisis** satu sama lain, ini membandingkan **satu analisis** ke **lima ide**.
+3. Analisis non-Inggris **tidak diskor** (anchor-nya token Inggris), jadi laporan `id` masuk daftar "not scored", bukan lulus.
+4. Satu corpus = satu pengukuran atas **satu versi prompt**. Variant `strip` juga sudah kehilangan merek & kota **di input**-nya, jadi anchor-nya memang lebih tipis by design.
 
 ## Invarian integritas input (N7/E21)
 
