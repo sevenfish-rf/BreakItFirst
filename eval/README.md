@@ -165,6 +165,22 @@ membuat screen **lebih kecil** kemungkinannya mengarang drift, dan karenanya
 `shift` palsu berujung revert engine, `shift` yang terlewat cuma berujung baca
 prosa lebih teliti.
 
+**Negation guard (2026-08-01).** Stem dihitung **per kemunculan**, dan kemunculan
+yang duduk di dalam *penyangkalan pembanding atas tema itu sendiri* dibuang:
+`unlike X`, `rather than X`, `instead of X`, `is not X`, dan bentuk tanpa objek
+`X is not.` — yang terakhir adalah misfire nyata (`churn` di dalam klausa "its
+failure is unrecoverable **in a way churn is not**" tercatat sebagai bukti untuk
+`churn`, dan itu satu-satunya `shift` di gate run 2026-08-01). Ruang lingkupnya
+sengaja sempit karena **negasi bukan ketiadaan**: "the filter does not prevent
+liability" menyangkal *verba*-nya dan tetap bicara soal `liability`, jadi tetap
+dihitung; `is not addressed by churn` juga tetap dihitung karena ada objek
+sesudahnya. Stem yang **semua** kemunculannya dibuang muncul di
+`ThemeMatch.dismissed` / `dismissedStems()` supaya laporan bisa menyebut apa yang
+dihapus, bukan cuma menampilkan skor yang mengecil tanpa sebab. Yang tidak
+dibelinya: ini tiga regex pada jendela 48/24 karakter — "far from churn" atau
+"churn plays no role" masih lolos. Satu mode kegagalan hilang, screen-nya belum
+paham negasi.
+
 Batasnya harus dinyatakan: **tema lebih kasar daripada hinge.** Dua mekanisme
 yang benar-benar berbeda tapi masih di satu tema (biaya retur vs biaya komponen,
 dua-duanya `margins`) juga keluar `same`. Jadi baca `same` sebagai *tidak

@@ -29,6 +29,7 @@ import { likelihoodStatedAsPercent } from "./assertions";
 import {
   compareHinge,
   describeSide,
+  dismissedStems,
   loadThemeKeywords,
   matchThemes,
   primaryTheme,
@@ -212,7 +213,63 @@ async function main() {
   ];
   for (const [pass, why] of grammar) check(pass, `stem grammar: ${why}`);
 
-  // 7. Tie behaviour (Q20). Before, a tie was settled by the theme name's first
+  // 7. Negation guard (2026-08-01). The only `shift` in the 2026-08-01 gate run
+  //    came from one literal `churn` inside "its failure is unrecoverable in a way
+  //    churn is not" — prose saying the mechanism is NOT churn scored as evidence
+  //    for `churn`. Pinned in BOTH directions, because the tempting wider rule is
+  //    wrong: negation is not absence. A sentence that negates a *verb* ("does not
+  //    prevent liability") is still an argument about the theme and must keep
+  //    firing; only a comparative dismissal of the named theme itself is dropped,
+  //    and only at that occurrence.
+  const negation: [boolean, string][] = [
+    [
+      !themesOf(
+        "The crisis filter fails silently, and its failure is unrecoverable in a way churn is not.",
+      ).includes("churn"),
+      "`churn is not.` (the real 2026-08-01 misfire) still scores as evidence for `churn`",
+    ],
+    [
+      themesOf("Its failure is unrecoverable in a way churn is not measured by.").includes("churn"),
+      "`churn is not measured by` was dismissed — an object follows, so the clause is still about churn",
+    ],
+    [
+      !themesOf("A claim-level failure rather than a defect.").includes("defects"),
+      "`rather than a defect` still scores as evidence for `defects`",
+    ],
+    [
+      !themesOf("The risk is unlike churn: it does not recover.").includes("churn"),
+      "`unlike churn` still scores as evidence for `churn`",
+    ],
+    [
+      !themesOf("This is not churn, it is a licensing wall.").includes("churn"),
+      "`is not churn` still scores as evidence for `churn`",
+    ],
+    [
+      !themesOf("The failure mode is instead of churn a hard stop.").includes("churn"),
+      "`instead of churn` still scores as evidence for `churn`",
+    ],
+    [
+      themesOf("The keyword filter does not prevent liability.").includes("liability"),
+      "verb negation dropped a real mention — negation is being read as absence",
+    ],
+    [
+      themesOf("The gap is not addressed by churn measurement at all.").includes("churn"),
+      "`is not addressed by churn` was dismissed — an object follows, the sentence is still about the theme",
+    ],
+    [
+      themesOf("Churn is not the only exposure: churn compounds every month.").includes("churn"),
+      "one dismissed occurrence suppressed the whole stem — the guard must be per-occurrence",
+    ],
+    [
+      dismissedStems("A claim-level failure rather than a defect.", keywords).some(
+        (d) => d.theme === "defects" && d.stems.includes("defect*"),
+      ),
+      "`dismissedStems` does not report what the guard removed — a report would show a silent hole",
+    ],
+  ];
+  for (const [pass, why] of negation) check(pass, `negation guard: ${why}`);
+
+  // 8. Tie behaviour (Q20). Before, a tie was settled by the theme name's first
   //    letter — 49 of 109 recorded primaries were decided that way. Now a tie is
   //    reported as a group and compared as a group: `primary` abstains, but the
   //    verdict does not.
@@ -247,7 +304,7 @@ async function main() {
     `tie probe: a side matching no stem scored "${abstained.verdict}" — expected "unmatched", the screen must abstain rather than guess`,
   );
 
-  // 8. `likelihood_not_percent` (Q20). The rule is "don't dress a judgement up as
+  // 9. `likelihood_not_percent` (Q20). The rule is "don't dress a judgement up as
   //    a probability", not "don't mention a percentage" — the first version failed
   //    a real fixture on the *idea's own take rate*, which is the analysis quoting
   //    its input. Both directions are pinned because narrowing it too far would
@@ -278,7 +335,7 @@ async function main() {
     `Screen probes: rephrased → ${rephrased.verdict}, different → ${different.verdict}, co-valid → ${coValid.verdict}, escaped → ${frameEscape.verdict}`,
   );
   console.log(
-    `Grammar probes: ${grammar.length} stem cases · tie group → ${topGroup(tied).join("/")} (primary abstains) · percent assertion pinned both ways`,
+    `Grammar probes: ${grammar.length} stem cases · ${negation.length} negation-guard cases (dismissal suppressed / verb negation kept) · tie group → ${topGroup(tied).join("/")} (primary abstains) · percent assertion pinned both ways`,
   );
   for (const n of notes) console.log(`  note: ${n}`);
 
