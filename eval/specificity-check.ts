@@ -14,9 +14,26 @@
  * provider calls, no credits.
  *
  * How: mask the product name, the category label and every proper noun out of
- * BOTH the analysis and the five golden ideas, then ask which idea the masked
+ * BOTH the analysis and every idea in the corpus, then ask which idea the masked
  * analysis best describes. What is left to identify an idea by is precisely what
  * `2test.md` asks about — actors and causal sequence.
+ *
+ * ADJACENT IDEAS (2026-08-02). The first version of this harness compared each
+ * analysis against the five golden fixtures only — and those five were authored to
+ * be *unrelated*, so attributing a report to its own input was easy and "0
+ * `generic`" was a weak pass. `eval/golden-adjacent/` fixes the corpus, not the
+ * code: near neighbours that share the surface of an existing fixture (same city,
+ * same buildings, same take-rate ritual / same endpoint shape, key auth, free
+ * tier, nightly batch) while turning on a different hinge. They enter the mask and
+ * the rival set; they are never run, so this stays $0 and the gate's own cost is
+ * unchanged (`eval/golden` is what `eval:baseline` and `eval:stability` iterate).
+ * Adjacency is not uniform and the report says which is which: `06`↔`01` and
+ * `07`↔`02` are lexically tight, `08` is a structural neighbour of the metering
+ * pair with its own vocabulary.
+ *
+ * Because this changes what every recorded specificity number means, the before /
+ * after is reproducible rather than asserted: `BIF_SPEC_ADJACENT=0` restores the
+ * five-idea corpus exactly.
  *
  *   own       — share of this idea's DISTINCTIVE masked anchors present in the
  *               analysis (distinctive = appears in this idea and in no other).
@@ -27,9 +44,9 @@
  *               only barely; `specific` otherwise.
  *
  * This is the axis `collision-check.ts` cannot see and vice versa: collision
- * compares two ANALYSES to each other, this compares one analysis to the five
- * IDEAS. A pair of analyses can be perfectly distinct from each other and still
- * both be un-anchored boilerplate about their own inputs.
+ * compares two ANALYSES to each other, this compares one analysis to every IDEA in
+ * the corpus. A pair of analyses can be perfectly distinct from each other and
+ * still both be un-anchored boilerplate about their own inputs.
  *
  * HONEST LIMITS. Every number here is lexical. An analysis that engages the
  * idea's mechanism in words the idea never used scores as `weak` unfairly, and
@@ -42,6 +59,8 @@
  * Env: BIF_SPEC_SOURCE=all|baselines|stability|locale-flip   (default: all)
  *      BIF_SPEC_RUN=<run_id>   score one run only (piggyback on a Gate 2 run)
  *      BIF_SPEC_ONLY=<fixture-id>
+ *      BIF_SPEC_ADJACENT=0     drop `eval/golden-adjacent` — reproduces the
+ *                              five-idea corpus used before 2026-08-02
  *      BIF_SPEC_GATE=1         exit non-zero if any analysis scores `generic`
  *
  * Usage: npm run eval:specificity-check
@@ -53,6 +72,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GOLDEN_DIR = path.join(__dirname, "golden");
+/** Near neighbours of a golden idea — rivals and mask only, never run. */
+const ADJACENT_DIR = path.join(__dirname, "golden-adjacent");
 const OUT_ROOT = path.join(__dirname, "specificity");
 
 /** Run roots that hold `raw/*.json` dumps of a completed analysis. */
@@ -137,15 +158,19 @@ export type Fixture = {
   category: string;
   locale?: string;
   idea: string;
+  /** Set at load time: came from `golden-adjacent`, so it rivals but is never run. */
+  adjacent?: boolean;
+  /** Which golden fixture this one was written to crowd. */
+  adjacent_to?: string;
 };
 
 /**
  * The mask — "the product name and the category", made literal.
  *
- * Built as the UNION over all five fixtures and applied to every text, analysis
- * and idea alike. Per-fixture masking would leave fixture 01 keeping the word
- * `billing` while fixture 02 had it removed, so 01 could win an attribution on
- * 02's own vocabulary.
+ * Built as the UNION over every fixture in the corpus and applied to every text,
+ * analysis and idea alike. Per-fixture masking would leave fixture 01 keeping the
+ * word `billing` while fixture 02 had it removed, so 01 could win an attribution
+ * on 02's own vocabulary.
  *
  * Three sources, each named by the test this instrument implements:
  *   - title tokens      — the product name ("Neighborhood pet-sitting marketplace")
@@ -594,6 +619,7 @@ function buildReport(
   probes: ReturnType<typeof runProbes>,
   skeleton: SkeletonStats,
 ): string {
+  const adjacent = fixtures.filter((f) => f.adjacent);
   const L: string[] = [];
   L.push(`# Name-blind specificity check (N1b / K2) — ${runId}`);
   L.push("");
@@ -601,9 +627,9 @@ function buildReport(
     "**What this measures:** the *"
       + "Tes spesifisitas* that `rubric.md` has only ever asked a human to do in their "
       + "head. The product name, the category label and every proper noun are masked "
-      + "out of both the report and the five golden ideas; what is left to identify an "
-      + "idea by is its actors and causal sequence. An analysis that its own input no "
-      + "longer explains better than somebody else's input is a template. "
+      + `out of both the report and all ${fixtures.length} corpus ideas; what is left to `
+      + "identify an idea by is its actors and causal sequence. An analysis that its own "
+      + "input no longer explains better than somebody else's input is a template. "
       + "**What it can't:** every number here is lexical — engaging a mechanism in "
       + "words the idea never used scores low unfairly, and name-dropping the idea's "
       + "nouns without arguing anything scores high unfairly. Read `generic` as *go "
@@ -613,13 +639,25 @@ function buildReport(
   L.push("");
   L.push("Offline: reads analyses already on disk, no provider calls, no credits.");
   L.push("");
+  if (adjacent.length > 0) {
+    L.push(
+      `**Corpus:** ${fixtures.length - adjacent.length} golden ideas (run by the gate) + `
+        + `**${adjacent.length} adjacent ideas** from \`eval/golden-adjacent\` that rival for `
+        + "attribution but are never run. They exist because the golden five were authored "
+        + "to be unrelated, which made attribution easy and `0 generic` a weak pass. "
+        + "`BIF_SPEC_ADJACENT=0` drops them and reproduces the pre-2026-08-02 numbers "
+        + "exactly.",
+    );
+    L.push("");
+  }
   L.push("## Anchors per idea (after masking)");
   L.push("");
-  L.push("| Fixture | Distinctive anchors | Sample |");
-  L.push("|---|---|---|");
+  L.push("| Fixture | Kind | Distinctive anchors | Sample |");
+  L.push("|---|---|---|---|");
   for (const f of fixtures) {
     const a = [...(anchors.get(f.id) ?? new Set<string>())].sort();
-    L.push(`| ${f.id} | ${a.length} | ${cell(a.slice(0, 12).join(", "))} |`);
+    const kind = f.adjacent ? `adjacent → \`${cell(f.adjacent_to)}\`` : "golden";
+    L.push(`| ${f.id} | ${kind} | ${a.length} | ${cell(a.slice(0, 12).join(", "))} |`);
   }
   L.push("");
 
@@ -680,6 +718,40 @@ function buildReport(
     L.push("");
   }
 
+  if (adjacent.length > 0 && rows.length > 0) {
+    L.push("## Near-neighbour pressure — what the adjacent ideas actually cost");
+    L.push("");
+    L.push(
+      "The adjacent ideas were authored to crowd a specific golden fixture, so the "
+        + "question is whether they now out-explain it. `own` unchanged next to a rising "
+        + "`rival` means the report is anchored in its own mechanism; `rival` overtaking "
+        + "`own` is exactly the `generic` the gate fires on. A neighbour that never "
+        + "becomes anybody's nearest rival added no pressure and should be rewritten, "
+        + "not counted as coverage.",
+    );
+    L.push("");
+    L.push("| Adjacent idea | Crowds | Nearest rival for | Mean rival score it reaches | Max |");
+    L.push("|---|---|---|---|---|");
+    for (const f of adjacent) {
+      const set = anchors.get(f.id) ?? new Set<string>();
+      const scores = rows.map((r) => coverage(set, r.tokens).score);
+      const nearest = rows.filter((r) => r.attribution.rival_id === f.id).length;
+      L.push(
+        `| ${f.id} | ${cell(f.adjacent_to)} | ${nearest}/${rows.length} `
+          + `| ${pct(mean(scores))} | ${pct(scores.length ? Math.max(...scores) : 0)} |`,
+      );
+    }
+    L.push("");
+    const crowded = rows.filter((r) => adjacent.some((f) => f.id === r.attribution.rival_id));
+    L.push(
+      `**${crowded.length}/${rows.length}** analyses now have an *adjacent* idea as their `
+        + "nearest rival rather than another golden idea. Those are the rows where the "
+        + "margin is being defended against a near neighbour instead of against an "
+        + "unrelated business — read their prose first.",
+    );
+    L.push("");
+  }
+
   L.push("## Skeleton similarity — the failure anchor coverage cannot see");
   L.push("");
   L.push(
@@ -735,6 +807,11 @@ function buildReport(
   L.push(`| ✗ generic | ${generic.length} |`);
   L.push(`| of which thin grounding (own < ${pct(OWN_MIN)}) | ${thin.length} |`);
   L.push(`| mean own / mean rival | ${pct(mean(rows.map((r) => r.attribution.own)))} / ${pct(mean(rows.map((r) => r.attribution.rival)))} |`);
+  if (adjacent.length > 0) {
+    L.push(
+      `| nearest rival is an adjacent idea | ${rows.filter((r) => adjacent.some((f) => f.id === r.attribution.rival_id)).length} |`,
+    );
+  }
   L.push(`| Runs read | ${new Set(rows.map((r) => `${r.source}/${r.run}`)).size} |`);
   L.push("");
   L.push(
@@ -749,7 +826,10 @@ function buildReport(
   L.push(
     "**Read before quoting this as a K2 result.** (1) One corpus is one measurement "
       + "of one prompt version; the number that matters is the delta after a "
-      + "`prompts.ts` edit, against the same fixtures. (2) `strip` variants have the "
+      + "`prompts.ts` edit, against the same fixtures — and *against the same corpus*, "
+      + "because adding or removing an idea changes every `rival` and therefore every "
+      + "margin (`BIF_SPEC_ADJACENT=0` is how you reproduce the five-idea numbers). "
+      + "(2) `strip` variants have the "
       + "brand and city removed from the *input*, so a lower score there is partly the "
       + "rewrite, not the engine. (3) Anchors are the idea's own words, which rewards "
       + "an analysis that quotes the input; the collision harness "
@@ -761,11 +841,30 @@ function buildReport(
   return L.join("\n");
 }
 
-async function loadFixtures(): Promise<Fixture[]> {
-  const files = (await readdir(GOLDEN_DIR)).filter((f) => f.endsWith(".json")).sort();
+async function loadDir(dir: string, adjacent: boolean): Promise<Fixture[]> {
+  let files: string[];
+  try {
+    files = (await readdir(dir)).filter((f) => f.endsWith(".json")).sort();
+  } catch {
+    return [];
+  }
   return Promise.all(
-    files.map(async (f) => JSON.parse(await readFile(path.join(GOLDEN_DIR, f), "utf8")) as Fixture),
+    files.map(async (f) => {
+      const fixture = JSON.parse(await readFile(path.join(dir, f), "utf8")) as Fixture;
+      return adjacent ? { ...fixture, adjacent: true } : fixture;
+    }),
   );
+}
+
+/**
+ * Golden ideas first, then the adjacent ones. Order matters only for the report;
+ * `buildAnchors` treats every idea symmetrically, which is the point — an adjacent
+ * idea takes shared vocabulary away from its neighbour and vice versa.
+ */
+async function loadFixtures(includeAdjacent: boolean): Promise<Fixture[]> {
+  const golden = await loadDir(GOLDEN_DIR, false);
+  if (!includeAdjacent) return golden;
+  return [...golden, ...(await loadDir(ADJACENT_DIR, true))];
 }
 
 function stamp(): string {
@@ -787,7 +886,9 @@ async function main() {
     process.exit(1);
   }
 
-  const fixtures = await loadFixtures();
+  const adjacentEnv = process.env.BIF_SPEC_ADJACENT?.trim();
+  const includeAdjacent = !(adjacentEnv === "0" || adjacentEnv === "false");
+  const fixtures = await loadFixtures(includeAdjacent);
   const known = new Set(fixtures.map((f) => f.id));
   const mask = buildMask(fixtures);
   const anchors = buildAnchors(fixtures, mask);
@@ -821,10 +922,21 @@ async function main() {
   console.log(`\nBreakItFirst name-blind specificity check (N1b / K2) — ${runId}`);
   console.log(
     `Corpus: ${rows.length} English analyses from ${new Set(rows.map((r) => `${r.source}/${r.run}`)).size} run(s)` +
-      `${crossLang.length ? ` · ${crossLang.length} non-English skipped` : ""} · offline (no provider calls)\n`,
+      `${crossLang.length ? ` · ${crossLang.length} non-English skipped` : ""} · offline (no provider calls)`,
+  );
+  const adjacentIds = fixtures.filter((f) => f.adjacent).map((f) => f.id);
+  console.log(
+    `Ideas competing for attribution: ${fixtures.length}` +
+      (adjacentIds.length
+        ? ` (${fixtures.length - adjacentIds.length} golden + ${adjacentIds.length} adjacent, never run)`
+        : " (golden only — BIF_SPEC_ADJACENT=0)") +
+      "\n",
   );
   for (const f of fixtures) {
-    console.log(`  ${f.id}: ${(anchors.get(f.id) ?? new Set()).size} distinctive anchors`);
+    console.log(
+      `  ${f.id}: ${(anchors.get(f.id) ?? new Set()).size} distinctive anchors` +
+        (f.adjacent ? `  [adjacent → ${f.adjacent_to ?? "?"}]` : ""),
+    );
   }
   console.log("");
   for (const r of rows) {
@@ -857,6 +969,14 @@ async function main() {
         offline: true,
         thresholds: { OWN_MIN, MARGIN_MIN, MIN_ANCHORS },
         selection: { source: sourceEnv, run: runFilter ?? null, fixture: only ?? null },
+        corpus: {
+          ideas: fixtures.length,
+          adjacent_included: includeAdjacent,
+          golden: fixtures.filter((f) => !f.adjacent).map((f) => f.id),
+          adjacent: fixtures
+            .filter((f) => f.adjacent)
+            .map((f) => ({ id: f.id, crowds: f.adjacent_to ?? null })),
+        },
         anchors: Object.fromEntries([...anchors].map(([id, set]) => [id, [...set].sort()])),
         controls: {
           swap_total: probes.swapTotal,

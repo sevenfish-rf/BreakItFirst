@@ -1,0 +1,17 @@
+{
+  "id": "08-api-speech-credits",
+  "title": "Prepaid speech-to-text credits API",
+  "category": "API",
+  "locale": "en",
+  "adjacent_to": "02-api-usage-billing",
+  "adjacent_why": "Third member of the metering triple with 02 and 07 — same endpoint shape, same key auth, same nightly batch buyers, same latency promise. Different hinge: revenue is collected up front at a fixed rate while cost is owed later to one upstream vendor that can reprice, so the margin on credits already sold is not held by this company at all.",
+  "fragile_hint": "true",
+  "idea": "A developer API that transcribes uploaded audio and returns speaker-labelled text, sold as prepaid credit packs: 1,000 minutes for $60, credits valid for 12 months, free tier 30 minutes. Auth is API keys only. Every request is forwarded to one upstream speech vendor billed per second, which can reprice or deprecate a model on 30 days notice; the margin is the spread. Target customers are podcast tools and call-centre QA dashboards that submit long recordings in nightly batches. Latency is advertised as 'under 5 minutes per hour of audio', and diarization quality is not measured anywhere.",
+  "focus_notes": [
+    "Prepaid at a fixed rate, cost owed later per second to a vendor that can reprice",
+    "Single upstream speech vendor with no self-hosted fallback and no second source",
+    "Credits sold today are a 12-month liability against next year's cost",
+    "Speaker labelling is the differentiator and nothing measures whether it is right"
+  ],
+  "expected_spof_themes": ["provider lock-in", "pricing", "margins", "sla", "churn"]
+}

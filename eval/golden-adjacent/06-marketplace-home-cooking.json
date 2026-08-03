@@ -1,0 +1,17 @@
+{
+  "id": "06-marketplace-home-cooking",
+  "title": "Neighborhood home-cooking marketplace",
+  "category": "Marketplace",
+  "locale": "en",
+  "adjacent_to": "01-marketplace-pet-sitting",
+  "adjacent_why": "Same shape as 01 — same city, same buildings, same verified-neighbor trust ritual, same take-rate split, same waived liability. Different actors and a different hinge: a perishable handoff window and an unpermitted kitchen, not an unsupervised animal.",
+  "fragile_hint": "true",
+  "idea": "A mobile marketplace where residents of the same apartment complex order home-cooked lunch boxes from verified neighbors who cook in their own kitchens. Cooks keep 85% of the order value; the platform takes 15%. Trust is built via government ID, a kitchen photo tour, and the first three orders free for new cooks. Handoff happens in the lobby between cook and buyer — no couriers, no cold chain, and no food-handling permit is asked for at signup. Orders close at 10am for a 12pm pickup window, and one cook usually carries a whole tower. Launch city is Jakarta high-rises only.",
+  "focus_notes": [
+    "Foodborne illness with no permit, no insurance and a waived liability clause",
+    "One cook per tower — supply concentration inside a single building",
+    "Perishable pickup window: a missed 12pm handoff is unrecoverable, not rescheduled",
+    "Repeat orders move to a WhatsApp group once buyer and cook have met"
+  ],
+  "expected_spof_themes": ["liability", "density", "disintermediation", "regulation", "ops"]
+}

@@ -1,0 +1,17 @@
+{
+  "id": "07-api-document-ocr",
+  "title": "Per-document OCR extraction API",
+  "category": "API",
+  "locale": "en",
+  "adjacent_to": "02-api-usage-billing",
+  "adjacent_why": "Same shape as 02 — public REST endpoint, usage pricing, free tier, API keys only, overnight batch customers, a refresh promise. Different hinge: the bill unit is a file while the cost unit is a page, so the pricing page and the invoice disagree by two orders of magnitude on the same customer.",
+  "fragile_hint": "true",
+  "idea": "A public REST API that turns scanned PDFs into structured invoice fields — vendor, issue date, line items, totals. Pricing is per document: $0.10 per file, free tier 100 documents per month. Auth is API keys only (no OAuth yet). Each file is rendered page by page and pushed through a GPU extraction model, so a 2-page receipt and a 400-page statement bundle are billed the same. Target customers are bookkeeping tools that upload a month of client scans in one overnight batch. Model refresh is promised as 'monthly', and confidence per field is returned but not enforced.",
+  "focus_notes": [
+    "Bill unit (file) vs cost unit (page) — one heavy tenant inverts gross margin",
+    "Unbounded overnight batches on a GPU queue with no per-key ceiling",
+    "Field confidence is returned but nothing gates a wrong total from reaching a ledger",
+    "'Monthly' refresh is a promise about a model whose behaviour changes silently"
+  ],
+  "expected_spof_themes": ["pricing", "margins", "abuse", "data quality", "sla"]
+}

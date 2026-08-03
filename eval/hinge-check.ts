@@ -5,7 +5,8 @@
  *
  *  1. Fixture set out of shape — a base with a missing rewrite kind, a variant
  *     pointing at a base that does not exist, a theme with no keyword stems
- *     (which makes that theme permanently invisible to the screen).
+ *     (which makes that theme permanently invisible to the screen), or an
+ *     adjacent K2 idea that names no golden neighbour to crowd.
  *  2. A degenerate screen — a stem so broad that every hinge maps to one theme
  *     reports zero drift no matter what the model does, which looks like success.
  *     The probes below assert the screen still separates a rephrased hinge from
@@ -39,18 +40,31 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GOLDEN_DIR = path.join(__dirname, "golden");
 const VARIANTS_DIR = path.join(__dirname, "golden-variants");
+/**
+ * Near-neighbour ideas for the K2 specificity corpus (`eval/specificity-check.ts`).
+ * They are rivals for attribution, never run and never rewritten — so they are
+ * checked for shape and theme coverage here, and deliberately exempt from the
+ * `para`/`strip`/`flip` requirement that §1 puts on a golden base.
+ */
+const ADJACENT_DIR = path.join(__dirname, "golden-adjacent");
 const REQUIRED_KINDS = ["para", "strip", "flip"];
 
 type Fixture = {
   id: string;
   variant_of?: string;
   variant_kind?: string;
+  adjacent_to?: string;
   idea: string;
   expected_spof_themes?: string[];
 };
 
 async function loadDir(dir: string): Promise<Fixture[]> {
-  const files = (await readdir(dir)).filter((f) => f.endsWith(".json")).sort();
+  let files: string[];
+  try {
+    files = (await readdir(dir)).filter((f) => f.endsWith(".json")).sort();
+  } catch {
+    return [];
+  }
   return Promise.all(
     files.map(
       async (f) => JSON.parse(await readFile(path.join(dir, f), "utf8")) as Fixture,
@@ -69,6 +83,7 @@ async function main() {
   const keywords = await loadThemeKeywords();
   const originals = await loadDir(GOLDEN_DIR);
   const variants = await loadDir(VARIANTS_DIR);
+  const adjacent = await loadDir(ADJACENT_DIR);
   const baseIds = new Set(originals.map((o) => o.id));
 
   // 1. Every base carries every rewrite kind, exactly once.
@@ -95,9 +110,36 @@ async function main() {
     }
   }
 
+  // 2b. Adjacent ideas (K2 corpus). No variants required — they are never rewritten
+  //     and never run. What must hold: a distinct id, real prose, and a `crowds`
+  //     pointer at a golden base, because an "adjacent" fixture that names no
+  //     neighbour is just a sixth unrelated idea and adds no attribution pressure.
+  for (const a of adjacent) {
+    check(!baseIds.has(a.id), `${a.id}: adjacent fixture reuses a golden fixture id`);
+    check(
+      a.idea.trim().length > 0,
+      `${a.id}: adjacent fixture has empty idea text`,
+    );
+    check(
+      !!a.adjacent_to && baseIds.has(a.adjacent_to),
+      `${a.id}: "adjacent_to" must name a fixture in eval/golden (got "${a.adjacent_to ?? "—"}")`,
+    );
+    check(
+      !a.variant_of && !a.variant_kind,
+      `${a.id}: adjacent fixture declares variant fields — it belongs in golden-variants, not golden-adjacent`,
+    );
+  }
+  if (adjacent.length) {
+    notes.push(
+      `${adjacent.length} adjacent idea(s) in golden-adjacent (specificity rivals, not run): ${adjacent
+        .map((a) => `${a.id}→${a.adjacent_to}`)
+        .join(", ")}`,
+    );
+  }
+
   // 3. Every theme a fixture expects has keyword stems, or the screen goes blind.
   const declared = new Set(
-    [...originals, ...variants].flatMap((f) => f.expected_spof_themes ?? []),
+    [...originals, ...variants, ...adjacent].flatMap((f) => f.expected_spof_themes ?? []),
   );
   for (const theme of declared) {
     check(
@@ -329,7 +371,7 @@ async function main() {
   }
 
   console.log(
-    `\nPreflight: ${originals.length} base fixtures · ${variants.length} variants · ${Object.keys(keywords).length} themes`,
+    `\nPreflight: ${originals.length} base fixtures · ${variants.length} variants · ${adjacent.length} adjacent ideas · ${Object.keys(keywords).length} themes`,
   );
   console.log(
     `Screen probes: rephrased → ${rephrased.verdict}, different → ${different.verdict}, co-valid → ${coValid.verdict}, escaped → ${frameEscape.verdict}`,

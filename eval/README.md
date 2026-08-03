@@ -6,8 +6,9 @@ Fondasi masterplan **B.1** — ukur kualitas report sebelum/sesudah ubahan promp
 
 | Path | Fungsi |
 |------|--------|
-| `golden/*.json` | 5 ide tes (generated) |
+| `golden/*.json` | 5 ide tes (generated) — **ini yang dijalankan** oleh `eval:baseline` dan `eval:stability` |
 | `golden-variants/*.json` | 3 tulisan-ulang per fixture `golden` — `para` (parafrase penuh), `strip` (nama merek/kota/pembanding dibuang, struktur & angka tetap), `flip` (fakta sama, urutan dibalik + gaya pitch) |
+| `golden-adjacent/*.json` | 3 ide **bertetangga** (2026-08-02) — saingan atribusi untuk `specificity-check.ts` saja. **Tidak pernah dijalankan**, jadi biaya gate tidak berubah. Tiap file menyebut `adjacent_to` = fixture `golden` yang dihimpitnya |
 | `theme-keywords.json` | Kosakata stem per tema SPOF — dipakai screen otomatis |
 | `rubric.md` | Lembar nilai manual (0/1/2 per kriteria, max **48** standard / **52** deep) |
 | `score-template.json` | Template skor |
@@ -284,11 +285,24 @@ tapi sampai K2 tes itu **nol kali ada di kode**. Semuanya mental check manual,
 jadi tidak pernah dijalankan atas 100+ analisis yang sudah menumpuk di disk.
 
 Harness ini menjalankannya otomatis dan **offline**: nama produk, kategori, dan
-proper noun disensor dari analisis *dan* dari kelima ide sekaligus (mask
-seragam — bukan per-fixture, supaya fixture 01 tidak menyimpan kata `billing`
-yang sudah dibuang dari fixture 02). Sisa token dicocokkan ke **anchor** tiap
-ide (token yang muncul di ide itu dan **tidak** di ide lain), lalu ditanya:
-laporan ini paling menjelaskan ide yang mana?
+proper noun disensor dari analisis *dan* dari **seluruh ide corpus** sekaligus
+(mask seragam — bukan per-fixture, supaya fixture 01 tidak menyimpan kata
+`billing` yang sudah dibuang dari fixture 02). Sisa token dicocokkan ke
+**anchor** tiap ide (token yang muncul di ide itu dan **tidak** di ide lain),
+lalu ditanya: laporan ini paling menjelaskan ide yang mana?
+
+**Ide bertetangga (2026-08-02).** Corpus-nya sekarang **8 ide**: 5 `golden` +
+3 `golden-adjacent` yang ikut jadi saingan tapi **tidak pernah dijalankan**
+(jadi tetap $0 dan biaya Gate 2 tidak bergerak). Alasannya ada di batas nomor 1
+di bawah: kelima fixture golden sengaja dibuat tak berhubungan, jadi menebak
+balik itu mudah. Tetangganya menyalin *permukaan* satu fixture dan mengganti
+hinge-nya — `06` (marketplace makanan rumahan, kota & gedung & ritual verifikasi
+sama seperti `01`), `07` (OCR per-dokumen: endpoint, key auth, free tier, batch
+malam sama seperti `02`, hinge-nya bill-unit vs cost-unit), `08` (kredit prabayar
+speech-to-text — tetangga *struktural* `02`, kosakatanya sendiri).
+`BIF_SPEC_ADJACENT=0` membuang mereka dan mereproduksi angka corpus-5 pra-2026-08-02
+persis — **wajib dipakai kalau mau membandingkan dengan angka lama**, karena
+menambah satu ide mengubah `rival` setiap baris.
 
 ```bash
 npm run eval:specificity-check
@@ -297,6 +311,8 @@ BIF_SPEC_RUN=2026-08-01_005921 npm run eval:specificity-check
 # batasi sumber / fixture:
 BIF_SPEC_SOURCE=stability npm run eval:specificity-check
 BIF_SPEC_ONLY=03-ai-therapy-chat npm run eval:specificity-check
+# corpus 5 ide saja (reproduksi angka pra-2026-08-02, buat before/after):
+BIF_SPEC_ADJACENT=0 npm run eval:specificity-check
 # gate CI — exit 1 kalau ada analisis yang `generic`:
 BIF_SPEC_GATE=1 npm run eval:specificity-check
 ```
@@ -319,9 +335,15 @@ Tiga kontrol diskriminasi ikut dijalankan tiap run, dan **gagalnya kontrol
 selalu exit 1 walau gate mati** — instrumen yang tak bisa mendeteksi kegagalan
 buatan tak berhak melaporkan kelulusan:
 
-- **anchor floor** — tiap ide harus menyisakan ≥8 anchor setelah masking, kalau tidak mask-nya terlalu lebar.
-- **boilerplate probe** — paragraf 8 baris yang sengaja idea-agnostic harus tetap di bawah grounding floor untuk kelima ide, dan tak boleh pernah terbaca `specific`.
-- **swap control** — tiap analisis Inggris dilabel ulang sebagai keempat ide lainnya; semuanya harus `generic`.
+- **anchor floor** — tiap ide harus menyisakan ≥8 anchor setelah masking, kalau tidak mask-nya terlalu lebar. (Ini juga pagar untuk ide bertetangga: tetangga yang terlalu mirip bisa menghabiskan anchor tetangganya. `01` turun 23 → 11 anchor setelah `06` masuk — masih di atas floor, tapi granularitasnya jadi 1/11 per anchor.)
+- **boilerplate probe** — paragraf 8 baris yang sengaja idea-agnostic harus tetap di bawah grounding floor untuk **semua** ide corpus, dan tak boleh pernah terbaca `specific`.
+- **swap control** — tiap analisis Inggris dilabel ulang sebagai **setiap** ide lain (termasuk yang bertetangga); semuanya harus `generic`. Ini kontrol yang paling banyak menguat: 528/528 → **924/924**, artinya melabeli laporan pet-sitting sebagai marketplace makanan rumahan pun masih terbaca `generic`.
+
+Dilaporkan tapi **tidak** digerbang, selain skeleton similarity: **near-neighbour
+pressure** — per ide bertetangga, berapa analisis yang sekarang menjadikannya
+saingan terdekat, dan skor `rival` tertinggi yang dia capai. Tetangga yang tak
+pernah jadi saingan terdekat siapa pun **tidak menambah tekanan** dan harus
+ditulis ulang, bukan dihitung sebagai cakupan.
 
 Dilaporkan tapi **tidak** digerbang: **skeleton similarity** — Jaccard prosa
 setelah anchor **semua** ide dibuang, jadi yang tersisa cuma kerangka
@@ -330,8 +352,8 @@ pelaporannya. Angka absolutnya tak punya arti; yang bisa dibaca cuma kontras
 
 **Batasnya, dan ini penting sebelum angka apa pun dikutip:**
 
-1. Lima fixture yang ada **sengaja dibuat sejauh mungkin** satu dari yang lain (marketplace, API billing, therapy chat, wiki SaaS, hardware ring). Menebak balik di antara lima domain tak berhubungan itu **mudah**, jadi "0 `generic`" adalah **lulus yang lemah** — tes yang sesungguhnya butuh fixture *bertetangga* (misal marketplace kedua). Menulis fixture-nya $0; menskornya butuh run berbayar.
-2. Anchor adalah **kata-kata ide itu sendiri**, jadi harness ini memberi nilai tinggi ke analisis yang mengutip input. Kegagalan sebaliknya — template yang slot-nya diisi kata benda si ide, jadi terdengar spesifik padahal kerangkanya sama — tidak tertangkap di sini; itu tugas `collision-check.ts`. Dua harness, dua sumbu: collision membandingkan **dua analisis** satu sama lain, ini membandingkan **satu analisis** ke **lima ide**.
+1. **Corpus power — sebagian diperbaiki 2026-08-02, belum selesai.** Kelima fixture golden sengaja dibuat sejauh mungkin satu dari yang lain (marketplace, API billing, therapy chat, wiki SaaS, hardware ring), jadi menebak balik di antara lima domain tak berhubungan itu **mudah** dan "0 `generic`" adalah lulus yang lemah. `golden-adjacent/` menutup sebagian: corpus 5 → 8 ide, 132 analisis yang sama diskor ulang **$0** (tanpa run baru), dan hasilnya `126/6/0` → **`125 specific · 7 weak · 0 generic`**, mean `rival` 0.208 → **0.241**, mean margin 0.450 → 0.413, **92/132** baris kini bertahan melawan ide *bertetangga*, bukan bisnis tak berhubungan. Yang **belum** benar: (a) `03` dan `04` tak punya tetangga, jadi sepertiga corpus tak berubah dan verdict-nya selemah sebelumnya; (b) `rival` tertinggi yang pernah tercapai 43% melawan `own` 55% — corpus-nya lebih keras, tapi belum benar-benar mengancam verdict yang digerbang; (c) tetangga juga **memangkas** anchor tetangganya (`01`: 23 → 11), jadi sebagian dari 5 verdict yang bergeser adalah granularitas instrumen, bukan perilaku engine — dua di antaranya bergerak ke arah *berlawanan* (`01-para` dan `04-para` justru naik `weak` → `specific`). Menulis fixture bertetangga $0; menskor *analisis* atas ide bertetangga (arah kedua K2: apakah dua ide mirip menghasilkan hinge berbeda) tetap butuh run berbayar dan belum dilakukan.
+2. Anchor adalah **kata-kata ide itu sendiri**, jadi harness ini memberi nilai tinggi ke analisis yang mengutip input. Kegagalan sebaliknya — template yang slot-nya diisi kata benda si ide, jadi terdengar spesifik padahal kerangkanya sama — tidak tertangkap di sini; itu tugas `collision-check.ts`. Dua harness, dua sumbu: collision membandingkan **dua analisis** satu sama lain, ini membandingkan **satu analisis** ke **seluruh ide corpus** (8 sejak 2026-08-02; 5 dengan `BIF_SPEC_ADJACENT=0`).
 3. Analisis non-Inggris **tidak diskor** (anchor-nya token Inggris), jadi laporan `id` masuk daftar "not scored", bukan lulus.
 4. Satu corpus = satu pengukuran atas **satu versi prompt**. Variant `strip` juga sudah kehilangan merek & kota **di input**-nya, jadi anchor-nya memang lebih tipis by design.
 
